@@ -22,14 +22,6 @@ import {
 import { getRangeQueueData, getGroupQueueTraderDataObj } from '../buyback-utils/index';
 import { WETHByChainId } from '@scom/scom-token-list';
 
-interface TradeFee {
-  fee: string
-  base: string
-}
-
-const RouterV1 = "OAXDEX_RouterV1";
-const Router = "OAXDEX_Router";
-
 function getAddresses() {
   return CoreContractAddressesByChainId[getChainId()] || {};
 }
@@ -45,46 +37,6 @@ const getWrappedTokenAddress = (): string => {
 const getHybridRouterAddress = (): string => {
   let Address = getAddresses();
   return Address['OSWAP_HybridRouter2'];
-}
-
-function getRouterAddress(market: Market): string {
-  let Address = getAddresses();
-  switch (market) {
-    case Market.OPENSWAP:
-      return Address[Router];
-    case Market.UNISWAP:
-      return Address.UniswapV2Router02;
-    case Market.SUSHISWAP:
-      return Address.SushiSwapV2Router02;
-    case Market.PANCAKESWAPV1:
-      return Address.PancakeSwapRouterV1;
-    case Market.PANCAKESWAP:
-      return Address.PancakeSwapRouter;
-    case Market.BAKERYSWAP:
-      return Address.BakerySwapRouter;
-    case Market.BURGERSWAP:
-      return Address.BurgerSwapRouter;
-    case Market.IFSWAPV1:
-      return Address.IFSwapRouterV1;
-    case Market.OPENSWAPV1:
-      return Address[RouterV1];
-    case Market.QUICKSWAP:
-      return Address.QuickSwapRouter;
-    case Market.BISWAP:
-      return Address.BiSwapRouter;
-    case Market.PANGOLIN:
-      return Address.PangolinRouter;
-    case Market.TRADERJOE:
-      return Address.TraderJoeRouter;
-    case Market.SPIRITSWAP:
-      return Address.SpiritSwapRouter;
-    case Market.SPOOKYSWAP:
-      return Address.SpookySwapRouter;
-    case Market.IFSWAPV3:
-      return Address.IFSwapRouterV3;
-    default:
-      return Address[Router];
-  }
 }
 
 const calculateAmountInByTradeFee = (tradeFeeMap: any, pairInfo: any, amountOut: string) => {
@@ -346,7 +298,6 @@ interface SwapData {
   commissions?: ICommissionInfo[];
 }
 
-
 const executeSwap: (swapData: SwapData) => Promise<{
   receipt: TransactionReceipt | null;
   error: Record<string, string> | null;
@@ -407,17 +358,12 @@ const getApprovalModelAction = async (options: IERC20ApprovalEventOptions) => {
   return approvalModelAction;
 }
 
-const setApprovalModalSpenderAddress = (market: Market, contractAddress?: string) => {
+const setApprovalModalSpenderAddress = (contractAddress?: string) => {
   let spender;
   if (contractAddress) {
-    spender = contractAddress
+    spender = contractAddress;
   } else {
-    if (market == Market.HYBRID || market == Market.MIXED_QUEUE || market == Market.PEGGED_QUEUE || market == Market.GROUP_QUEUE) {
-      spender = getHybridRouterAddress();
-    }
-    else {
-      spender = getRouterAddress(market);
-    }
+    spender = getHybridRouterAddress();
   }
   approvalModel.spenderAddress = spender;
 }
@@ -425,7 +371,6 @@ const setApprovalModalSpenderAddress = (market: Market, contractAddress?: string
 export {
   SwapData,
   executeSwap,
-  getRouterAddress,
   getHybridRouterAddress,
   getApprovalModelAction,
   setApprovalModalSpenderAddress
