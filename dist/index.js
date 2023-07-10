@@ -18,6 +18,236 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijstech/eth-wallet", "@ijstech/components"], function (require, exports, eth_wallet_1, components_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.isWalletAddress = exports.viewOnExplorerByTxHash = exports.numberToBytes32 = exports.padLeft = exports.toWeiInv = exports.limitDecimals = exports.limitInputNumber = exports.isInvalidInput = exports.isValidNumber = exports.formatNumberWithSeparators = exports.formatPercentNumber = exports.formatNumber = exports.compareDate = exports.formatUTCDate = exports.formatDate = exports.DefaultDateFormat = exports.DefaultDateTimeFormat = exports.explorerTxUrlsByChainId = exports.SITE_ENV = void 0;
+    var SITE_ENV;
+    (function (SITE_ENV) {
+        SITE_ENV["DEV"] = "dev";
+        SITE_ENV["TESTNET"] = "testnet";
+        SITE_ENV["MAINNET"] = "mainnet";
+    })(SITE_ENV = exports.SITE_ENV || (exports.SITE_ENV = {}));
+    exports.explorerTxUrlsByChainId = {
+        1: 'https://etherscan.io/tx/',
+        4: 'https://rinkeby.etherscan.io/tx/',
+        42: 'https://kovan.etherscan.io/tx/',
+        56: 'https://bscscan.com/tx/',
+        97: 'https://testnet.bscscan.com/tx/',
+        43113: 'https://testnet.snowtrace.io/tx/',
+        43114: 'https://snowtrace.io/tx/',
+        137: 'https://polygonscan.com/tx/',
+        80001: 'https://mumbai.polygonscan.com/tx/',
+        250: 'https://ftmscan.com/tx/',
+        4002: 'https://testnet.ftmscan.com/tx/',
+        13370: 'https://aminoxtestnet.blockscout.alphacarbon.network/tx/',
+        421613: 'https://goerli.arbiscan.io/tx/'
+    };
+    exports.DefaultDateTimeFormat = 'DD/MM/YYYY HH:mm:ss';
+    exports.DefaultDateFormat = 'DD/MM/YYYY';
+    const formatDate = (date, customType, showTimezone) => {
+        const formatType = customType || exports.DefaultDateFormat;
+        const formatted = (0, components_1.moment)(date).format(formatType);
+        if (showTimezone) {
+            return `${formatted} (UTC+${(0, components_1.moment)().utcOffset() / 60})`;
+        }
+        return formatted;
+    };
+    exports.formatDate = formatDate;
+    const formatUTCDate = (date, customType, showTimezone) => {
+        const formatType = customType || exports.DefaultDateFormat;
+        const formatted = (0, components_1.moment)(date).utc().format(formatType);
+        return showTimezone ? `${formatted} (UTC)` : formatted;
+    };
+    exports.formatUTCDate = formatUTCDate;
+    const compareDate = (fromDate, toDate) => {
+        if (!toDate) {
+            toDate = (0, components_1.moment)();
+        }
+        return (0, components_1.moment)(fromDate).isSameOrBefore(toDate);
+    };
+    exports.compareDate = compareDate;
+    const formatNumber = (value, decimals) => {
+        let val = value;
+        const minValue = '0.0000001';
+        if (typeof value === 'string') {
+            val = new eth_wallet_1.BigNumber(value).toNumber();
+        }
+        else if (typeof value === 'object') {
+            val = value.toNumber();
+        }
+        if (val != 0 && new eth_wallet_1.BigNumber(val).lt(minValue)) {
+            return `<${minValue}`;
+        }
+        return (0, exports.formatNumberWithSeparators)(val, decimals || 4);
+    };
+    exports.formatNumber = formatNumber;
+    const formatPercentNumber = (value, decimals) => {
+        let val = value;
+        if (typeof value === 'string') {
+            val = new eth_wallet_1.BigNumber(value).toNumber();
+        }
+        else if (typeof value === 'object') {
+            val = value.toNumber();
+        }
+        return (0, exports.formatNumberWithSeparators)(val, decimals || 2);
+    };
+    exports.formatPercentNumber = formatPercentNumber;
+    const formatNumberWithSeparators = (value, precision) => {
+        if (!value)
+            value = 0;
+        if (precision) {
+            let outputStr = '';
+            if (value >= 1) {
+                outputStr = value.toLocaleString('en-US', { maximumFractionDigits: precision });
+            }
+            else {
+                outputStr = value.toLocaleString('en-US', { maximumSignificantDigits: precision });
+            }
+            if (outputStr.length > 18) {
+                outputStr = outputStr.substr(0, 18) + '...';
+            }
+            return outputStr;
+        }
+        return value.toLocaleString('en-US');
+    };
+    exports.formatNumberWithSeparators = formatNumberWithSeparators;
+    const isValidNumber = (value) => {
+        const val = new eth_wallet_1.BigNumber(value);
+        return val.gte(0);
+    };
+    exports.isValidNumber = isValidNumber;
+    const isInvalidInput = (val) => {
+        const value = new eth_wallet_1.BigNumber(val);
+        if (value.lt(0))
+            return true;
+        return (val || '').toString().substring(0, 2) === '00' || val === '-';
+    };
+    exports.isInvalidInput = isInvalidInput;
+    const limitInputNumber = (input, decimals) => {
+        const amount = input.value;
+        if ((0, exports.isInvalidInput)(amount)) {
+            input.value = '0';
+            return;
+        }
+        if (!new eth_wallet_1.BigNumber(amount).isNaN()) {
+            input.value = (0, exports.limitDecimals)(amount, decimals || 18);
+        }
+    };
+    exports.limitInputNumber = limitInputNumber;
+    const limitDecimals = (value, decimals) => {
+        let val = value;
+        if (typeof value !== 'string') {
+            val = val.toString();
+        }
+        let chart;
+        if (val.includes('.')) {
+            chart = '.';
+        }
+        else if (val.includes(',')) {
+            chart = ',';
+        }
+        else {
+            return value;
+        }
+        const parts = val.split(chart);
+        let decimalsPart = parts[1];
+        if (decimalsPart && decimalsPart.length > decimals) {
+            parts[1] = decimalsPart.substr(0, decimals);
+        }
+        return parts.join(chart);
+    };
+    exports.limitDecimals = limitDecimals;
+    const toWeiInv = (n, unit) => {
+        if (new eth_wallet_1.BigNumber(n).eq(0))
+            return new eth_wallet_1.BigNumber('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+        return new eth_wallet_1.BigNumber('1').shiftedBy((unit || 18) * 2).idiv(new eth_wallet_1.BigNumber(n).shiftedBy(unit || 18));
+    };
+    exports.toWeiInv = toWeiInv;
+    const padLeft = function (string, chars, sign) {
+        return new Array(chars - string.length + 1).join(sign ? sign : "0") + string;
+    };
+    exports.padLeft = padLeft;
+    const numberToBytes32 = (value, prefix) => {
+        if (!value)
+            return;
+        let v = value;
+        if (typeof value == "number") {
+            // covert to a hex string
+            v = value.toString(16);
+        }
+        else if (/^[0-9]*$/.test(value)) {
+            // assuming value to be a decimal number, value could be a hex
+            v = new eth_wallet_1.BigNumber(value).toString(16);
+        }
+        else if (/^(0x)?[0-9A-Fa-f]*$/.test(value)) {
+            // value already a hex
+            v = value;
+        }
+        else if (eth_wallet_1.BigNumber.isBigNumber(value)) {
+            v = value.toString(16);
+        }
+        v = v.replace("0x", "");
+        v = (0, exports.padLeft)(v, 64);
+        if (prefix)
+            v = '0x' + v;
+        return v;
+    };
+    exports.numberToBytes32 = numberToBytes32;
+    const viewOnExplorerByTxHash = (chainId, txHash) => {
+        if (exports.explorerTxUrlsByChainId[chainId]) {
+            let url = `${exports.explorerTxUrlsByChainId[chainId]}${txHash}`;
+            window.open(url);
+        }
+    };
+    exports.viewOnExplorerByTxHash = viewOnExplorerByTxHash;
+    function isWalletAddress(address) {
+        return /^0x[a-fA-F0-9]{40}$/.test(address);
+    }
+    exports.isWalletAddress = isWalletAddress;
+});
+define("@scom/scom-buyback/global/utils/error.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.parseContractError = void 0;
+    ///<amd-module name='@scom/scom-buyback/global/utils/error.ts'/> 
+    async function parseContractError(oMessage, tokens) {
+        const staticMessageMap = {
+            'execution reverted: OAXDEX: K': 'x * y = k Violated',
+            'execution reverted: OAXDEX: FORBIDDEN': 'Forbidden',
+            'execution reverted: OAXDEX: INSUFFICIENT_INPUT_AMOUNT': 'Insufficient input amount',
+            'execution reverted: OAXDEX: INVALID_TO': 'Invalid to',
+            'execution reverted: OAXDEX: INSUFFICIENT_LIQUIDITY': 'Insufficient liquidity',
+            'execution reverted: OAXDEX: INSUFFICIENT_OUTPUT_AMOUNT': 'Insufficient output amount',
+            'execution reverted: OAXDEX: PAIR PAUSED': 'Pair paused',
+            'execution reverted: OAXDEX: GLOBALLY PAUSED': 'Globally paused',
+            'execution reverted: OAXDEX: INSUFFICIENT_LIQUIDITY_BURNED': 'Insufficient liquidity burned',
+            'execution reverted: OAXDEX: INSUFFICIENT_LIQUIDITY_MINTED': 'Insufficient liquidity minted',
+            'execution reverted: OAXDEX: OVERFLOW': 'Overflow',
+            'execution reverted: OAXDEX_Pair: INSUFFICIENT_LIQUIDITY': 'Insufficient liquidity',
+            'execution reverted: OAXDEX_Pair: INSUFFICIENT_OUTPUT_AMOUNT': 'Insufficient output amount',
+            'execution reverted: OAXDEX_Pair: INSUFFICIENT_INPUT_AMOUNT': 'Insufficient input amount',
+            'execution reverted: OAXDEX: LOCKED': 'Locked',
+            'execution reverted: OAXDEX: INVALID_SIGNATURE': 'Invalid signature',
+            'execution reverted: OAXDEX: EXPIRED': 'Expired',
+            'MetaMask Tx Signature: User denied transaction signature.': 'User denied transaction signature',
+            'execution reverted: OracleAdaptor: Price outside allowed range': 'Circuit Breaker: Exceeds Price Protection Range',
+            'execution reverted: PAIR_NOT_MATCH': 'Pair Not Match',
+            'execution reverted: No oracle found': 'No Oracle found',
+            'execution reverted: Amount exceeds available fund': 'Insufficient liquidity',
+        };
+        let s = staticMessageMap[oMessage];
+        if (s) {
+            return s;
+        }
+        return '';
+    }
+    exports.parseContractError = parseContractError;
+});
+define("@scom/scom-buyback/global/utils/pageBlock.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
 define("@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -12951,18 +13181,18 @@ define("@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts", ["requir
     Object.defineProperty(exports, "toDeploymentContracts", { enumerable: true, get: function () { return deploy_1.toDeploymentContracts; } });
     Object.defineProperty(exports, "OpenSwap", { enumerable: true, get: function () { return OpenSwap_3.OpenSwap; } });
 });
-define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts"], function (require, exports, eth_wallet_1, index_3) {
+define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts"], function (require, exports, eth_wallet_2, index_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isAddressValid = exports.getERC20Allowance = exports.approveERC20Max = exports.getERC20Amount = exports.registerSendTxEvents = exports.isTransactionConfirmed = void 0;
     ;
     const isTransactionConfirmed = async (txHash) => {
-        const tx = await eth_wallet_1.Wallet.getClientInstance().getTransactionReceipt(txHash);
+        const tx = await eth_wallet_2.Wallet.getClientInstance().getTransactionReceipt(txHash);
         return tx && !!tx.blockNumber;
     };
     exports.isTransactionConfirmed = isTransactionConfirmed;
     const registerSendTxEvents = (sendTxEventHandlers) => {
-        const wallet = eth_wallet_1.Wallet.getClientInstance();
+        const wallet = eth_wallet_2.Wallet.getClientInstance();
         wallet.registerSendTxEvents({
             transactionHash: (error, receipt) => {
                 if (sendTxEventHandlers.transactionHash) {
@@ -12978,13 +13208,13 @@ define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijs
     };
     exports.registerSendTxEvents = registerSendTxEvents;
     async function getERC20Amount(wallet, token, decimals) {
-        let erc20 = new eth_wallet_1.Erc20(wallet, token, decimals);
+        let erc20 = new eth_wallet_2.Erc20(wallet, token, decimals);
         return await erc20.balance;
     }
     exports.getERC20Amount = getERC20Amount;
     const approveERC20Max = async (token, spenderAddress, callback, confirmationCallback) => {
-        let wallet = eth_wallet_1.Wallet.getClientInstance();
-        let amount = new eth_wallet_1.BigNumber(2).pow(256).minus(1);
+        let wallet = eth_wallet_2.Wallet.getClientInstance();
+        let amount = new eth_wallet_2.BigNumber(2).pow(256).minus(1);
         let erc20 = new index_3.Contracts.ERC20(wallet, token.address);
         (0, exports.registerSendTxEvents)({
             transactionHash: callback,
@@ -13000,7 +13230,7 @@ define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijs
     const getERC20Allowance = async (token, spenderAddress) => {
         if (!(token === null || token === void 0 ? void 0 : token.address))
             return null;
-        let wallet = eth_wallet_1.Wallet.getClientInstance();
+        let wallet = eth_wallet_2.Wallet.getClientInstance();
         let erc20 = new index_3.Contracts.ERC20(wallet, token.address);
         let allowance = await erc20.allowance({
             owner: wallet.account.address,
@@ -13010,459 +13240,11 @@ define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijs
     };
     exports.getERC20Allowance = getERC20Allowance;
     const isAddressValid = async (address) => {
-        let wallet = eth_wallet_1.Wallet.getClientInstance();
+        let wallet = eth_wallet_2.Wallet.getClientInstance();
         const isValid = wallet.web3.utils.isAddress(address);
         return isValid;
     };
     exports.isAddressValid = isAddressValid;
-});
-define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijstech/eth-wallet", "@ijstech/components"], function (require, exports, eth_wallet_2, components_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.isWalletAddress = exports.viewOnExplorerByAddress = exports.viewOnExplorerByTxHash = exports.downloadJsonFile = exports.renderBalanceTooltip = exports.getWeekDays = exports.uniqWith = exports.formatNumberValue = exports.getParamsFromUrl = exports.numberToBytes32 = exports.padLeft = exports.toWeiInv = exports.getAPI = exports.limitDecimals = exports.limitInputNumber = exports.isInvalidInput = exports.isValidNumber = exports.formatNumberWithSeparators = exports.formatPercentNumber = exports.formatNumber = exports.compareDate = exports.formatUTCDate = exports.formatDate = exports.DefaultDateFormat = exports.DefaultDateTimeFormat = exports.explorerAddressUrlsByChainId = exports.explorerTxUrlsByChainId = exports.SITE_ENV = void 0;
-    var SITE_ENV;
-    (function (SITE_ENV) {
-        SITE_ENV["DEV"] = "dev";
-        SITE_ENV["TESTNET"] = "testnet";
-        SITE_ENV["MAINNET"] = "mainnet";
-    })(SITE_ENV = exports.SITE_ENV || (exports.SITE_ENV = {}));
-    exports.explorerTxUrlsByChainId = {
-        1: 'https://etherscan.io/tx/',
-        4: 'https://rinkeby.etherscan.io/tx/',
-        42: 'https://kovan.etherscan.io/tx/',
-        56: 'https://bscscan.com/tx/',
-        97: 'https://testnet.bscscan.com/tx/',
-        43113: 'https://testnet.snowtrace.io/tx/',
-        43114: 'https://snowtrace.io/tx/',
-        137: 'https://polygonscan.com/tx/',
-        80001: 'https://mumbai.polygonscan.com/tx/',
-        250: 'https://ftmscan.com/tx/',
-        4002: 'https://testnet.ftmscan.com/tx/',
-        13370: 'https://aminoxtestnet.blockscout.alphacarbon.network/tx/',
-        421613: 'https://goerli.arbiscan.io/tx/'
-    };
-    exports.explorerAddressUrlsByChainId = {
-        1: 'https://etherscan.io/address/',
-        4: 'https://rinkeby.etherscan.io/address/',
-        42: 'https://kovan.etherscan.io/address/',
-        97: 'https://testnet.bscscan.com/address/',
-        56: 'https://bscscan.com/address/',
-        43113: 'https://testnet.snowtrace.io/address/',
-        43114: 'https://snowtrace.io/address/',
-        137: 'https://polygonscan.com/address/',
-        80001: 'https://mumbai.polygonscan.com/address/',
-        250: 'https://ftmscan.com/address/',
-        4002: 'https://testnet.ftmscan.com/address/',
-        13370: 'https://aminoxtestnet.blockscout.alphacarbon.network/address/',
-        421613: 'https://goerli.arbiscan.io/address/'
-    };
-    exports.DefaultDateTimeFormat = 'DD/MM/YYYY HH:mm:ss';
-    exports.DefaultDateFormat = 'DD/MM/YYYY';
-    const formatDate = (date, customType, showTimezone) => {
-        const formatType = customType || exports.DefaultDateFormat;
-        const formatted = (0, components_1.moment)(date).format(formatType);
-        if (showTimezone) {
-            return `${formatted} (UTC+${(0, components_1.moment)().utcOffset() / 60})`;
-        }
-        return formatted;
-    };
-    exports.formatDate = formatDate;
-    const formatUTCDate = (date, customType, showTimezone) => {
-        const formatType = customType || exports.DefaultDateFormat;
-        const formatted = (0, components_1.moment)(date).utc().format(formatType);
-        return showTimezone ? `${formatted} (UTC)` : formatted;
-    };
-    exports.formatUTCDate = formatUTCDate;
-    const compareDate = (fromDate, toDate) => {
-        if (!toDate) {
-            toDate = (0, components_1.moment)();
-        }
-        return (0, components_1.moment)(fromDate).isSameOrBefore(toDate);
-    };
-    exports.compareDate = compareDate;
-    const formatNumber = (value, decimals) => {
-        let val = value;
-        const minValue = '0.0000001';
-        if (typeof value === 'string') {
-            val = new eth_wallet_2.BigNumber(value).toNumber();
-        }
-        else if (typeof value === 'object') {
-            val = value.toNumber();
-        }
-        if (val != 0 && new eth_wallet_2.BigNumber(val).lt(minValue)) {
-            return `<${minValue}`;
-        }
-        return (0, exports.formatNumberWithSeparators)(val, decimals || 4);
-    };
-    exports.formatNumber = formatNumber;
-    const formatPercentNumber = (value, decimals) => {
-        let val = value;
-        if (typeof value === 'string') {
-            val = new eth_wallet_2.BigNumber(value).toNumber();
-        }
-        else if (typeof value === 'object') {
-            val = value.toNumber();
-        }
-        return (0, exports.formatNumberWithSeparators)(val, decimals || 2);
-    };
-    exports.formatPercentNumber = formatPercentNumber;
-    const formatNumberWithSeparators = (value, precision) => {
-        if (!value)
-            value = 0;
-        if (precision) {
-            let outputStr = '';
-            if (value >= 1) {
-                outputStr = value.toLocaleString('en-US', { maximumFractionDigits: precision });
-            }
-            else {
-                outputStr = value.toLocaleString('en-US', { maximumSignificantDigits: precision });
-            }
-            if (outputStr.length > 18) {
-                outputStr = outputStr.substr(0, 18) + '...';
-            }
-            return outputStr;
-            // let parts = parseFloat(value.toPrecision(precision)).toString().split(".");
-            // parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            // return parts.join(".");
-        }
-        else {
-            return value.toLocaleString('en-US');
-            // let parts = value.toString().split(".");
-            // parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            // return parts.join(".");
-        }
-    };
-    exports.formatNumberWithSeparators = formatNumberWithSeparators;
-    const isValidNumber = (value) => {
-        const val = new eth_wallet_2.BigNumber(value);
-        return val.gte(0);
-    };
-    exports.isValidNumber = isValidNumber;
-    const isInvalidInput = (val) => {
-        const value = new eth_wallet_2.BigNumber(val);
-        if (value.lt(0))
-            return true;
-        return (val || '').toString().substring(0, 2) === '00' || val === '-';
-    };
-    exports.isInvalidInput = isInvalidInput;
-    const limitInputNumber = (input, decimals) => {
-        const amount = input.value;
-        if ((0, exports.isInvalidInput)(amount)) {
-            input.value = '0';
-            return;
-        }
-        if (!new eth_wallet_2.BigNumber(amount).isNaN()) {
-            input.value = (0, exports.limitDecimals)(amount, decimals || 18);
-        }
-    };
-    exports.limitInputNumber = limitInputNumber;
-    const limitDecimals = (value, decimals) => {
-        let val = value;
-        if (typeof value !== 'string') {
-            val = val.toString();
-        }
-        let chart;
-        if (val.includes('.')) {
-            chart = '.';
-        }
-        else if (val.includes(',')) {
-            chart = ',';
-        }
-        else {
-            return value;
-        }
-        const parts = val.split(chart);
-        let decimalsPart = parts[1];
-        if (decimalsPart && decimalsPart.length > decimals) {
-            parts[1] = decimalsPart.substr(0, decimals);
-        }
-        return parts.join(chart);
-    };
-    exports.limitDecimals = limitDecimals;
-    async function getAPI(url, paramsObj) {
-        let queries = '';
-        if (paramsObj) {
-            try {
-                queries = new URLSearchParams(paramsObj).toString();
-            }
-            catch (err) {
-                console.log('err', err);
-            }
-        }
-        let fullURL = url + (queries ? `?${queries}` : '');
-        const response = await fetch(fullURL, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            },
-        });
-        return response.json();
-    }
-    exports.getAPI = getAPI;
-    const toWeiInv = (n, unit) => {
-        if (new eth_wallet_2.BigNumber(n).eq(0))
-            return new eth_wallet_2.BigNumber('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-        return new eth_wallet_2.BigNumber('1').shiftedBy((unit || 18) * 2).idiv(new eth_wallet_2.BigNumber(n).shiftedBy(unit || 18));
-    };
-    exports.toWeiInv = toWeiInv;
-    const padLeft = function (string, chars, sign) {
-        return new Array(chars - string.length + 1).join(sign ? sign : "0") + string;
-    };
-    exports.padLeft = padLeft;
-    const numberToBytes32 = (value, prefix) => {
-        if (!value)
-            return;
-        let v = value;
-        if (typeof value == "number") {
-            // covert to a hex string
-            v = value.toString(16);
-        }
-        else if (/^[0-9]*$/.test(value)) {
-            // assuming value to be a decimal number, value could be a hex
-            v = new eth_wallet_2.BigNumber(value).toString(16);
-        }
-        else if (/^(0x)?[0-9A-Fa-f]*$/.test(value)) {
-            // value already a hex
-            v = value;
-        }
-        else if (eth_wallet_2.BigNumber.isBigNumber(value)) {
-            v = value.toString(16);
-        }
-        v = v.replace("0x", "");
-        v = (0, exports.padLeft)(v, 64);
-        if (prefix)
-            v = '0x' + v;
-        return v;
-    };
-    exports.numberToBytes32 = numberToBytes32;
-    const getParamsFromUrl = () => {
-        const startIdx = window.location.href.indexOf("?");
-        const search = window.location.href.substring(startIdx, window.location.href.length);
-        const queryString = search;
-        const urlParams = new URLSearchParams(queryString);
-        return urlParams;
-    };
-    exports.getParamsFromUrl = getParamsFromUrl;
-    const formatNumberValue = (data, tokenMap) => {
-        const { title, value, symbol, icon, prefix, isWrapped } = data;
-        try {
-            let limitDecimals = 18;
-            if (symbol) {
-                let symb = symbol;
-                if (symb.includes('/')) {
-                    symb = symb.split('/')[0];
-                }
-                if (symbol === 'USD') {
-                    limitDecimals = 2;
-                }
-                else {
-                    const tokenObj = Object.values(tokenMap).find((token) => token.symbol === symb);
-                    if (tokenObj) {
-                        limitDecimals = tokenObj.decimals || 18;
-                    }
-                }
-            }
-            const val = parseFloat(value);
-            const minValue = 0.0001;
-            let result;
-            let tooltip = `${value}`;
-            if (val === 0) {
-                result = `0`;
-            }
-            else if (val < minValue) {
-                if (prefix === '$') {
-                    result = `< ${prefix}${minValue}`;
-                }
-                else if (prefix) {
-                    result = `${prefix.replace('=', '')} < ${minValue}`;
-                }
-                else {
-                    result = `< ${minValue}`;
-                }
-                tooltip = val.toLocaleString('en-US', { maximumFractionDigits: limitDecimals });
-            }
-            else {
-                const stringValue = value.toString();
-                const decimalsIndex = stringValue.indexOf('.');
-                const length = decimalsIndex < 0 ? stringValue.length : stringValue.length - 1;
-                let valueFormatted = val.toLocaleString('en-US', { maximumFractionDigits: limitDecimals });
-                const arr = valueFormatted.split('.');
-                valueFormatted = arr[0];
-                if (arr[1]) {
-                    valueFormatted = `${arr[0]}.${arr[1].substr(0, 4)}`;
-                }
-                if (length <= 7) {
-                    result = valueFormatted;
-                }
-                else if (decimalsIndex > 7) {
-                    result = `${valueFormatted.substr(0, 9)}...`;
-                }
-                else if (decimalsIndex > -1) {
-                    result = valueFormatted;
-                }
-                else {
-                    const finalVal = valueFormatted.substr(0, 13);
-                    result = `${finalVal}${length > 10 ? '...' : ''}`;
-                }
-                if (result.length > 20 && !result.includes('...')) {
-                    result = `${result.substr(0, 13)}...`;
-                }
-                // Format value for the tooltip
-                const parts = stringValue.split('.');
-                const intVal = parseInt(parts[0]).toLocaleString('en-US');
-                tooltip = `${intVal}`;
-                if (parts[1]) {
-                    let decVal = parts[1];
-                    if (parts[1].length > limitDecimals) {
-                        decVal = parseFloat(`0.${parts[1]}`).toLocaleString('en-US', { maximumFractionDigits: limitDecimals });
-                        if (decVal == 1) {
-                            decVal = parts[1].substr(0, limitDecimals);
-                        }
-                        else {
-                            decVal = decVal.substr(2);
-                        }
-                    }
-                    tooltip += `.${decVal}`;
-                }
-            }
-            if (icon) {
-                result += ` <img width="20" src="${icon}" style="padding-bottom: 0.15rem" />`;
-            }
-            if (symbol) {
-                result += ` ${symbol}`;
-                tooltip += ` ${symbol}`;
-            }
-            if (prefix) {
-                result = `${val < minValue ? '' : prefix}${result}`;
-                tooltip = `${prefix}${tooltip}`;
-            }
-            if (title) {
-                result = `${title}: ${result}`;
-            }
-            if (isWrapped) {
-                result = `(${result})`;
-            }
-            if (symbol === 'USD') {
-                return result;
-            }
-            else {
-                return { result, tooltip };
-            }
-        }
-        catch (_a) {
-            return '-';
-        }
-    };
-    exports.formatNumberValue = formatNumberValue;
-    const uniqWith = (array, compareFn) => {
-        const unique = [];
-        for (const cur of array) {
-            const isDuplicate = unique.some((oth) => compareFn(cur, oth));
-            if (!isDuplicate)
-                unique.push(cur);
-        }
-        return unique;
-    };
-    exports.uniqWith = uniqWith;
-    const getWeekDays = () => {
-        const d = new Date();
-        d.setDate(d.getDate() - 7);
-        let days = [];
-        let day = d;
-        for (let i = 0; i < 7; i++) {
-            days.push(day.setDate(day.getDate() + 1));
-        }
-        return days;
-    };
-    exports.getWeekDays = getWeekDays;
-    const renderBalanceTooltip = (params, tokenMap, isBold) => {
-        const data = (0, exports.formatNumberValue)(params, tokenMap);
-        if (typeof data === "object") {
-            const { result, tooltip } = data;
-            if (isBold) {
-                return `<i-label class="bold" tooltip='${JSON.stringify({ content: tooltip })}'>${result}</i-label>`;
-            }
-            return `<i-label tooltip='${JSON.stringify({ content: tooltip })}'>${result}</i-label>`;
-        }
-        return data;
-    };
-    exports.renderBalanceTooltip = renderBalanceTooltip;
-    const replacer = (key, value) => {
-        if (['minLockTime', 'campaignStart', 'campaignEnd', 'perAddressCap', 'maxTotalLock', 'multiplier', 'initialReward', 'vestingPeriod', 'claimDeadline', 'vestingStartDate', 'rewardAmount', 'value'].includes(key)) {
-            const val = Number(value);
-            return isNaN(val) ? value : val;
-        }
-        return value;
-    };
-    const downloadJsonFile = (name, obj) => {
-        const link = document.createElement("a");
-        const text = JSON.stringify(obj, replacer, 2);
-        link.download = name;
-        const jsonContent = `data:application/json;charset=utf-8,${encodeURIComponent(text)}`;
-        link.href = jsonContent;
-        link.click();
-    };
-    exports.downloadJsonFile = downloadJsonFile;
-    const viewOnExplorerByTxHash = (chainId, txHash) => {
-        if (exports.explorerTxUrlsByChainId[chainId]) {
-            let url = `${exports.explorerTxUrlsByChainId[chainId]}${txHash}`;
-            window.open(url);
-        }
-    };
-    exports.viewOnExplorerByTxHash = viewOnExplorerByTxHash;
-    const viewOnExplorerByAddress = (chainId, address) => {
-        if (exports.explorerAddressUrlsByChainId[chainId]) {
-            let url = `${exports.explorerAddressUrlsByChainId[chainId]}${address}`;
-            window.open(url);
-        }
-    };
-    exports.viewOnExplorerByAddress = viewOnExplorerByAddress;
-    function isWalletAddress(address) {
-        return /^0x[a-fA-F0-9]{40}$/.test(address);
-    }
-    exports.isWalletAddress = isWalletAddress;
-});
-define("@scom/scom-buyback/global/utils/error.ts", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.parseContractError = void 0;
-    ///<amd-module name='@scom/scom-buyback/global/utils/error.ts'/> 
-    async function parseContractError(oMessage, tokens) {
-        const staticMessageMap = {
-            'execution reverted: OAXDEX: K': 'x * y = k Violated',
-            'execution reverted: OAXDEX: FORBIDDEN': 'Forbidden',
-            'execution reverted: OAXDEX: INSUFFICIENT_INPUT_AMOUNT': 'Insufficient input amount',
-            'execution reverted: OAXDEX: INVALID_TO': 'Invalid to',
-            'execution reverted: OAXDEX: INSUFFICIENT_LIQUIDITY': 'Insufficient liquidity',
-            'execution reverted: OAXDEX: INSUFFICIENT_OUTPUT_AMOUNT': 'Insufficient output amount',
-            'execution reverted: OAXDEX: PAIR PAUSED': 'Pair paused',
-            'execution reverted: OAXDEX: GLOBALLY PAUSED': 'Globally paused',
-            'execution reverted: OAXDEX: INSUFFICIENT_LIQUIDITY_BURNED': 'Insufficient liquidity burned',
-            'execution reverted: OAXDEX: INSUFFICIENT_LIQUIDITY_MINTED': 'Insufficient liquidity minted',
-            'execution reverted: OAXDEX: OVERFLOW': 'Overflow',
-            'execution reverted: OAXDEX_Pair: INSUFFICIENT_LIQUIDITY': 'Insufficient liquidity',
-            'execution reverted: OAXDEX_Pair: INSUFFICIENT_OUTPUT_AMOUNT': 'Insufficient output amount',
-            'execution reverted: OAXDEX_Pair: INSUFFICIENT_INPUT_AMOUNT': 'Insufficient input amount',
-            'execution reverted: OAXDEX: LOCKED': 'Locked',
-            'execution reverted: OAXDEX: INVALID_SIGNATURE': 'Invalid signature',
-            'execution reverted: OAXDEX: EXPIRED': 'Expired',
-            'MetaMask Tx Signature: User denied transaction signature.': 'User denied transaction signature',
-            'execution reverted: OracleAdaptor: Price outside allowed range': 'Circuit Breaker: Exceeds Price Protection Range',
-            'execution reverted: PAIR_NOT_MATCH': 'Pair Not Match',
-            'execution reverted: No oracle found': 'No Oracle found',
-            'execution reverted: Amount exceeds available fund': 'Insufficient liquidity',
-        };
-        let s = staticMessageMap[oMessage];
-        if (s) {
-            return s;
-        }
-        return '';
-    }
-    exports.parseContractError = parseContractError;
-});
-define("@scom/scom-buyback/global/utils/pageBlock.ts", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
 });
 define("@scom/scom-buyback/global/utils/approvalModel.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-buyback/global/utils/common.ts"], function (require, exports, eth_wallet_3, common_1) {
     "use strict";
@@ -13601,58 +13383,8 @@ define("@scom/scom-buyback/assets.ts", ["require", "exports", "@ijstech/componen
 define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.ABIKeys = exports.ProviderConfigMap = exports.tokenPriceAMMReference = exports.ToUSDPriceFeedAddressesMap = exports.CoreContractAddressesByChainId = exports.Market = void 0;
+    exports.CoreContractAddressesByChainId = exports.Market = void 0;
     ///<amd-module name='@scom/scom-buyback/store/data/index.ts'/> 
-    //not adjusted for cronos and its testnet
-    const ToUSDPriceFeedAddressesMap = {
-        56: {
-            '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c': '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
-            '0x55d398326f99059ff775485246999027b3197955': '0xB97Ad0E74fa7d920791E90258A6E2085088b4320',
-            '0xe9e7cea3dedca5984780bafc599bd69add087d56': '0xcBb98864Ef56E9042e7d2efef76141f15731B82f', //BUSD
-        },
-        97: {
-            '0xae13d989dac2f0debff460ac112a837c89baa7cd': '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526',
-            '0x29386b60e0a9a1a30e1488ada47256577ca2c385': '0xEca2605f0BCF2BA5966372C99837b1F182d3D620',
-            '0xde9334c157968320f26e449331d6544b89bbd00f': '0x9331b55D9830EF609A2aBCfAc0FBCE050A52fdEa',
-            '0xb78daa2f1a2de8270a5641f052fafc4b2b3ea3b1': '0x9331b55D9830EF609A2aBCfAc0FBCE050A52fdEa', //BUSD       
-        },
-        43113: {
-            '0xd00ae08403b9bbb9124bb305c09058e32c39a48c': '0x5498BB86BC934c8D34FDA08E81D444153d0D06aD',
-            '0xb9c31ea1d475c25e58a1be1a46221db55e5a7c6e': '0x7898AcCC83587C3C55116c5230C17a6Cd9C71bad', //USDT.e  
-        },
-        43114: {
-            '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7': '0x0A77230d17318075983913bC2145DB16C7366156',
-            '0xc7198437980c041c805a1edcba50c1ce5db95118': '0xEBE676ee90Fe1112671f19b6B7459bC678B67e8a',
-            '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664': '0xF096872672F44d6EBA71458D74fe67F9a77a23B9', //USDC.e  
-        }
-    };
-    exports.ToUSDPriceFeedAddressesMap = ToUSDPriceFeedAddressesMap;
-    //not adjusted for cronos and its testnet
-    const tokenPriceAMMReference = {
-        56: {
-            "0xb32ac3c79a94ac1eb258f3c830bbdbc676483c93": "0x6AA3eC903176df556e8D8473A002b6A807399351",
-            "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c": "0x58F876857a02D6762E0101bb5C46A8c1ED44Dc16",
-            "0x0b15ddf19d47e6a86a56148fb4afffc6929bcb89": "0x71E6de81381eFE0Aa98f56b3B43eB3727D640715",
-            "0x416947e6fc78f158fd9b775fa846b72d768879c2": "0xe6A97E7B5EB2FA72A8B4BeDaaf4CdE85E015DAbf",
-            "0x31720b2276df3b3b757b55845d17eea184d4fc8f": "0x0DBCe9e7b634B5eAAAb483194CC3224Fde9624CF" // OAX : OAX & BNB (OSWAP-LP)
-        },
-        97: {
-            "0x45eee762aaea4e5ce317471bda8782724972ee19": "0xb0094FfE387da1739FB95bAbCAF01B105FD0D887",
-            "0xae13d989dac2f0debff460ac112a837c89baa7cd": "0x4A63235712c5F56796b8120DE9195626cf7496f1",
-            "0xc2c76387eb1cd15f2f55d2463b5aad6fca062eb1": "0xd2401ED7A6444CB96EE78424a222A51788E90060",
-            "0x52423b7f0769d0365ebdd79342ce167eb9c29ae2": "0x34aE455fC2d8C808471f7A6967eee858C61cc838",
-            "0xb79aa5c1730ad78dd958f05fd87022aef3e50721": "0x902d79f7Dc980D9b21D691F5F0737ce11f352eB9",
-            "0x8677048f3ed472610514ba6ef6ec2f03b550ebdb": "0x095307dEac764FDC521fE2E3cf8EDf0f40B00F17", // Oax: Oax & BNB
-        },
-        43113: {
-            "0x78d9d80e67bc80a11efbf84b7c8a65da51a8ef3c": "0x239b4EaF1746051b1bED34dC2963f053c4649f88",
-            "0xd00ae08403B9bbb9124bB305C09058E32C39A48c": "0x0f98073122cc43596eF645Ae51FE085f355C487e" // AVAX : AVAX & USDT.e
-        },
-        43114: {
-            "0xb32ac3c79a94ac1eb258f3c830bbdbc676483c93": "0xBeaE5AaA6d76ABe711336801D590850e18cB3C6b", // OSWAP : OSWAP & AVAX      
-        }
-    };
-    exports.tokenPriceAMMReference = tokenPriceAMMReference;
     const CoreContractAddressesByChainId = {
         1: {
             // "GOV_TOKEN": undefined,
@@ -14015,181 +13747,11 @@ define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], functio
         Market[Market["JETSWAP"] = 20] = "JETSWAP";
         Market[Market["IFSWAPV3"] = 21] = "IFSWAPV3";
     })(Market = exports.Market || (exports.Market = {}));
-    const ProviderConfigMap = {
-        OpenSwap: {
-            caption: 'OpenSwap',
-            marketCode: Market.OPENSWAP,
-            key: 'OpenSwap',
-            dexId: 1,
-            supportedChains: [42, 56, 97, 4002, 43113, 43114, 80001, 13370, 338]
-        },
-        Uniswap: {
-            caption: 'Uniswap',
-            marketCode: Market.UNISWAP,
-            key: 'Uniswap',
-            dexId: 10,
-            supportedChains: [1, 42]
-        },
-        SushiSwap: {
-            caption: 'SushiSwap',
-            marketCode: Market.SUSHISWAP,
-            key: 'SushiSwap',
-            dexId: 8,
-            supportedChains: [1, 42, 137, 250, 43113, 43114]
-        },
-        PancakeSwap: {
-            caption: 'PancakeSwap',
-            marketCode: Market.PANCAKESWAP,
-            key: 'PancakeSwap',
-            dexId: 2,
-            supportedChains: [56, 97]
-        },
-        PancakeSwapV1: {
-            caption: 'PancakeSwapV1',
-            marketCode: Market.PANCAKESWAPV1,
-            key: 'PancakeSwapV1'
-        },
-        BakerySwap: {
-            caption: 'BakerySwap',
-            marketCode: Market.BAKERYSWAP,
-            key: 'BakerySwap',
-            dexId: 3,
-            supportedChains: [56, 97]
-        },
-        BurgerSwap: {
-            caption: 'BurgerSwap',
-            marketCode: Market.BURGERSWAP,
-            key: 'BurgerSwap',
-            dexId: 4
-        },
-        Oracle: {
-            caption: 'Oracle',
-            marketCode: Market.MIXED_QUEUE,
-            key: 'Oracle',
-            dexId: 5,
-            supportedChains: [56, 97, 43113, 43114]
-        },
-        PeggedOracle: {
-            caption: 'Pegged Queue',
-            marketCode: Market.PEGGED_QUEUE,
-            key: 'PeggedOracle'
-        },
-        GroupQueue: {
-            caption: 'Group Queue',
-            marketCode: Market.GROUP_QUEUE,
-            key: 'GroupQueue'
-        },
-        IFSwapV1: {
-            caption: 'IFSwapV1',
-            marketCode: Market.IFSWAPV1,
-            key: 'IFSwapV1',
-            dexId: 7,
-            supportedChains: [56]
-        },
-        IFSwapV3: {
-            caption: 'IFSwapV3',
-            marketCode: Market.IFSWAPV3,
-            key: 'IFSwapV3',
-            dexId: 18,
-            supportedChains: [56]
-        },
-        OpenSwapV1: {
-            caption: 'OpenSwapV1',
-            marketCode: Market.OPENSWAPV1,
-            key: 'OpenSwapV1'
-        },
-        Hybrid: {
-            caption: 'Smart Router',
-            marketCode: Market.HYBRID,
-            key: 'Hybrid',
-            dexId: 0,
-            supportedChains: [42, 56, 97, 43113, 43114]
-        },
-        QuickSwap: {
-            caption: 'QuickSwap',
-            marketCode: Market.QUICKSWAP,
-            key: 'QuickSwap',
-            dexId: 9,
-            supportedChains: [137]
-        },
-        BiSwap: {
-            caption: 'BiSwap',
-            marketCode: Market.BISWAP,
-            key: 'BiSwap',
-            dexId: 11,
-            supportedChains: [56]
-        },
-        Pangolin: {
-            caption: 'Pangolin',
-            marketCode: Market.PANGOLIN,
-            key: 'Pangolin',
-            dexId: 12,
-            supportedChains: [43113, 43114]
-        },
-        TraderJoe: {
-            caption: 'TraderJoe',
-            marketCode: Market.TRADERJOE,
-            key: 'TraderJoe',
-            dexId: 13,
-            supportedChains: [43114]
-        },
-        SpiritSwap: {
-            caption: 'SpiritSwap',
-            marketCode: Market.SPIRITSWAP,
-            key: 'SpiritSwap',
-            dexId: 15,
-            supportedChains: [250]
-        },
-        SpookySwap: {
-            caption: 'SpookySwap',
-            marketCode: Market.SPOOKYSWAP,
-            key: 'SpookySwap',
-            dexId: 14,
-            supportedChains: [250]
-        },
-    };
-    exports.ProviderConfigMap = ProviderConfigMap;
-    const ABIKeys = {
-        Factory: 'OAXDEX_Factory',
-        Pair: 'OAXDEX_Pair',
-        //New
-        OracleFactory: 'OSWAP_OracleFactory',
-        OraclePair: 'OSWAP_OraclePair',
-        OracleLiquidityProvider: 'OSWAP_OracleLiquidityProvider',
-        HybridRouterRegistry: 'OSWAP_HybridRouterRegistry',
-        HybridRouter: 'OSWAP_HybridRouter2',
-        RangeFactory: 'OSWAP_RangeFactory',
-        RangePair: 'OSWAP_RangePair',
-        RangeLiquidityProvider: 'OSWAP_RangeLiquidityProvider',
-        OracleAdaptor: 'OSWAP_OracleAdaptor',
-        RestrictedFactory: 'OSWAP_RestrictedFactory',
-        RestrictedPair: 'OSWAP_RestrictedPair',
-        RestrictedLiquidityProvider: 'OSWAP_RestrictedLiquidityProvider',
-        ConfigStore: 'OSWAP_ConfigStore',
-        PeggedOracleFactory: 'OSWAP_PeggedOracleFactory',
-        PeggedOraclePair: 'OSWAP_PeggedOraclePair',
-        PeggedOracleLiquidityProvider: 'OSWAP_PeggedOracleLiquidityProvider',
-        //Old
-        // OracleFactory: 'OAXDEX_OracleFactory',
-        //RangeFactory: 'OAXDEX_RangeFactory',
-        //RestrictedFactory: 'OAXDEX_RestrictedFactory',
-        //OraclePair: 'OAXDEX_OraclePair',
-        //RangePair: 'OAXDEX_RangePair',
-        //RestrictedPair: 'OAXDEX_RestrictedPair',
-        // OracleLiquidityProvider: 'OAXDEX_OracleLiquidityProvider',
-        //RangeLiquidityProvider: 'OAXDEX_RangeLiquidityProvider',
-        //RestrictedLiquidityProvider: 'OAXDEX_RestrictedLiquidityProvider',
-        //ConfigStore: 'OAXDEX_ConfigStore',
-        //OracleAdaptor: 'OAXDEX_OracleAdaptor',
-        // HybridRouterRegistry: 'OAXDEX_HybridRouterRegistry',
-        // HybridRouter: 'OAXDEX_HybridRouter2'
-    };
-    exports.ABIKeys = ABIKeys;
 });
-define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-token-list", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts", "@scom/scom-network-list", "@scom/scom-buyback/store/data/index.ts", "@scom/scom-buyback/store/data/index.ts", "@ijstech/components"], function (require, exports, eth_wallet_4, index_5, scom_token_list_1, index_6, scom_network_list_1, index_7, index_8, components_3) {
+define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-token-list", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts", "@scom/scom-network-list", "@scom/scom-buyback/store/data/index.ts", "@scom/scom-buyback/store/data/index.ts"], function (require, exports, eth_wallet_4, index_5, scom_token_list_1, index_6, scom_network_list_1, index_7, index_8) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getCommissionAmount = exports.getCurrentCommissions = exports.getEmbedderCommissionFee = exports.setAPIGatewayUrls = exports.getIPFSGatewayUrl = exports.setIPFSGatewayUrl = exports.getProxyAddress = exports.setProxyAddresses = exports.getNetworkName = exports.getNetworkExplorerName = exports.hasUserToken = exports.setUserTokens = exports.getTokenObject = exports.getWalletPluginProvider = exports.getWalletPluginMap = exports.setWalletPluginProvider = exports.state = exports.setTransactionDeadline = exports.getTransactionDeadline = exports.setSlippageTolerance = exports.getSlippageTolerance = exports.toggleExpertMode = exports.isExpertMode = exports.getErc20 = exports.hasMetaMask = exports.getWalletProvider = exports.getChainId = exports.switchNetwork = exports.isWalletConnected = exports.setDataFromConfig = exports.getWETH = exports.getAddresses = exports.getChainNativeToken = exports.getCurrentChainId = exports.setCurrentChainId = exports.getNetworkInfo = exports.getSiteSupportedNetworks = exports.getInfuraId = exports.getSupportedNetworks = exports.addUserTokens = exports.getUserTokens = exports.INFINITE = exports.nullAddress = exports.WalletPlugin = void 0;
+    exports.getCommissionAmount = exports.getCurrentCommissions = exports.getEmbedderCommissionFee = exports.setAPIGatewayUrls = exports.getIPFSGatewayUrl = exports.setIPFSGatewayUrl = exports.getProxyAddress = exports.setProxyAddresses = exports.getNetworkName = exports.getNetworkExplorerName = exports.getTokenObject = exports.getWalletPluginProvider = exports.getWalletPluginMap = exports.setWalletPluginProvider = exports.state = exports.setTransactionDeadline = exports.getTransactionDeadline = exports.setSlippageTolerance = exports.getSlippageTolerance = exports.getErc20 = exports.getChainId = exports.isWalletConnected = exports.setDataFromConfig = exports.getWETH = exports.getAddresses = exports.getChainNativeToken = exports.getCurrentChainId = exports.setCurrentChainId = exports.getNetworkInfo = exports.getSiteSupportedNetworks = exports.getInfuraId = exports.getSupportedNetworks = exports.INFINITE = exports.nullAddress = exports.WalletPlugin = void 0;
     __exportStar(index_8, exports);
     var WalletPlugin;
     (function (WalletPlugin) {
@@ -14204,39 +13766,6 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
     })(WalletPlugin = exports.WalletPlugin || (exports.WalletPlugin = {}));
     exports.nullAddress = "0x0000000000000000000000000000000000000000";
     exports.INFINITE = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    const TOKENS = "oswap_user_tokens_";
-    const getUserTokens = (chainId) => {
-        let tokens = localStorage[TOKENS + chainId];
-        if (tokens) {
-            tokens = JSON.parse(tokens);
-        }
-        else {
-            tokens = [];
-        }
-        const userTokens = exports.state.userTokens[chainId];
-        if (userTokens && userTokens.length) {
-            tokens = tokens.concat(userTokens);
-        }
-        return tokens.length ? tokens : null;
-    };
-    exports.getUserTokens = getUserTokens;
-    const addUserTokens = (token) => {
-        const chainId = getChainId();
-        let tokens = localStorage[TOKENS + chainId];
-        let i = -1;
-        if (tokens) {
-            tokens = JSON.parse(tokens);
-            i = tokens.findIndex((item) => item.address == token.address);
-        }
-        else {
-            tokens = [];
-        }
-        if (i == -1) {
-            tokens.push(token);
-        }
-        localStorage[TOKENS + chainId] = JSON.stringify(tokens);
-    };
-    exports.addUserTokens = addUserTokens;
     const getSupportedNetworks = () => {
         return Object.values(exports.state.networkMap);
     };
@@ -14326,46 +13855,15 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
         return wallet.isConnected;
     }
     exports.isWalletConnected = isWalletConnected;
-    async function switchNetwork(chainId) {
-        var _a;
-        if (!isWalletConnected()) {
-            (0, exports.setCurrentChainId)(chainId);
-            eth_wallet_4.Wallet.getClientInstance().chainId = chainId;
-            components_3.application.EventBus.dispatch("chainChanged" /* EventId.chainChanged */, chainId);
-            return;
-        }
-        const wallet = eth_wallet_4.Wallet.getClientInstance();
-        if (((_a = wallet === null || wallet === void 0 ? void 0 : wallet.clientSideProvider) === null || _a === void 0 ? void 0 : _a.name) === WalletPlugin.MetaMask) {
-            await wallet.switchNetwork(chainId);
-        }
-    }
-    exports.switchNetwork = switchNetwork;
     function getChainId() {
         return isWalletConnected() ? eth_wallet_4.Wallet.getClientInstance().chainId : exports.state.currentChainId;
     }
     exports.getChainId = getChainId;
-    function getWalletProvider() {
-        return localStorage.getItem('walletProvider') || '';
-    }
-    exports.getWalletProvider = getWalletProvider;
-    const hasMetaMask = function () {
-        const provider = (0, exports.getWalletPluginProvider)(WalletPlugin.MetaMask);
-        return provider === null || provider === void 0 ? void 0 : provider.installed();
-    };
-    exports.hasMetaMask = hasMetaMask;
     function getErc20(address) {
         const wallet = eth_wallet_4.Wallet.getClientInstance();
         return new eth_wallet_4.Erc20(wallet, address);
     }
     exports.getErc20 = getErc20;
-    const isExpertMode = () => {
-        return exports.state.isExpertMode;
-    };
-    exports.isExpertMode = isExpertMode;
-    function toggleExpertMode() {
-        exports.state.isExpertMode = !exports.state.isExpertMode;
-    }
-    exports.toggleExpertMode = toggleExpertMode;
     const getSlippageTolerance = () => {
         return exports.state.slippageTolerance;
     };
@@ -14386,11 +13884,9 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
         siteEnv: index_5.SITE_ENV.TESTNET,
         networkMap: {},
         currentChainId: 0,
-        isExpertMode: false,
         slippageTolerance: 0.5,
         transactionDeadline: 30,
-        infuraId: "",
-        userTokens: {},
+        infuraId: '',
         walletPluginMap: {},
         proxyAddresses: {},
         ipfsGatewayUrl: '',
@@ -14427,20 +13923,6 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
         };
     };
     exports.getTokenObject = getTokenObject;
-    const setUserTokens = (token, chainId) => {
-        if (!exports.state.userTokens[chainId]) {
-            exports.state.userTokens[chainId] = [token];
-        }
-        else {
-            exports.state.userTokens[chainId].push(token);
-        }
-    };
-    exports.setUserTokens = setUserTokens;
-    const hasUserToken = (address, chainId) => {
-        var _a;
-        return (_a = exports.state.userTokens[chainId]) === null || _a === void 0 ? void 0 : _a.some((token) => { var _a; return ((_a = token.address) === null || _a === void 0 ? void 0 : _a.toLocaleLowerCase()) === (address === null || address === void 0 ? void 0 : address.toLocaleLowerCase()); });
-    };
-    exports.hasUserToken = hasUserToken;
     const getNetworkExplorerName = (chainId) => {
         if ((0, exports.getNetworkInfo)(chainId)) {
             return (0, exports.getNetworkInfo)(chainId).explorerName;
@@ -14504,10 +13986,8 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
 define("@scom/scom-buyback/store/index.ts", ["require", "exports", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/store/utils.ts"], function (require, exports, assets_1, utils_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.maxHeight = exports.maxWidth = exports.fallBackUrl = void 0;
+    exports.fallBackUrl = void 0;
     exports.fallBackUrl = assets_1.default.fullPath('img/tokens/token-placeholder.svg');
-    exports.maxWidth = '690px';
-    exports.maxHeight = 321;
     __exportStar(utils_1, exports);
 });
 define("@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/contracts/OSWAP_OracleChained.json.ts", ["require", "exports"], function (require, exports) {
@@ -16435,7 +15915,7 @@ define("@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/index.ts", ["
     ///<amd-module name='@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/index.ts'/> 
     exports.Contracts = Contracts;
 });
-define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@scom/scom-buyback/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts", "@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/index.ts", "@ijstech/components", "@scom/scom-token-list"], function (require, exports, index_9, eth_wallet_5, index_10, index_11, index_12, components_4, scom_token_list_2) {
+define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@scom/scom-buyback/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts", "@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/index.ts", "@ijstech/components", "@scom/scom-token-list"], function (require, exports, index_9, eth_wallet_5, index_10, index_11, index_12, components_3, scom_token_list_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getGuaranteedBuyBackInfo = exports.getGroupQueueTraderDataObj = exports.getLatestOraclePrice = exports.getPair = exports.getRangeQueueData = void 0;
@@ -16555,7 +16035,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
                 tradeFee
             });
         }
-        return queueArr.filter(v => (0, components_4.moment)().isBetween(v.start, v.expire));
+        return queueArr.filter(v => (0, components_3.moment)().isBetween(v.start, v.expire));
     };
     const getGroupQueueItemsForAllowAll = async (pairAddress, tokenIn, tokenOut) => {
         let wallet = eth_wallet_5.Wallet.getClientInstance();
@@ -16596,7 +16076,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
                 tradeFee
             });
         }
-        return queueArr.filter(v => ((0, components_4.moment)().isBetween(v.start, v.expire) && v.allowAll == true));
+        return queueArr.filter(v => ((0, components_3.moment)().isBetween(v.start, v.expire) && v.allowAll == true));
     };
     const getGroupQueueTraderDataObj = async (pairAddress, tokenIn, tokenOut, amountIn, offerIndex) => {
         let tokens = mapTokenObjectSet({ tokenIn, tokenOut });
@@ -16804,7 +16284,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
                 let lowerLimit = offer.lowerLimit;
                 let upperLimit = offer.upperLimit;
                 let expire = offer.expire.toNumber() * 1000;
-                if ((0, components_4.moment)(expire).isBefore((0, components_4.moment)()))
+                if ((0, components_3.moment)(expire).isBefore((0, components_3.moment)()))
                     continue;
                 if (new eth_wallet_5.BigNumber(lowerLimit).gt(priceSwap))
                     continue;
@@ -17381,9 +16861,7 @@ define("@scom/scom-buyback/contracts/scom-commission-proxy-contract/index.ts", [
 define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts", "@scom/scom-buyback/contracts/scom-commission-proxy-contract/index.ts", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-token-list"], function (require, exports, eth_wallet_6, index_13, index_14, index_15, index_16, index_17, scom_token_list_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.setApprovalModalSpenderAddress = exports.getApprovalModelAction = exports.getHybridRouterAddress = exports.getRouterAddress = exports.executeSwap = void 0;
-    const RouterV1 = "OAXDEX_RouterV1";
-    const Router = "OAXDEX_Router";
+    exports.setApprovalModalSpenderAddress = exports.getApprovalModelAction = exports.getHybridRouterAddress = exports.executeSwap = void 0;
     function getAddresses() {
         return index_16.CoreContractAddressesByChainId[(0, index_16.getChainId)()] || {};
     }
@@ -17398,46 +16876,6 @@ define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstec
         return Address['OSWAP_HybridRouter2'];
     };
     exports.getHybridRouterAddress = getHybridRouterAddress;
-    function getRouterAddress(market) {
-        let Address = getAddresses();
-        switch (market) {
-            case index_16.Market.OPENSWAP:
-                return Address[Router];
-            case index_16.Market.UNISWAP:
-                return Address.UniswapV2Router02;
-            case index_16.Market.SUSHISWAP:
-                return Address.SushiSwapV2Router02;
-            case index_16.Market.PANCAKESWAPV1:
-                return Address.PancakeSwapRouterV1;
-            case index_16.Market.PANCAKESWAP:
-                return Address.PancakeSwapRouter;
-            case index_16.Market.BAKERYSWAP:
-                return Address.BakerySwapRouter;
-            case index_16.Market.BURGERSWAP:
-                return Address.BurgerSwapRouter;
-            case index_16.Market.IFSWAPV1:
-                return Address.IFSwapRouterV1;
-            case index_16.Market.OPENSWAPV1:
-                return Address[RouterV1];
-            case index_16.Market.QUICKSWAP:
-                return Address.QuickSwapRouter;
-            case index_16.Market.BISWAP:
-                return Address.BiSwapRouter;
-            case index_16.Market.PANGOLIN:
-                return Address.PangolinRouter;
-            case index_16.Market.TRADERJOE:
-                return Address.TraderJoeRouter;
-            case index_16.Market.SPIRITSWAP:
-                return Address.SpiritSwapRouter;
-            case index_16.Market.SPOOKYSWAP:
-                return Address.SpookySwapRouter;
-            case index_16.Market.IFSWAPV3:
-                return Address.IFSwapRouterV3;
-            default:
-                return Address[Router];
-        }
-    }
-    exports.getRouterAddress = getRouterAddress;
     const calculateAmountInByTradeFee = (tradeFeeMap, pairInfo, amountOut) => {
         let tradeFeeObj = tradeFeeMap[pairInfo.market];
         let feeMultiplier = new eth_wallet_6.BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee);
@@ -17723,28 +17161,23 @@ define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstec
         return approvalModelAction;
     };
     exports.getApprovalModelAction = getApprovalModelAction;
-    const setApprovalModalSpenderAddress = (market, contractAddress) => {
+    const setApprovalModalSpenderAddress = (contractAddress) => {
         let spender;
         if (contractAddress) {
             spender = contractAddress;
         }
         else {
-            if (market == index_16.Market.HYBRID || market == index_16.Market.MIXED_QUEUE || market == index_16.Market.PEGGED_QUEUE || market == index_16.Market.GROUP_QUEUE) {
-                spender = getHybridRouterAddress();
-            }
-            else {
-                spender = getRouterAddress(market);
-            }
+            spender = getHybridRouterAddress();
         }
         approvalModel.spenderAddress = spender;
     };
     exports.setApprovalModalSpenderAddress = setApprovalModalSpenderAddress;
 });
-define("@scom/scom-buyback/common/result.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_5) {
+define("@scom/scom-buyback/common/result.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_5.Styles.Theme.ThemeVars;
-    exports.default = components_5.Styles.style({
+    const Theme = components_4.Styles.Theme.ThemeVars;
+    exports.default = components_4.Styles.style({
         textAlign: 'center',
         $nest: {
             'i-label > *': {
@@ -17809,12 +17242,12 @@ define("@scom/scom-buyback/common/result.css.ts", ["require", "exports", "@ijste
         }
     });
 });
-define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/common/result.css.ts", "@scom/scom-buyback/assets.ts"], function (require, exports, components_6, eth_wallet_7, index_18, index_19, result_css_1, assets_2) {
+define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/common/result.css.ts", "@scom/scom-buyback/assets.ts"], function (require, exports, components_5, eth_wallet_7, index_18, index_19, result_css_1, assets_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Result = void 0;
     ;
-    let Result = class Result extends components_6.Module {
+    let Result = class Result extends components_5.Module {
         get message() {
             return this._message;
         }
@@ -17864,7 +17297,7 @@ define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/
         }
         async renderUI() {
             this.mainContent.innerHTML = '';
-            const mainSection = await components_6.VStack.create({
+            const mainSection = await components_5.VStack.create({
                 horizontalAlignment: 'center'
             });
             if (this.message.status === 'warning') {
@@ -17875,13 +17308,13 @@ define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/
                             this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_2.default.fullPath('img/loading.svg'), width: 24, height: 24 } }),
                             this.$render("i-label", { caption: "Loading...", font: { color: '#FD4A4C' }, class: "i-loading-spinner_text" })))));
                 mainSection.appendChild(loading);
-                const section = new components_6.VStack();
+                const section = new components_5.VStack();
                 section.margin = { bottom: 20 };
                 const captionList = ['Waiting For Confirmation', this.message.content || '', 'Confirm this transaction in your wallet'];
                 const classList = ['waiting-txt mb-1', 'mb-1', 'confirm-txt'];
                 for (let i = 0; i < captionList.length; i++) {
                     const caption = captionList[i];
-                    const label = await components_6.Label.create();
+                    const label = await components_5.Label.create();
                     label.caption = caption;
                     if (classList[i]) {
                         const classes = classList[i].split(' ');
@@ -17895,35 +17328,35 @@ define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/
             else if (this.message.status === 'success') {
                 const chainId = await eth_wallet_7.Wallet.getClientInstance().getChainId();
                 const explorerName = (0, index_19.getNetworkExplorerName)(chainId);
-                const image = await components_6.Image.create({
+                const image = await components_5.Image.create({
                     width: '50px',
                     url: assets_2.default.fullPath('img/success-icon.svg')
                 });
                 image.classList.add("inline-block", "mb");
                 mainSection.appendChild(image);
-                const label = await components_6.Label.create();
+                const label = await components_5.Label.create();
                 label.caption = 'Transaction Submitted';
                 label.classList.add("waiting-txt");
                 mainSection.appendChild(label);
-                const contentSection = await components_6.Panel.create();
+                const contentSection = await components_5.Panel.create();
                 contentSection.id = "contentSection";
                 mainSection.appendChild(contentSection);
-                const contentLabel = await components_6.Label.create();
+                const contentLabel = await components_5.Label.create();
                 contentLabel.caption = this.message.content || '';
                 contentSection.appendChild(contentLabel);
                 if (this.message.txtHash) {
-                    const section = new components_6.VStack();
-                    const label1 = await components_6.Label.create({
+                    const section = new components_5.VStack();
+                    const label1 = await components_5.Label.create({
                         caption: this.message.txtHash.substr(0, 33),
                         margin: { bottom: 4 }
                     });
                     section.appendChild(label1);
-                    const label2 = await components_6.Label.create({
+                    const label2 = await components_5.Label.create({
                         caption: this.message.txtHash.substr(33, this.message.txtHash.length)
                     });
                     label2.classList.add("mb-1");
                     section.appendChild(label2);
-                    const link = await components_6.Label.create({
+                    const link = await components_5.Label.create({
                         caption: `View on ${explorerName}`,
                     });
                     link.onClick = this.buildLink.bind(this);
@@ -17931,7 +17364,7 @@ define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/
                     section.appendChild(link);
                     contentSection.appendChild(section);
                 }
-                const button = new components_6.Button(mainSection, {
+                const button = new components_5.Button(mainSection, {
                     width: '100%',
                     caption: 'Close',
                     // font: { color: Theme.colors.primary.contrastText }
@@ -17943,26 +17376,26 @@ define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/
                 mainSection.appendChild(button);
             }
             else {
-                const image = await components_6.Image.create({
+                const image = await components_5.Image.create({
                     width: '50px',
                     url: assets_2.default.fullPath('img/oswap_error.png')
                 });
                 image.classList.add("inline-block", "mb");
                 mainSection.appendChild(image);
-                const label = await components_6.Label.create({
+                const label = await components_5.Label.create({
                     caption: 'Transaction Rejected.'
                 });
                 label.classList.add("waiting-txt", "mb");
                 mainSection.appendChild(label);
-                const section = await components_6.VStack.create();
+                const section = await components_5.VStack.create();
                 section.id = "contentSection";
-                const contentLabel = await components_6.Label.create({
+                const contentLabel = await components_5.Label.create({
                     caption: await this.onErrMsgChanged()
                 });
                 contentLabel.classList.add("mb-1");
                 section.appendChild(contentLabel);
                 mainSection.appendChild(section);
-                const button = new components_6.Button(mainSection, {
+                const button = new components_5.Button(mainSection, {
                     width: '100%',
                     caption: 'Cancel',
                     // font: { color: Theme.colors.primary.contrastText }
@@ -17990,7 +17423,7 @@ define("@scom/scom-buyback/common/result.tsx", ["require", "exports", "@ijstech/
         }
     };
     Result = __decorate([
-        (0, components_6.customElements)('buyback-result')
+        (0, components_5.customElements)('buyback-result')
     ], Result);
     exports.Result = Result;
     ;
@@ -18001,12 +17434,12 @@ define("@scom/scom-buyback/common/index.tsx", ["require", "exports", "@scom/scom
     exports.Result = void 0;
     Object.defineProperty(exports, "Result", { enumerable: true, get: function () { return result_1.Result; } });
 });
-define("@scom/scom-buyback/commissions/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_7) {
+define("@scom/scom-buyback/commissions/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.tableStyle = exports.customStyle = void 0;
-    const Theme = components_7.Styles.Theme.ThemeVars;
-    exports.customStyle = components_7.Styles.style({
+    const Theme = components_6.Styles.Theme.ThemeVars;
+    exports.customStyle = components_6.Styles.style({
         $nest: {
             'input': {
                 paddingLeft: '10px'
@@ -18029,7 +17462,7 @@ define("@scom/scom-buyback/commissions/index.css.ts", ["require", "exports", "@i
             }
         }
     });
-    exports.tableStyle = components_7.Styles.style({
+    exports.tableStyle = components_6.Styles.style({
         $nest: {
             '.i-table-header>tr>th': {
                 fontSize: '0.875rem !important',
@@ -18038,12 +17471,12 @@ define("@scom/scom-buyback/commissions/index.css.ts", ["require", "exports", "@i
         }
     });
 });
-define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/commissions/index.css.ts"], function (require, exports, components_8, eth_wallet_8, index_20, index_21, index_css_1) {
+define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/commissions/index.css.ts"], function (require, exports, components_7, eth_wallet_8, index_20, index_21, index_css_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_8.Styles.Theme.ThemeVars;
+    const Theme = components_7.Styles.Theme.ThemeVars;
     const CommissionFeeTooltipText = "For each transaction, you'll receive a 1% commission fee based on the total amount. This fee will be transferred to a designated commission contract within the corresponding blockchain network.";
-    let BuybackConfig = class BuybackConfig extends components_8.Module {
+    let BuybackConfig = class BuybackConfig extends components_7.Module {
         constructor() {
             super(...arguments);
             this.commissionsTableColumns = [
@@ -18059,14 +17492,14 @@ define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijst
                             return this.$render("i-panel", null);
                         const networkInfo = (0, index_20.getNetworkInfo)(network.chainId);
                         const imgUrl = networkInfo.image || '';
-                        const hstack = new components_8.HStack(undefined, {
+                        const hstack = new components_7.HStack(undefined, {
                             verticalAlignment: 'center',
                             gap: 5
                         });
-                        const imgEl = new components_8.Icon(hstack, {
+                        const imgEl = new components_7.Icon(hstack, {
                             image: { url: imgUrl, width: 16, height: 16 }
                         });
-                        const lbName = new components_8.Label(hstack, {
+                        const lbName = new components_7.Label(hstack, {
                             caption: networkInfo.chainName || '',
                             font: { size: '0.875rem' }
                         });
@@ -18081,7 +17514,7 @@ define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijst
                     onRenderCell: function (source, columnData, rowData) {
                         const replaced = columnData.slice(6, columnData.length - 9);
                         const caption = ((columnData === null || columnData === void 0 ? void 0 : columnData.length) < 15) ? columnData : columnData.replace(replaced, '...');
-                        return new components_8.Label(undefined, {
+                        return new components_7.Label(undefined, {
                             caption: caption || '',
                             font: { size: '0.875rem' },
                             tooltip: {
@@ -18096,7 +17529,7 @@ define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijst
                     key: '',
                     textAlign: 'center',
                     onRenderCell: async (source, data, rowData) => {
-                        const icon = new components_8.Icon(undefined, {
+                        const icon = new components_7.Icon(undefined, {
                             name: "edit",
                             fill: Theme.text.primary,
                             height: 14,
@@ -18117,7 +17550,7 @@ define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijst
                     key: '',
                     textAlign: 'center',
                     onRenderCell: async (source, data, rowData) => {
-                        const icon = new components_8.Icon(undefined, {
+                        const icon = new components_7.Icon(undefined, {
                             name: "times",
                             fill: Theme.colors.primary.main,
                             height: 14,
@@ -18266,8 +17699,8 @@ define("@scom/scom-buyback/commissions/index.tsx", ["require", "exports", "@ijst
         }
     };
     BuybackConfig = __decorate([
-        components_8.customModule,
-        (0, components_8.customElements)("i-scom-buyback-config")
+        components_7.customModule,
+        (0, components_7.customElements)("i-scom-buyback-config")
     ], BuybackConfig);
     exports.default = BuybackConfig;
 });
@@ -18327,78 +17760,78 @@ define("@scom/scom-buyback/data.json.ts", ["require", "exports"], function (requ
         }
     };
 });
-define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/components", "@scom/scom-buyback/assets.ts"], function (require, exports, components_9, assets_3) {
+define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/components", "@scom/scom-buyback/assets.ts"], function (require, exports, components_8, assets_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.buybackComponent = exports.buybackDappContainer = void 0;
-    const Theme = components_9.Styles.Theme.ThemeVars;
+    const Theme = components_8.Styles.Theme.ThemeVars;
     const colorVar = {
         primaryButton: 'transparent linear-gradient(90deg, #AC1D78 0%, #E04862 100%) 0% 0% no-repeat padding-box',
         primaryGradient: 'linear-gradient(255deg,#f15e61,#b52082)',
         darkBg: '#181E3E 0% 0% no-repeat padding-box',
         primaryDisabled: 'transparent linear-gradient(270deg,#351f52,#552a42) 0% 0% no-repeat padding-box !important'
     };
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Apple SD Gothic Neo",
         src: `url("${assets_3.default.fullPath('fonts/FontsFree-Net-Apple-SD-Gothic-Neo-Bold.ttf')}") format("truetype")`,
         fontWeight: 'bold',
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Montserrat Regular",
         src: `url("${assets_3.default.fullPath('fonts/montserrat/Montserrat-Regular.ttf')}") format("truetype")`,
         fontWeight: 'nomal',
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Montserrat Bold",
         src: `url("${assets_3.default.fullPath('fonts/montserrat/Montserrat-Bold.ttf')}") format("truetype")`,
         fontWeight: 'bold',
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Montserrat Light",
         src: `url("${assets_3.default.fullPath('fonts/montserrat/Montserrat-Light.ttf')}") format("truetype")`,
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Montserrat Medium",
         src: `url("${assets_3.default.fullPath('fonts/montserrat/Montserrat-Medium.ttf')}") format("truetype")`,
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Montserrat SemiBold",
         src: `url("${assets_3.default.fullPath('fonts/montserrat/Montserrat-SemiBold.ttf')}") format("truetype")`,
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Raleway Regular",
         src: `url("${assets_3.default.fullPath('fonts/raleway/Raleway-Regular.ttf')}") format("truetype")`,
         fontWeight: 'nomal',
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Raleway Bold",
         src: `url("${assets_3.default.fullPath('fonts/raleway/Raleway-Bold.ttf')}") format("truetype")`,
         fontWeight: 'bold',
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Raleway Light",
         src: `url("${assets_3.default.fullPath('fonts/raleway/Raleway-Light.ttf')}") format("truetype")`,
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Raleway Medium",
         src: `url("${assets_3.default.fullPath('fonts/raleway/Raleway-Medium.ttf')}") format("truetype")`,
         fontStyle: 'normal'
     });
-    components_9.Styles.fontFace({
+    components_8.Styles.fontFace({
         fontFamily: "Raleway SemiBold",
         src: `url("${assets_3.default.fullPath('fonts/raleway/Raleway-SemiBold.ttf')}") format("truetype")`,
         fontStyle: 'normal'
     });
-    exports.buybackDappContainer = components_9.Styles.style({
+    exports.buybackDappContainer = components_8.Styles.style({
         $nest: {
             'dapp-container-body': {
                 $nest: {
@@ -18420,7 +17853,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
             }
         }
     });
-    exports.buybackComponent = components_9.Styles.style({
+    exports.buybackComponent = components_8.Styles.style({
         $nest: {
             'i-label': {
                 fontFamily: 'Montserrat Regular',
@@ -18613,11 +18046,11 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         }
     });
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/common/index.tsx", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@ijstech/eth-contract"], function (require, exports, components_10, eth_wallet_9, index_22, index_23, index_24, index_25, index_26, assets_4, data_json_1, scom_token_list_4, index_css_2) {
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/common/index.tsx", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@ijstech/eth-contract"], function (require, exports, components_9, eth_wallet_9, index_22, index_23, index_24, index_25, index_26, assets_4, data_json_1, scom_token_list_4, index_css_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_10.Styles.Theme.ThemeVars;
-    let ScomBuyback = class ScomBuyback extends components_10.Module {
+    const Theme = components_9.Styles.Theme.ThemeVars;
+    let ScomBuyback = class ScomBuyback extends components_9.Module {
         static async create(options, parent) {
             let self = new this(parent, options);
             await self.ready();
@@ -19008,7 +18441,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.contractAddress = (0, index_25.getHybridRouterAddress)();
                 }
                 if (this.approvalModelAction) {
-                    (0, index_25.setApprovalModalSpenderAddress)(index_23.Market.HYBRID, this.contractAddress);
+                    (0, index_25.setApprovalModalSpenderAddress)(this.contractAddress);
                     this.updateCommissionInfo();
                 }
             };
@@ -19279,7 +18712,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.btnSwap.caption = this.submitButtonText;
                     }
                 });
-                (0, index_25.setApprovalModalSpenderAddress)(index_23.Market.HYBRID, this.contractAddress);
+                (0, index_25.setApprovalModalSpenderAddress)(this.contractAddress);
                 const firstToken = this.getTokenObject('toTokenAddress');
                 await this.approvalModelAction.checkAllowance(firstToken, this.getFirstAvailableBalance());
             };
@@ -19307,7 +18740,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             };
             this.initEmptyUI = async () => {
                 if (!this.noCampaignSection) {
-                    this.noCampaignSection = await components_10.Panel.create({ width: '100%', height: '100%' });
+                    this.noCampaignSection = await components_9.Panel.create({ width: '100%', height: '100%' });
                 }
                 const isConnected = (0, index_23.isWalletConnected)();
                 this.noCampaignSection.clearInnerHTML();
@@ -19362,8 +18795,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     // 		</i-hstack>
                     // 	</i-vstack>
                     // );
-                    const vStackEndTime = await components_10.HStack.create({ gap: 4, verticalAlignment: 'center', margin: { top: '0.75rem' } });
-                    const lbEndTime = await components_10.Label.create({ caption: 'Estimated End Time: ', font: { size: '0.875rem', bold: true } });
+                    const vStackEndTime = await components_9.HStack.create({ gap: 4, verticalAlignment: 'center', margin: { top: '0.75rem' } });
+                    const lbEndTime = await components_9.Label.create({ caption: 'Estimated End Time: ', font: { size: '0.875rem', bold: true } });
                     vStackEndTime.appendChild(lbEndTime);
                     vStackEndTime.appendChild(this.$render("i-label", { caption: (0, index_22.formatDate)(endDate), font: { size: '0.875rem' } }));
                     // let interval: any;
@@ -19471,7 +18904,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             };
             if (data_json_1.default)
                 (0, index_23.setDataFromConfig)(data_json_1.default);
-            this.$eventBus = components_10.application.EventBus;
+            this.$eventBus = components_9.application.EventBus;
             this.registerEvent();
         }
         get isSellDisabled() {
@@ -19481,8 +18914,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             if (!info)
                 return true;
             const { startDate, endDate, allowAll, addresses } = info;
-            const isUpcoming = (0, components_10.moment)().isBefore((0, components_10.moment)(startDate));
-            const isEnded = (0, components_10.moment)().isAfter((0, components_10.moment)(endDate));
+            const isUpcoming = (0, components_9.moment)().isBefore((0, components_9.moment)(startDate));
+            const isEnded = (0, components_9.moment)().isAfter((0, components_9.moment)(endDate));
             if (isUpcoming || isEnded) {
                 return true;
             }
@@ -19585,8 +19018,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
         }
     };
     ScomBuyback = __decorate([
-        components_10.customModule,
-        (0, components_10.customElements)('i-scom-buyback')
+        components_9.customModule,
+        (0, components_9.customElements)('i-scom-buyback')
     ], ScomBuyback);
     exports.default = ScomBuyback;
 });

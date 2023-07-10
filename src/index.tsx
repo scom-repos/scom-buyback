@@ -480,7 +480,7 @@ export default class ScomBuyback extends Module {
 			this.contractAddress = getHybridRouterAddress();
 		}
 		if (this.approvalModelAction) {
-			setApprovalModalSpenderAddress(Market.HYBRID, this.contractAddress);
+			setApprovalModalSpenderAddress(this.contractAddress);
 			this.updateCommissionInfo();
 		}
 	}
@@ -798,7 +798,7 @@ export default class ScomBuyback extends Module {
 					this.btnSwap.caption = this.submitButtonText;
 				}
 			});
-		setApprovalModalSpenderAddress(Market.HYBRID, this.contractAddress);
+		setApprovalModalSpenderAddress(this.contractAddress);
 		const firstToken = this.getTokenObject('toTokenAddress') as ITokenObject;
 		await this.approvalModelAction.checkAllowance(firstToken, this.getFirstAvailableBalance());
 	}

@@ -1,4 +1,56 @@
 /// <reference path="@ijstech/eth-contract/index.d.ts" />
+/// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
+declare module "@scom/scom-buyback/global/utils/helper.ts" {
+    import { BigNumber } from '@ijstech/eth-wallet';
+    export enum SITE_ENV {
+        DEV = "dev",
+        TESTNET = "testnet",
+        MAINNET = "mainnet"
+    }
+    export const explorerTxUrlsByChainId: {
+        [key: number]: string;
+    };
+    export const DefaultDateTimeFormat = "DD/MM/YYYY HH:mm:ss";
+    export const DefaultDateFormat = "DD/MM/YYYY";
+    export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
+    export const formatUTCDate: (date: any, customType?: string, showTimezone?: boolean) => string;
+    export const compareDate: (fromDate: any, toDate?: any) => boolean;
+    export const formatNumber: (value: any, decimals?: number) => string;
+    export const formatPercentNumber: (value: any, decimals?: number) => string;
+    export const formatNumberWithSeparators: (value: number, precision?: number) => string;
+    export const isValidNumber: (value: string | number) => boolean;
+    export const isInvalidInput: (val: any) => boolean;
+    export const limitInputNumber: (input: any, decimals?: number) => void;
+    export const limitDecimals: (value: any, decimals: number) => any;
+    export const toWeiInv: (n: string, unit?: number) => BigNumber;
+    export const padLeft: (string: string, chars: number, sign?: string) => string;
+    export const numberToBytes32: (value: any, prefix?: string) => any;
+    export const viewOnExplorerByTxHash: (chainId: number, txHash: string) => void;
+    export function isWalletAddress(address: string): boolean;
+}
+/// <amd-module name="@scom/scom-buyback/global/utils/error.ts" />
+declare module "@scom/scom-buyback/global/utils/error.ts" {
+    export function parseContractError(oMessage: string, tokens: string[]): Promise<string>;
+}
+/// <amd-module name="@scom/scom-buyback/global/utils/pageBlock.ts" />
+declare module "@scom/scom-buyback/global/utils/pageBlock.ts" {
+    export interface PageBlock {
+        getData: () => any;
+        setData: (data: any) => Promise<void>;
+        getTag: () => any;
+        setTag: (tag: any) => Promise<void>;
+        validate?: () => boolean;
+        defaultEdit?: boolean;
+        tag?: any;
+        readonly onEdit: () => Promise<void>;
+        readonly onConfirm: () => Promise<void>;
+        readonly onDiscard: () => Promise<void>;
+        edit: () => Promise<void>;
+        confirm: () => Promise<void>;
+        discard: () => Promise<void>;
+        config: () => Promise<void>;
+    }
+}
 /// <amd-module name="@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts" />
 declare module "@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts" {
     const _default: {
@@ -9595,70 +9647,6 @@ declare module "@scom/scom-buyback/global/utils/common.ts" {
     export const getERC20Allowance: (token: ITokenObject, spenderAddress: string) => Promise<BigNumber>;
     export const isAddressValid: (address: string) => Promise<any>;
 }
-/// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
-declare module "@scom/scom-buyback/global/utils/helper.ts" {
-    import { BigNumber } from '@ijstech/eth-wallet';
-    import { TokenMapType } from "@scom/scom-buyback/global/utils/common.ts";
-    export enum SITE_ENV {
-        DEV = "dev",
-        TESTNET = "testnet",
-        MAINNET = "mainnet"
-    }
-    export const explorerTxUrlsByChainId: {
-        [key: number]: string;
-    };
-    export const explorerAddressUrlsByChainId: {
-        [key: number]: string;
-    };
-    export const DefaultDateTimeFormat = "DD/MM/YYYY HH:mm:ss";
-    export const DefaultDateFormat = "DD/MM/YYYY";
-    export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
-    export const formatUTCDate: (date: any, customType?: string, showTimezone?: boolean) => string;
-    export const compareDate: (fromDate: any, toDate?: any) => boolean;
-    export const formatNumber: (value: any, decimals?: number) => string;
-    export const formatPercentNumber: (value: any, decimals?: number) => string;
-    export const formatNumberWithSeparators: (value: number, precision?: number) => string;
-    export const isValidNumber: (value: string | number) => boolean;
-    export const isInvalidInput: (val: any) => boolean;
-    export const limitInputNumber: (input: any, decimals?: number) => void;
-    export const limitDecimals: (value: any, decimals: number) => any;
-    export function getAPI(url: string, paramsObj?: any): Promise<any>;
-    export const toWeiInv: (n: string, unit?: number) => BigNumber;
-    export const padLeft: (string: string, chars: number, sign?: string) => string;
-    export const numberToBytes32: (value: any, prefix?: string) => any;
-    export const getParamsFromUrl: () => URLSearchParams;
-    export const formatNumberValue: (data: any, tokenMap: TokenMapType) => any;
-    export const uniqWith: (array: any[], compareFn: (cur: any, oth: any) => boolean) => any;
-    export const getWeekDays: () => any[];
-    export const renderBalanceTooltip: (params: any, tokenMap: TokenMapType, isBold?: boolean) => any;
-    export const downloadJsonFile: (name: string, obj: any) => void;
-    export const viewOnExplorerByTxHash: (chainId: number, txHash: string) => void;
-    export const viewOnExplorerByAddress: (chainId: number, address: string) => void;
-    export function isWalletAddress(address: string): boolean;
-}
-/// <amd-module name="@scom/scom-buyback/global/utils/error.ts" />
-declare module "@scom/scom-buyback/global/utils/error.ts" {
-    export function parseContractError(oMessage: string, tokens: string[]): Promise<string>;
-}
-/// <amd-module name="@scom/scom-buyback/global/utils/pageBlock.ts" />
-declare module "@scom/scom-buyback/global/utils/pageBlock.ts" {
-    export interface PageBlock {
-        getData: () => any;
-        setData: (data: any) => Promise<void>;
-        getTag: () => any;
-        setTag: (tag: any) => Promise<void>;
-        validate?: () => boolean;
-        defaultEdit?: boolean;
-        tag?: any;
-        readonly onEdit: () => Promise<void>;
-        readonly onConfirm: () => Promise<void>;
-        readonly onDiscard: () => Promise<void>;
-        edit: () => Promise<void>;
-        confirm: () => Promise<void>;
-        discard: () => Promise<void>;
-        config: () => Promise<void>;
-    }
-}
 /// <amd-module name="@scom/scom-buyback/global/utils/approvalModel.ts" />
 declare module "@scom/scom-buyback/global/utils/approvalModel.ts" {
     import { ITokenObject } from "@scom/scom-buyback/global/utils/common.ts";
@@ -9793,16 +9781,6 @@ declare module "@scom/scom-buyback/assets.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/store/data/index.ts" />
 declare module "@scom/scom-buyback/store/data/index.ts" {
-    const ToUSDPriceFeedAddressesMap: {
-        [chainId: number]: {
-            [token: string]: string;
-        };
-    };
-    const tokenPriceAMMReference: {
-        [chainId: number]: {
-            [token: string]: string;
-        };
-    };
     const CoreContractAddressesByChainId: {
         [chainId: number]: {
             [contract: string]: string;
@@ -9832,38 +9810,7 @@ declare module "@scom/scom-buyback/store/data/index.ts" {
         JETSWAP = 20,
         IFSWAPV3 = 21
     }
-    interface ProviderConfig {
-        caption: string;
-        image?: string;
-        marketCode: Market;
-        key: string;
-        dexId?: number;
-        supportedChains?: number[];
-    }
-    const ProviderConfigMap: {
-        [key: string]: ProviderConfig;
-    };
-    const ABIKeys: {
-        Factory: string;
-        Pair: string;
-        OracleFactory: string;
-        OraclePair: string;
-        OracleLiquidityProvider: string;
-        HybridRouterRegistry: string;
-        HybridRouter: string;
-        RangeFactory: string;
-        RangePair: string;
-        RangeLiquidityProvider: string;
-        OracleAdaptor: string;
-        RestrictedFactory: string;
-        RestrictedPair: string;
-        RestrictedLiquidityProvider: string;
-        ConfigStore: string;
-        PeggedOracleFactory: string;
-        PeggedOraclePair: string;
-        PeggedOracleLiquidityProvider: string;
-    };
-    export { CoreContractAddressesByChainId, ToUSDPriceFeedAddressesMap, tokenPriceAMMReference, ProviderConfig, ProviderConfigMap, ABIKeys };
+    export { CoreContractAddressesByChainId };
 }
 /// <amd-module name="@scom/scom-buyback/store/utils.ts" />
 declare module "@scom/scom-buyback/store/utils.ts" {
@@ -9882,8 +9829,6 @@ declare module "@scom/scom-buyback/store/utils.ts" {
     }
     export const nullAddress = "0x0000000000000000000000000000000000000000";
     export const INFINITE = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    export const getUserTokens: (chainId: number) => any;
-    export const addUserTokens: (token: ITokenObject) => void;
     export const getSupportedNetworks: () => IExtendedNetwork[];
     export const getInfuraId: () => string;
     export const getSiteSupportedNetworks: () => IExtendedNetwork[];
@@ -9897,13 +9842,8 @@ declare module "@scom/scom-buyback/store/utils.ts" {
     export const getWETH: (chainId: number) => ITokenObject;
     export const setDataFromConfig: (options: any) => void;
     export function isWalletConnected(): boolean;
-    export function switchNetwork(chainId: number): Promise<void>;
     export function getChainId(): number;
-    export function getWalletProvider(): string;
-    export const hasMetaMask: () => boolean;
     export function getErc20(address: string): Erc20;
-    export const isExpertMode: () => boolean;
-    export function toggleExpertMode(): void;
     export const getSlippageTolerance: () => any;
     export const setSlippageTolerance: (value: any) => void;
     export const getTransactionDeadline: () => any;
@@ -9917,13 +9857,9 @@ declare module "@scom/scom-buyback/store/utils.ts" {
             [key: number]: IExtendedNetwork;
         };
         currentChainId: number;
-        isExpertMode: boolean;
         slippageTolerance: number;
         transactionDeadline: number;
         infuraId: string;
-        userTokens: {
-            [key: string]: ITokenObject[];
-        };
         walletPluginMap: Record<WalletPlugin, IClientSideProvider>;
         proxyAddresses: ProxyAddresses;
         ipfsGatewayUrl: string;
@@ -9940,8 +9876,6 @@ declare module "@scom/scom-buyback/store/utils.ts" {
         symbol: string;
         balance: any;
     }>;
-    export const setUserTokens: (token: ITokenObject, chainId: number) => void;
-    export const hasUserToken: (address: string, chainId: number) => boolean;
     export const getNetworkExplorerName: (chainId: number) => string;
     export const getNetworkName: (chainId: number) => string;
     export const setProxyAddresses: (data: ProxyAddresses) => void;
@@ -9956,8 +9890,6 @@ declare module "@scom/scom-buyback/store/utils.ts" {
 /// <amd-module name="@scom/scom-buyback/store/index.ts" />
 declare module "@scom/scom-buyback/store/index.ts" {
     export const fallBackUrl: string;
-    export const maxWidth = "690px";
-    export const maxHeight = 321;
     export * from "@scom/scom-buyback/store/utils.ts";
 }
 /// <amd-module name="@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/contracts/OSWAP_OracleChained.json.ts" />
@@ -12552,9 +12484,7 @@ declare module "@scom/scom-buyback/contracts/scom-commission-proxy-contract/inde
 declare module "@scom/scom-buyback/swap-utils/index.ts" {
     import { BigNumber, TransactionReceipt } from '@ijstech/eth-wallet';
     import { QueueType, IERC20ApprovalEventOptions, ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
-    import { Market } from "@scom/scom-buyback/store/index.ts";
     const getHybridRouterAddress: () => string;
-    function getRouterAddress(market: Market): string;
     interface SwapData {
         provider: string;
         queueType?: QueueType;
@@ -12572,8 +12502,8 @@ declare module "@scom/scom-buyback/swap-utils/index.ts" {
         error: Record<string, string> | null;
     }>;
     const getApprovalModelAction: (options: IERC20ApprovalEventOptions) => Promise<import("@scom/scom-buyback/global/index.ts").IERC20ApprovalAction>;
-    const setApprovalModalSpenderAddress: (market: Market, contractAddress?: string) => void;
-    export { SwapData, executeSwap, getRouterAddress, getHybridRouterAddress, getApprovalModelAction, setApprovalModalSpenderAddress };
+    const setApprovalModalSpenderAddress: (contractAddress?: string) => void;
+    export { SwapData, executeSwap, getHybridRouterAddress, getApprovalModelAction, setApprovalModalSpenderAddress };
 }
 /// <amd-module name="@scom/scom-buyback/common/result.css.ts" />
 declare module "@scom/scom-buyback/common/result.css.ts" {
