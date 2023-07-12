@@ -1,4 +1,4 @@
-import { IClientSideProvider } from '@ijstech/eth-wallet';
+import { IWalletPlugin } from '@scom/scom-wallet-modal';
 
 export interface ICommissionInfo {
   chainId: number;
@@ -30,13 +30,6 @@ export interface IBuybackCampaign {
   showHeader?: boolean;
   defaultChainId?: number;
 }
-
-export interface IWalletPlugin {
-  name: string;
-  packageName?: string;
-  provider?: IClientSideProvider;
-}
-
 export interface INetworkConfig {
   chainId: number;
   chainName?: string;

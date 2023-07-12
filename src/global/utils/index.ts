@@ -11,7 +11,6 @@ export {
   getERC20Allowance,
   isAddressValid,
   getERC20Amount,
-  ITokenObject,
   TokenMapType
 } from './common';
 

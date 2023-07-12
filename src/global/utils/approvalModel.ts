@@ -1,5 +1,6 @@
 import { BigNumber } from '@ijstech/eth-wallet';
-import { registerSendTxEvents, approveERC20Max, getERC20Allowance, ITokenObject } from './common';
+import { registerSendTxEvents, approveERC20Max, getERC20Allowance } from './common';
+import { ITokenObject } from '@scom/scom-token-list';
 
 export enum ApprovalStatus {
   TO_BE_APPROVED,

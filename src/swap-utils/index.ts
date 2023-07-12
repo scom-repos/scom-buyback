@@ -1,10 +1,9 @@
-import { Wallet, BigNumber, Utils, TransactionReceipt } from '@ijstech/eth-wallet';
+import { BigNumber, Utils, TransactionReceipt, Wallet, IWallet } from '@ijstech/eth-wallet';
 import { Contracts } from '../contracts/oswap-openswap-contract/index';
 import { Contracts as ProxyContracts } from '../contracts/scom-commission-proxy-contract/index';
 
 import {
   QueueType,
-  ITokenObject,
   IERC20ApprovalEventOptions,
   ERC20ApprovalModel,
   ICommissionInfo,
@@ -17,10 +16,11 @@ import {
   getTransactionDeadline,
   getChainId,
   getProxyAddress,
+  getRpcWallet,
 } from '../store/index';
 
 import { getRangeQueueData, getGroupQueueTraderDataObj } from '../buyback-utils/index';
-import { WETHByChainId } from '@scom/scom-token-list';
+import { WETHByChainId, ITokenObject } from '@scom/scom-token-list';
 
 function getAddresses() {
   return CoreContractAddressesByChainId[getChainId()] || {};
@@ -107,7 +107,7 @@ const getPathsByTokenIn = (tradeFeeMap: any, pairInfoList: any[], routeObj: any,
   return routeObjList;
 }
 
-const getHybridAmountsOut = async (wallet: Wallet, amountIn: BigNumber, tokenIn: string, pair: string[], data: string = '0x') => {
+const getHybridAmountsOut = async (wallet: IWallet, amountIn: BigNumber, tokenIn: string, pair: string[], data: string = '0x') => {
   let result
   try {
     let Address = getAddresses();
@@ -125,7 +125,7 @@ const getHybridAmountsOut = async (wallet: Wallet, amountIn: BigNumber, tokenIn:
   return result;
 }
 
-const hybridTradeExactIn = async (wallet: Wallet, bestSmartRoute: any[], path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[], callback?: any, confirmationCallback?: any) => {
+const hybridTradeExactIn = async (wallet: IWallet, bestSmartRoute: any[], path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[], callback?: any, confirmationCallback?: any) => {
   if (path.length < 2) {
     return null;
   }
@@ -303,7 +303,7 @@ const executeSwap: (swapData: SwapData) => Promise<{
   error: Record<string, string> | null;
 }> = async (swapData: SwapData) => {
   let receipt: TransactionReceipt | null = null;
-  const wallet = Wallet.getClientInstance() as any;
+  const wallet = Wallet.getClientInstance();
   try {
     const toAddress = wallet.account.address;
     const slippageTolerance = getSlippageTolerance();

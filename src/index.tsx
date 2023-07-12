@@ -1,18 +1,18 @@
 import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, IEventBus, application, customModule, Input, moment, HStack, customElements, IDataSchema } from '@ijstech/components';
-import { BigNumber, Wallet } from '@ijstech/eth-wallet';
+import { BigNumber, Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import '@ijstech/eth-contract';
-import { formatNumber, formatDate, EventId, limitInputNumber, limitDecimals, IERC20ApprovalAction, QueueType, ITokenObject, IWalletPlugin, IBuybackCampaign, ICommissionInfo } from './global/index';
-import { getChainId, isWalletConnected, setCurrentChainId, fallBackUrl, Market, getProxyAddress, setDataFromConfig, getCurrentCommissions, getCommissionAmount, getEmbedderCommissionFee } from './store/index';
+import { formatNumber, formatDate, EventId, limitInputNumber, limitDecimals, IERC20ApprovalAction, QueueType, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
+import { getChainId, setCurrentChainId, fallBackUrl, getProxyAddress, setDataFromConfig, getCurrentCommissions, getCommissionAmount, getEmbedderCommissionFee, getRpcWallet, initRpcWallet, isClientWalletConnected, isRpcWalletConnected } from './store/index';
 import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
 import { executeSwap, getApprovalModelAction, getHybridRouterAddress, setApprovalModalSpenderAddress } from './swap-utils/index';
-import { Result } from './common/index';
+import Alert from './alert/index';
 import Assets from './assets';
-import { INetworkConfig } from '@scom/scom-network-picker';
-import BuybackConfig from './commissions/index';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
-import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets } from '@scom/scom-token-list';
+import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObject } from '@scom/scom-token-list';
 import { buybackComponent, buybackDappContainer } from './index.css';
+import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
+import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -63,7 +63,7 @@ export default class ScomBuyback extends Module {
 	private loadingElm: Panel;
 	private buybackComponent: Panel;
 	private buybackElm: Panel;
-	private buybackResult: Result;
+	private buybackAlert: Alert;
 	private noCampaignSection: Panel;
 	private buybackInfo: GuaranteedBuyBackInfo | null;
 	private firstInputBox: VStack;
@@ -74,17 +74,32 @@ export default class ScomBuyback extends Module {
 	private hStackCommission: HStack;
 	private lbCommissionFee: Label;
 	private btnSwap: Button;
+	private mdWallet: ScomWalletModal;
 	private approvalModelAction: IERC20ApprovalAction;
 	private isApproveButtonShown: boolean;
 
 	private dappContainer: ScomDappContainer;
-	private configDApp: BuybackConfig;
 	private contractAddress: string;
+	private rpcWalletEvents: IEventBusRegistry[] = [];
+	private clientEvents: any[] = [];
 
 	static async create(options?: ScomBuybackElement, parent?: Container) {
 		let self = new this(parent, options);
 		await self.ready();
 		return self;
+	}
+
+	onHide() {
+		this.dappContainer.onHide();
+		const rpcWallet = getRpcWallet();
+		for (let event of this.rpcWalletEvents) {
+			rpcWallet.unregisterWalletEvent(event);
+		}
+		this.rpcWalletEvents = [];
+		for (let event of this.clientEvents) {
+			event.unregister();
+		}
+		this.clientEvents = [];
 	}
 
 	private getPropertiesSchema() {
@@ -196,13 +211,11 @@ export default class ScomBuyback extends Module {
 			// 			execute: async () => {
 			// 				_oldData = { ...this._data };
 			// 				if (userInputData.commissions) this._data.commissions = userInputData.commissions;
-			// 				this.configDApp.data = this._data;
 			// 				this.refreshUI();
 			// 				if (builder?.setData) builder.setData(this._data);
 			// 			},
 			// 			undo: () => {
 			// 				this._data = { ..._oldData };
-			// 				this.configDApp.data = this._data;
 			// 				this.refreshUI();
 			// 				if (builder?.setData) builder.setData(this._data);
 			// 			},
@@ -212,19 +225,21 @@ export default class ScomBuyback extends Module {
 			// 	customUI: {
 			// 		render: (data?: any, onConfirm?: (result: boolean, data: any) => void) => {
 			// 			const vstack = new VStack();
-			// 			const config = new BuybackConfig(null, {
-			// 				commissions: self._data.commissions
-			// 			});
-			// 			const button = new Button(null, {
-			// 				caption: 'Confirm',
-			// 			});
-			// 			vstack.append(config);
-			// 			vstack.append(button);
-			// 			button.onClick = async () => {
-			// 				const commissions = config.data.commissions;
-			// 				if (onConfirm) onConfirm(true, { commissions });
-			// 			}
-			// 			return vstack;
+			// 			const config = new ScomCommissionFeeSetup(null, {
+			//         commissions: self._data.commissions,
+			//         fee: getEmbedderCommissionFee(),
+			//         networks: self._data.networks
+			//       });
+			//       const button = new Button(null, {
+			//         caption: 'Confirm',
+			//       });
+			//       vstack.append(config);
+			//       vstack.append(button);
+			//       button.onClick = async () => {
+			//         const commissions = config.commissions;
+			//         if (onConfirm) onConfirm(true, {commissions});
+			//       }
+			//       return vstack;
 			// 		}
 			// 	}
 			// },
@@ -252,14 +267,12 @@ export default class ScomBuyback extends Module {
 							this._data.tokenOut = userInputData.tokenOut;
 							this._data.detailUrl = userInputData.detailUrl;
 							setCurrentChainId(this._data.chainId);
-							this.configDApp.data = this._data;
 							this.refreshUI();
 							if (builder?.setData) builder.setData(this._data);
 						},
 						undo: async () => {
 							this._data = { ..._oldData };
 							setCurrentChainId(this._data.chainId);
-							this.configDApp.data = this._data;
 							this.refreshUI();
 							if (builder?.setData) builder.setData(this._data);
 						},
@@ -317,7 +330,7 @@ export default class ScomBuyback extends Module {
 			{
 				name: 'Emdedder Configurator',
 				target: 'Embedders',
-				elementName: 'i-scom-buyback-config',
+				elementName: 'i-scom-commission-fee-setup',
 				getLinkParams: () => {
 					const commissions = this._data.commissions || [];
 					return {
@@ -335,8 +348,8 @@ export default class ScomBuyback extends Module {
 						await this.setData(resultingData);
 					}
 				},
-				bindOnChanged: (element: BuybackConfig, callback: (data: any) => Promise<void>) => {
-					element.onCustomCommissionsChanged = async (data: any) => {
+				bindOnChanged: (element: ScomCommissionFeeSetup, callback: (data: any) => Promise<void>) => {
+					element.onChanged = async (data: any) => {
 						let resultingData = {
 							...self._data,
 							...data
@@ -345,7 +358,10 @@ export default class ScomBuyback extends Module {
 						await callback(data);
 					}
 				},
-				getData: this.getData.bind(this),
+				getData: () => {
+					const fee = getEmbedderCommissionFee();
+					return { ...this.getData(), fee }
+				},
 				setData: this.setData.bind(this),
 				getTag: this.getTag.bind(this),
 				setTag: this.setTag.bind(this)
@@ -358,8 +374,24 @@ export default class ScomBuyback extends Module {
 	}
 
 	private async setData(data: IBuybackCampaign) {
-		this.configDApp.data = data;
 		this._data = data;
+
+		const rpcWalletId = initRpcWallet(this.defaultChainId);
+		const rpcWallet = getRpcWallet();
+		const event = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
+			this.updateContractAddress();
+			await this.initializeWidgetConfig();
+		});
+		this.rpcWalletEvents.push(event);
+
+		const containerData = {
+			defaultChainId: this.defaultChainId,
+			wallets: this.wallets,
+			networks: this.networks,
+			showHeader: this.showHeader,
+			rpcWalletId: rpcWallet.instanceId
+		}
+		if (this.dappContainer?.setData) this.dappContainer.setData(containerData);
 		this.updateContractAddress();
 		await this.refreshUI();
 	}
@@ -442,8 +474,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	get commissions() {
-		return [];
-		// return this._data.commissions ?? [];
+		return this._data.commissions ?? [];
 	}
 
 	set commissions(value: ICommissionInfo[]) {
@@ -458,18 +489,11 @@ export default class ScomBuyback extends Module {
 	}
 
 	private registerEvent = () => {
-		this.$eventBus.register(this, EventId.IsWalletConnected, this.onWalletConnect);
-		this.$eventBus.register(this, EventId.IsWalletDisconnected, this.onWalletConnect);
-		this.$eventBus.register(this, EventId.chainChanged, this.onChainChange);
+		this.clientEvents.push(this.$eventBus.register(this, EventId.chainChanged, this.onChainChanged));
 	}
 
-	private onWalletConnect = async (connected: boolean) => {
-		this.onSetupPage(connected);
-	}
-
-	private onChainChange = async () => {
-		const isConnected = isWalletConnected();
-		this.onSetupPage(isConnected);
+	private onChainChanged = async () => {
+		this.initializeWidgetConfig();
 	}
 
 	private updateContractAddress = () => {
@@ -486,43 +510,43 @@ export default class ScomBuyback extends Module {
 	}
 
 	private refreshUI = async () => {
-		await this.onSetupPage(isWalletConnected());
+		await this.initializeWidgetConfig();
 	}
 
-	private onSetupPage = async (connected: boolean, hideLoading?: boolean) => {
-		const data = {
-			defaultChainId: this.defaultChainId,
-			wallets: this.wallets,
-			networks: this.networks,
-			showHeader: this.showHeader
-		}
-		if (this.dappContainer?.setData) this.dappContainer.setData(data);
-		if (!hideLoading && this.loadingElm) {
-			this.loadingElm.visible = true;
-		}
-		if (!connected || !this._data || this._data.chainId !== getChainId()) {
-			this.renderEmpty();
-			return;
-		}
-		try {
-			this.infoStack.visible = true;
-			this.emptyStack.visible = false;
-			tokenStore.updateTokenMapData();
-			tokenStore.updateAllTokenBalances();
-			this.buybackInfo = await getGuaranteedBuyBackInfo(this._data);
-			this.updateCommissionInfo();
-			this.renderBuybackCampaign();
-			this.renderLeftPart();
-			const firstToken = this.getTokenObject('toTokenAddress');
-			if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[getChainId()]?.symbol) {
-				await this.initApprovalModelAction();
+	private initializeWidgetConfig = async (hideLoading?: boolean) => {
+		setTimeout(async () => {
+			const rpcWallet = getRpcWallet();
+			if (!hideLoading && this.loadingElm) {
+				this.loadingElm.visible = true;
 			}
-		} catch {
-			this.renderEmpty();
-		}
-		if (!hideLoading && this.loadingElm) {
-			this.loadingElm.visible = false;
-		}
+			if (!isRpcWalletConnected() || !this._data || this._data.chainId !== getChainId()) {
+				this.renderEmpty();
+				return;
+			}
+			try {
+				this.infoStack.visible = true;
+				this.emptyStack.visible = false;
+				const currentChainId = getChainId();
+				tokenStore.updateTokenMapData(currentChainId);
+				if (rpcWallet.address) {
+					tokenStore.updateAllTokenBalances(rpcWallet);
+				}
+				await Wallet.getClientInstance().init();
+				this.buybackInfo = await getGuaranteedBuyBackInfo(this._data);
+				this.updateCommissionInfo();
+				this.renderBuybackCampaign();
+				this.renderLeftPart();
+				const firstToken = this.getTokenObject('toTokenAddress');
+				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[getChainId()]?.symbol) {
+					await this.initApprovalModelAction();
+				}
+			} catch {
+				this.renderEmpty();
+			}
+			if (!hideLoading && this.loadingElm) {
+				this.loadingElm.visible = false;
+			}
+		});
 	}
 
 	private get isSellDisabled() {
@@ -689,7 +713,7 @@ export default class ScomBuyback extends Module {
 		const { pairAddress, offerIndex } = this.buybackInfo.queueInfo;
 		const amount = new BigNumber(this.firstInput?.value || 0);
 		const commissionAmount = getCommissionAmount(this.commissions, amount);
-		this.showResultMessage(this.buybackResult, 'warning', `Swapping ${formatNumber(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
+		this.showResultMessage(this.buybackAlert, 'warning', `Swapping ${formatNumber(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
 		const params = {
 			provider: "RestrictedOracle",
 			queueType: QueueType.GROUP_QUEUE,
@@ -704,7 +728,7 @@ export default class ScomBuyback extends Module {
 		}
 		const { error } = await executeSwap(params);
 		if (error) {
-			this.showResultMessage(this.buybackResult, 'error', error as any);
+			this.showResultMessage(this.buybackAlert, 'error', error as any);
 		}
 	}
 
@@ -732,7 +756,7 @@ export default class ScomBuyback extends Module {
 			const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
 			const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
 			const total = firstVal.plus(commissionAmount).plus(fee);
-	
+
 			if (firstVal.gt(firstMaxVal) || secondVal.gt(secondMaxVal) || total.gt(balance)) {
 				return 'Insufficient amount available';
 			}
@@ -744,7 +768,7 @@ export default class ScomBuyback extends Module {
 	};
 
 	private initApprovalModelAction = async () => {
-		if (!isWalletConnected()) return;
+		if (!isRpcWalletConnected()) return;
 		this.approvalModelAction = await getApprovalModelAction(
 			{
 				sender: this,
@@ -760,7 +784,7 @@ export default class ScomBuyback extends Module {
 					this.isApproveButtonShown = false
 				},
 				onApproving: async (token: ITokenObject, receipt?: string, data?: any) => {
-					this.showResultMessage(this.buybackResult, 'success', receipt || '');
+					this.showResultMessage(this.buybackAlert, 'success', receipt || '');
 					this.btnSwap.rightIcon.visible = true;
 					this.btnSwap.caption = 'Approving';
 					this.updateInput(false);
@@ -773,26 +797,26 @@ export default class ScomBuyback extends Module {
 					this.updateBtnSwap();
 				},
 				onApprovingError: async (token: ITokenObject, err: Error) => {
-					this.showResultMessage(this.buybackResult, 'error', err);
+					this.showResultMessage(this.buybackAlert, 'error', err);
 					this.updateInput(true);
 					this.btnSwap.caption = 'Approve';
 					this.btnSwap.rightIcon.visible = false;
 				},
 				onPaying: async (receipt?: string, data?: any) => {
-					this.showResultMessage(this.buybackResult, 'success', receipt || '');
+					this.showResultMessage(this.buybackAlert, 'success', receipt || '');
 					this.btnSwap.rightIcon.visible = true;
 					this.btnSwap.caption = this.submitButtonText;
 					this.updateInput(false);
 				},
 				onPaid: async (data?: any) => {
-					await this.onSetupPage(isWalletConnected(), true);
+					await this.initializeWidgetConfig(true);
 					this.firstInput.value = '';
 					this.secondInput.value = '';
 					this.btnSwap.rightIcon.visible = false;
 					this.btnSwap.caption = this.submitButtonText;
 				},
 				onPayingError: async (err: Error) => {
-					this.showResultMessage(this.buybackResult, 'error', err);
+					this.showResultMessage(this.buybackAlert, 'error', err);
 					this.btnSwap.rightIcon.visible = false;
 					this.btnSwap.enabled = true;
 					this.btnSwap.caption = this.submitButtonText;
@@ -812,30 +836,58 @@ export default class ScomBuyback extends Module {
 		return null;
 	}
 
-	private showResultMessage = (result: Result, status: 'warning' | 'success' | 'error', content?: string | Error) => {
-		if (!result) return;
+	private showResultMessage = (alert: Alert, status: 'warning' | 'success' | 'error', content?: string | Error) => {
+		if (!alert) return;
 		let params: any = { status };
 		if (status === 'success') {
 			params.txtHash = content;
 		} else {
 			params.content = content;
 		}
-		result.message = { ...params };
-		result.showModal();
+		alert.message = { ...params };
+		alert.showModal();
+	}
+
+	private connectWallet = async () => {
+		if (!isClientWalletConnected()) {
+			if (this.mdWallet) {
+				await application.loadPackage('@scom/scom-wallet-modal', '*');
+				this.mdWallet.networks = this.networks;
+				this.mdWallet.wallets = this.wallets;
+				this.mdWallet.showModal();
+			}
+			return;
+		}
+		if (!isRpcWalletConnected()) {
+			const chainId = getChainId();
+			const clientWallet = Wallet.getClientInstance();
+			await clientWallet.switchNetwork(chainId);
+			return;
+		}
 	}
 
 	private initEmptyUI = async () => {
 		if (!this.noCampaignSection) {
 			this.noCampaignSection = await Panel.create({ width: '100%', height: '100%' });
 		}
-		const isConnected = isWalletConnected();
+		const isClientConnected = isClientWalletConnected();
+		const isRpcConnected = isRpcWalletConnected();
 		this.noCampaignSection.clearInnerHTML();
 		this.noCampaignSection.appendChild(
 			<i-vstack class="no-buyback" height="100%" background={{ color: Theme.background.main }} verticalAlignment="center">
 				<i-vstack gap={10} verticalAlignment="center" horizontalAlignment="center">
 					<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
-					<i-label caption={isConnected ? 'No Buybacks' : 'Please connect with your wallet!'} />
+					<i-label caption={isClientConnected ? 'No Buybacks' : 'Please connect with your wallet!'} />
 				</i-vstack>
+				{!isClientConnected || !isRpcConnected ? <i-button
+					caption={!isClientConnected ? 'Connect Wallet' : 'Switch Network'}
+					class="btn-os"
+					minHeight={43}
+					width={300}
+					maxWidth="90%"
+					margin={{ top: 10, left: 'auto', right: 'auto' }}
+					onClick={this.connectWallet} /> : []
+				}
 			</i-vstack>
 		);
 		this.noCampaignSection.visible = true;
@@ -1086,8 +1138,8 @@ export default class ScomBuyback extends Module {
 	async init() {
 		this.isReadyCallbackQueued = true;
 		super.init();
-		this.buybackResult = new Result();
-		this.buybackComponent.appendChild(this.buybackResult);
+		this.buybackAlert = new Alert();
+		this.buybackComponent.appendChild(this.buybackAlert);
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);
 		if (!lazyLoad) {
 			const defaultChainId = this.getAttribute('defaultChainId', true);
@@ -1157,7 +1209,8 @@ export default class ScomBuyback extends Module {
 							<i-vstack id="buybackElm" minWidth={300} gap="0.5rem" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} background={{ color: Theme.background.main }} verticalAlignment="space-between" />
 						</i-hstack>
 					</i-panel>
-					<i-scom-buyback-config id="configDApp" visible={false} />
+					<i-scom-commission-fee-setup id="configDApp" visible={false} />
+					<i-scom-wallet-modal id="mdWallet" wallets={[]} />
 				</i-panel>
 			</i-scom-dapp-container>
 		)
