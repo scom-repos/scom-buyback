@@ -519,7 +519,7 @@ export default class ScomBuyback extends Module {
 			if (!hideLoading && this.loadingElm) {
 				this.loadingElm.visible = true;
 			}
-			if (!isRpcWalletConnected() || !this._data || this._data.chainId !== getChainId()) {
+			if (!isClientWalletConnected() || !this._data || this._data.chainId !== getChainId()) {
 				this.renderEmpty();
 				return;
 			}
@@ -537,7 +537,7 @@ export default class ScomBuyback extends Module {
 				this.renderBuybackCampaign();
 				this.renderLeftPart();
 				const firstToken = this.getTokenObject('toTokenAddress');
-				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[getChainId()]?.symbol) {
+				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[getChainId()]?.symbol && isRpcWalletConnected()) {
 					await this.initApprovalModelAction();
 				}
 			} catch {
@@ -697,10 +697,13 @@ export default class ScomBuyback extends Module {
 	}
 
 	private onSwap = () => {
+		if (!isRpcWalletConnected()) {
+			this.connectWallet();
+			return;
+		}
 		if (this.buybackInfo && this.isApproveButtonShown) {
 			const info = this.buybackInfo.queueInfo;
 			this.approvalModelAction.doApproveAction(this.getTokenObject('toTokenAddress') as ITokenObject, info.tokenInAvailable);
-			return;
 		} else {
 			this.approvalModelAction.doPayAction();
 		}
@@ -738,6 +741,9 @@ export default class ScomBuyback extends Module {
 	}
 
 	private get submitButtonText() {
+		if (!isRpcWalletConnected()) {
+			return 'Switch Network';
+		}
 		if (this.isApproveButtonShown) {
 			return this.btnSwap?.rightIcon.visible ? 'Approving' : 'Approve';
 		}
@@ -776,7 +782,7 @@ export default class ScomBuyback extends Module {
 				onToBeApproved: async (token: ITokenObject) => {
 					this.isApproveButtonShown = true
 					this.btnSwap.enabled = true;
-					this.btnSwap.caption = 'Approve';
+					this.btnSwap.caption = isRpcWalletConnected() ? 'Approve' : 'Switch Network';
 				},
 				onToBePaid: async (token: ITokenObject) => {
 					this.updateBtnSwap();
@@ -862,7 +868,6 @@ export default class ScomBuyback extends Module {
 			const chainId = getChainId();
 			const clientWallet = Wallet.getClientInstance();
 			await clientWallet.switchNetwork(chainId);
-			return;
 		}
 	}
 

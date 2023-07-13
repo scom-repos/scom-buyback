@@ -16,7 +16,6 @@ import {
   getTransactionDeadline,
   getChainId,
   getProxyAddress,
-  getRpcWallet,
 } from '../store/index';
 
 import { getRangeQueueData, getGroupQueueTraderDataObj } from '../buyback-utils/index';

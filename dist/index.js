@@ -13972,7 +13972,7 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
     exports.isRpcWalletConnected = isRpcWalletConnected;
     function getChainId() {
         const rpcWallet = getRpcWallet();
-        return rpcWallet.chainId;
+        return rpcWallet === null || rpcWallet === void 0 ? void 0 : rpcWallet.chainId;
     }
     exports.getChainId = getChainId;
     function initRpcWallet(defaultChainId) {
@@ -16013,7 +16013,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     };
     exports.getPair = getPair;
     const getGroupQueueItemsForTrader = async (pairAddress, tokenIn, tokenOut) => {
-        let wallet = (0, index_10.getRpcWallet)();
+        let wallet = eth_wallet_5.Wallet.getClientInstance();
         let chainId = (0, index_10.getChainId)();
         const nativeToken = (0, index_10.getChainNativeToken)(chainId);
         var direction = new eth_wallet_5.BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
@@ -16034,7 +16034,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         for (let i = 0; i < amounts.length; i++) {
             if (amounts[i].eq("0"))
                 continue;
-            let allocation = await getGroupQueueAllocation(trader, traderOffer.index[i].toNumber(), pairAddress, tokenIn, tokenOut);
+            let allocation = await getGroupQueueAllocation(wallet, trader, traderOffer.index[i].toNumber(), pairAddress, tokenIn, tokenOut);
             if (allocation.eq("0"))
                 continue;
             let tokenOutAvailable = new eth_wallet_5.BigNumber(amounts[i]).gt(new eth_wallet_5.BigNumber(allocation)) ? allocation : amounts[i];
@@ -16059,7 +16059,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         return queueArr.filter(v => (0, components_4.moment)().isBetween(v.start, v.expire));
     };
     const getGroupQueueItemsForAllowAll = async (pairAddress, tokenIn, tokenOut) => {
-        let wallet = (0, index_10.getRpcWallet)();
+        let wallet = eth_wallet_5.Wallet.getClientInstance();
         let chainId = (0, index_10.getChainId)();
         const nativeToken = (0, index_10.getChainNativeToken)(chainId);
         var direction = new eth_wallet_5.BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
@@ -16141,13 +16141,13 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         };
     };
     exports.getGroupQueueTraderDataObj = getGroupQueueTraderDataObj;
-    const getGroupQueueAllocation = async (traderAddress, offerIndex, pairAddress, tokenIn, tokenOut) => {
+    const getGroupQueueAllocation = async (wallet, traderAddress, offerIndex, pairAddress, tokenIn, tokenOut) => {
         let direction = new eth_wallet_5.BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-        return await new index_11.Contracts.OSWAP_RestrictedPair((0, index_10.getRpcWallet)(), pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
+        return await new index_11.Contracts.OSWAP_RestrictedPair(wallet, pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
     };
     const getLatestOraclePrice = async (queueType, token, againstToken) => {
         let tokens = mapTokenObjectSet({ token, againstToken });
-        let wallet = (0, index_10.getRpcWallet)();
+        let wallet = eth_wallet_5.Wallet.getClientInstance();
         let address = getFactoryAddress(queueType);
         let factory = new index_11.Contracts.OSWAP_OracleFactory(wallet, address);
         let oracleAdapterAddress = await factory.oracles({ param1: tokens.token.address, param2: tokens.againstToken.address });
@@ -16218,7 +16218,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         let price = (0, index_9.toWeiInv)(new eth_wallet_5.BigNumber(offer.amountAndPrice[1]).shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
         let amount = new eth_wallet_5.BigNumber(offer.amountAndPrice[0]).shiftedBy(-Number(tokenIn.decimals)).toFixed();
         const selectedAddress = wallet.address;
-        let available = offer.lockedAndAllowAll[1] ? amount : new eth_wallet_5.BigNumber(await getGroupQueueAllocation(selectedAddress, offerIndex, pairAddress, tokenOut, tokenIn)).shiftedBy(-Number(tokenIn.decimals)).toFixed();
+        let available = offer.lockedAndAllowAll[1] ? amount : new eth_wallet_5.BigNumber(await getGroupQueueAllocation(wallet, selectedAddress, offerIndex, pairAddress, tokenOut, tokenIn)).shiftedBy(-Number(tokenIn.decimals)).toFixed();
         let tokenInAvailable = new eth_wallet_5.BigNumber(available).dividedBy(new eth_wallet_5.BigNumber(price)).dividedBy(new eth_wallet_5.BigNumber(tradeFee)).toFixed();
         return {
             pairAddress: pairAddress.toLowerCase(),
@@ -16266,7 +16266,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     }
     const getRangeQueueData = async (pair, tokenA, tokenB, amountOut) => {
         let data = '0x';
-        let wallet = (0, index_10.getRpcWallet)();
+        let wallet = eth_wallet_5.Wallet.getClientInstance();
         let chainId = (0, index_10.getChainId)();
         if (!tokenA.address)
             tokenA = getWETH(chainId);
@@ -18182,9 +18182,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.rpcWalletEvents = [];
             this.clientEvents = [];
             this.registerEvent = () => {
-                this.clientEvents.push(this.$eventBus.register(this, "chainChanged" /* EventId.chainChanged */, this.onChainChange));
+                this.clientEvents.push(this.$eventBus.register(this, "chainChanged" /* EventId.chainChanged */, this.onChainChanged));
             };
-            this.onChainChange = async () => {
+            this.onChainChanged = async () => {
                 this.initializeWidgetConfig();
             };
             this.updateContractAddress = () => {
@@ -18210,7 +18210,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     if (!hideLoading && this.loadingElm) {
                         this.loadingElm.visible = true;
                     }
-                    if (!(0, index_21.isRpcWalletConnected)() || !this._data || this._data.chainId !== (0, index_21.getChainId)()) {
+                    if (!(0, index_21.isClientWalletConnected)() || !this._data || this._data.chainId !== (0, index_21.getChainId)()) {
                         this.renderEmpty();
                         return;
                     }
@@ -18228,7 +18228,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.renderBuybackCampaign();
                         this.renderLeftPart();
                         const firstToken = this.getTokenObject('toTokenAddress');
-                        if (firstToken && firstToken.symbol !== ((_a = scom_token_list_4.ChainNativeTokenByChainId[(0, index_21.getChainId)()]) === null || _a === void 0 ? void 0 : _a.symbol)) {
+                        if (firstToken && firstToken.symbol !== ((_a = scom_token_list_4.ChainNativeTokenByChainId[(0, index_21.getChainId)()]) === null || _a === void 0 ? void 0 : _a.symbol) && (0, index_21.isRpcWalletConnected)()) {
                             await this.initApprovalModelAction();
                         }
                     }
@@ -18371,10 +18371,13 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.btnSwap.caption = this.submitButtonText;
             };
             this.onSwap = () => {
+                if (!(0, index_21.isRpcWalletConnected)()) {
+                    this.connectWallet();
+                    return;
+                }
                 if (this.buybackInfo && this.isApproveButtonShown) {
                     const info = this.buybackInfo.queueInfo;
                     this.approvalModelAction.doApproveAction(this.getTokenObject('toTokenAddress'), info.tokenInAvailable);
-                    return;
                 }
                 else {
                     this.approvalModelAction.doPayAction();
@@ -18420,7 +18423,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     onToBeApproved: async (token) => {
                         this.isApproveButtonShown = true;
                         this.btnSwap.enabled = true;
-                        this.btnSwap.caption = 'Approve';
+                        this.btnSwap.caption = (0, index_21.isRpcWalletConnected)() ? 'Approve' : 'Switch Network';
                     },
                     onToBePaid: async (token) => {
                         this.updateBtnSwap();
@@ -18506,7 +18509,6 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const chainId = (0, index_21.getChainId)();
                     const clientWallet = eth_wallet_8.Wallet.getClientInstance();
                     await clientWallet.switchNetwork(chainId);
-                    return;
                 }
             };
             this.initEmptyUI = async () => {
@@ -18701,6 +18703,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
         }
         get submitButtonText() {
             var _a, _b;
+            if (!(0, index_21.isRpcWalletConnected)()) {
+                return 'Switch Network';
+            }
             if (this.isApproveButtonShown) {
                 return ((_a = this.btnSwap) === null || _a === void 0 ? void 0 : _a.rightIcon.visible) ? 'Approving' : 'Approve';
             }
