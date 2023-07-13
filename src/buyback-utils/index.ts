@@ -2,19 +2,19 @@ import {
   QueueType,
   toWeiInv,
   numberToBytes32,
-  ITokenObject,
   IBuybackCampaign,
 } from '../global/index';
-import { BigNumber, Utils, Wallet } from '@ijstech/eth-wallet';
+import { BigNumber, Utils } from '@ijstech/eth-wallet';
 import {
   getChainNativeToken,
   getAddresses,
-  getChainId
+  getChainId,
+  getRpcWallet
 } from '../store/index';
 import { Contracts } from '../contracts/oswap-openswap-contract/index';
 import { Contracts as AdaptorContracts } from '../contracts/oswap-oracle-adaptor-contract/index';
 import { moment } from '@ijstech/components';
-import { WETHByChainId, tokenStore } from '@scom/scom-token-list';
+import { ITokenObject, WETHByChainId, tokenStore } from '@scom/scom-token-list';
 
 export interface AllocationMap { address: string, allocation: string }
 
@@ -77,7 +77,7 @@ const getTradeFee = (queueType: QueueType) => {
 }
 
 const getPair = async (queueType: QueueType, tokenA: any, tokenB: any) => {
-  const wallet = Wallet.getClientInstance();
+  const wallet = getRpcWallet();
   let tokens = mapTokenObjectSet({ tokenA, tokenB });
   let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
   let factoryAddress = getFactoryAddress(queueType);
@@ -113,7 +113,7 @@ interface GroupQueueOfferDetail {
 }
 
 const getGroupQueueItemsForTrader = async (pairAddress: string, tokenIn: any, tokenOut: any): Promise<GroupQueueOfferDetail[]> => {
-  let wallet = Wallet.getClientInstance();
+  let wallet = getRpcWallet();
   let chainId = getChainId();
   const nativeToken = getChainNativeToken(chainId);
   var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
@@ -159,7 +159,7 @@ const getGroupQueueItemsForTrader = async (pairAddress: string, tokenIn: any, to
 }
 
 const getGroupQueueItemsForAllowAll = async (pairAddress: string, tokenIn: any, tokenOut: any): Promise<GroupQueueOfferDetail[]> => {
-  let wallet = Wallet.getClientInstance();
+  let wallet = getRpcWallet();
   let chainId = getChainId();
   const nativeToken = getChainNativeToken(chainId);
   var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
@@ -254,12 +254,12 @@ const getGroupQueueTraderDataObj = async (pairAddress: string, tokenIn: any, tok
 
 const getGroupQueueAllocation = async (traderAddress: string, offerIndex: number, pairAddress: string, tokenIn: any, tokenOut: any) => {
   let direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-  return await new Contracts.OSWAP_RestrictedPair(Wallet.getClientInstance(), pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
+  return await new Contracts.OSWAP_RestrictedPair(getRpcWallet(), pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
 };
 
 const getLatestOraclePrice = async (queueType: QueueType, token: ITokenObject, againstToken: ITokenObject) => {
   let tokens = mapTokenObjectSet({ token, againstToken });
-  let wallet = Wallet.getClientInstance();
+  let wallet = getRpcWallet();
   let address = getFactoryAddress(queueType);
   let factory = new Contracts.OSWAP_OracleFactory(wallet, address);
   let oracleAdapterAddress = await factory.oracles({ param1: tokens.token.address, param2: tokens.againstToken.address });
@@ -327,7 +327,7 @@ interface ProviderGroupQueueInfo {
 }
 
 const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddress: string, offerIndex: number): Promise<ProviderGroupQueueInfo> => {
-  let wallet = Wallet.getClientInstance();
+  let wallet = getRpcWallet();
   let chainId = getChainId();
   const nativeToken = getChainNativeToken(chainId);
   const WETH9Address = getAddressByKey('WETH9');
@@ -422,7 +422,7 @@ interface QueueBasicInfo {
 
 const getRangeQueueData = async (pair: string, tokenA: ITokenObject, tokenB: ITokenObject, amountOut: BigNumber) => {
   let data = '0x';
-  let wallet = Wallet.getClientInstance();
+  let wallet = getRpcWallet();
   let chainId = getChainId();
 
   if (!tokenA.address) tokenA = getWETH(chainId);

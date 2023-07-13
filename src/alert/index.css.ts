@@ -5,9 +5,7 @@ export default Styles.style({
   textAlign: 'center',
   $nest: {
     'i-label > *': {
-      // color: Theme.text.primary,
-      fontSize: '.875rem',
-      wordBreak: 'normal'
+      fontSize: '.875rem'
     },
     '.modal': {
       minWidth: '25%',

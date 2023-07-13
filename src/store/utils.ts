@@ -1,13 +1,10 @@
-import { BigNumber, Erc20, IClientSideProvider, Wallet } from '@ijstech/eth-wallet';
+import { BigNumber, Erc20, INetwork, Wallet } from '@ijstech/eth-wallet';
 import {
-  EventId,
   ICommissionInfo,
   IExtendedNetwork,
-  ITokenObject,
   SITE_ENV
 } from '../global/index';
-
-import { ChainNativeTokenByChainId, WETHByChainId } from '@scom/scom-token-list';
+import { ChainNativeTokenByChainId, WETHByChainId, isWalletConnected, ITokenObject } from '@scom/scom-token-list';
 import { Contracts as OpenSwapContracts } from '../contracts/oswap-openswap-contract/index';
 import getNetworkList from '@scom/scom-network-list';
 import { CoreContractAddressesByChainId } from './data/index';
@@ -40,7 +37,6 @@ const setInfuraId = (infuraId: string) => {
 export const getInfuraId = () => {
   return state.infuraId;
 }
-
 
 export const getSiteSupportedNetworks = () => {
   let networkFullList = Object.values(state.networkMap);
@@ -118,15 +114,6 @@ export const setDataFromConfig = (options: any) => {
   }
 }
 
-export function isWalletConnected() {
-  const wallet = Wallet.getClientInstance();
-  return wallet.isConnected;
-}
-
-export function getChainId() {
-  return isWalletConnected() ? Wallet.getClientInstance().chainId : state.currentChainId;
-}
-
 export function getErc20(address: string) {
   const wallet = Wallet.getClientInstance();
   return new Erc20(wallet, address);
@@ -157,23 +144,11 @@ export const state = {
   slippageTolerance: 0.5,
   transactionDeadline: 30,
   infuraId: '',
-  walletPluginMap: {} as Record<WalletPlugin, IClientSideProvider>,
   proxyAddresses: {} as ProxyAddresses,
   ipfsGatewayUrl: '',
   apiGatewayUrls: {} as Record<string, string>,
-  embedderCommissionFee: '0'
-}
-
-export const setWalletPluginProvider = (walletPlugin: WalletPlugin, wallet: IClientSideProvider) => {
-  state.walletPluginMap[walletPlugin] = wallet;
-}
-
-export const getWalletPluginMap = () => {
-  return state.walletPluginMap;
-}
-
-export const getWalletPluginProvider = (walletPlugin: WalletPlugin) => {
-  return state.walletPluginMap[walletPlugin];
+  embedderCommissionFee: '0',
+  rpcWalletId: ''
 }
 
 export const getTokenObject = async (address: string, showBalance?: boolean) => {
@@ -251,4 +226,47 @@ export const getCommissionAmount = (commissions: ICommissionInfo[], amount: BigN
   });
   const commissionsAmount = _commissions.length ? _commissions.map(v => v.amount).reduce((a, b) => a.plus(b)) : new BigNumber(0);
   return commissionsAmount;
+}
+
+export function isClientWalletConnected() {
+  const wallet = Wallet.getClientInstance();
+  return wallet.isConnected;
+}
+
+export function isRpcWalletConnected() {
+  const wallet = getRpcWallet();
+  return wallet?.isConnected;
+}
+
+export function getChainId() {
+  const rpcWallet = getRpcWallet();
+  return rpcWallet.chainId;
+}
+
+export function initRpcWallet(defaultChainId: number) {
+  if (state.rpcWalletId) {
+    return state.rpcWalletId;
+  }
+  const clientWallet = Wallet.getClientInstance();
+  const networkList: INetwork[] = Object.values(application.store.networkMap);
+  const instanceId = clientWallet.initRpcWallet({
+    networks: networkList,
+    defaultChainId,
+    infuraId: application.store.infuraId,
+    multicalls: application.store.multicalls
+  });
+  state.rpcWalletId = instanceId;
+  if (clientWallet.address) {
+    const rpcWallet = Wallet.getRpcWalletInstance(instanceId);
+    rpcWallet.address = clientWallet.address;
+  }
+  return instanceId;
+}
+
+export function getRpcWallet() {
+  return Wallet.getRpcWalletInstance(state.rpcWalletId);
+}
+
+export function getClientWallet() {
+  return Wallet.getClientInstance();
 }

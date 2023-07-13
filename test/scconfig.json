@@ -13,12 +13,14 @@
   },
   "dependencies": {
     "@scom/scom-buyback": "*",
+    "@scom/scom-dapp-container": "*",
     "@ijstech/eth-contract": "*",
     "@ijstech/eth-wallet": "*",
-    "@scom/scom-dapp-container": "*",
+    "@scom/scom-wallet-modal": "*",
+    "@scom/scom-commission-fee-setup": "*",
     "@scom/scom-network-picker": "*",
-    "@scom/scom-network-list": "*",
-    "@scom/scom-token-list": "*"
+    "@scom/scom-token-list": "*",
+    "@scom/scom-network-list": "*"
   },
   "menus": [
     {
@@ -75,5 +77,6 @@
     "mobile": 414,
     "tablet": 1280,
     "desktop": 1920
-  }
+  },
+  "infuraId": "928992396bec4e7ea3b68b0e2d6ee4fe"
 }

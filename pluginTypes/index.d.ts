@@ -1,4 +1,6 @@
 /// <reference path="@ijstech/eth-contract/index.d.ts" />
+/// <reference path="@ijstech/eth-wallet/index.d.ts" />
+/// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
 /// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
 declare module "@scom/scom-buyback/global/utils/helper.ts" {
     import { BigNumber } from '@ijstech/eth-wallet';
@@ -9624,19 +9626,7 @@ declare module "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts" {
 /// <amd-module name="@scom/scom-buyback/global/utils/common.ts" />
 declare module "@scom/scom-buyback/global/utils/common.ts" {
     import { Wallet, BigNumber, ISendTxEventsOptions } from '@ijstech/eth-wallet';
-    export interface ITokenObject {
-        address?: string;
-        name: string;
-        decimals: number;
-        symbol: string;
-        status?: boolean | null;
-        logoURI?: string;
-        isCommon?: boolean | null;
-        balance?: string | number;
-        isNative?: boolean | null;
-        isWETH?: boolean | null;
-        isNew?: boolean | null;
-    }
+    import { ITokenObject } from '@scom/scom-token-list';
     export type TokenMapType = {
         [token: string]: ITokenObject;
     };
@@ -9649,7 +9639,7 @@ declare module "@scom/scom-buyback/global/utils/common.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/global/utils/approvalModel.ts" />
 declare module "@scom/scom-buyback/global/utils/approvalModel.ts" {
-    import { ITokenObject } from "@scom/scom-buyback/global/utils/common.ts";
+    import { ITokenObject } from '@scom/scom-token-list';
     export enum ApprovalStatus {
         TO_BE_APPROVED = 0,
         APPROVING = 1,
@@ -9687,7 +9677,7 @@ declare module "@scom/scom-buyback/global/utils/approvalModel.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/global/utils/interfaces.ts" />
 declare module "@scom/scom-buyback/global/utils/interfaces.ts" {
-    import { IClientSideProvider } from '@ijstech/eth-wallet';
+    import { IWalletPlugin } from '@scom/scom-wallet-modal';
     export interface ICommissionInfo {
         chainId: number;
         walletAddress: string;
@@ -9715,11 +9705,6 @@ declare module "@scom/scom-buyback/global/utils/interfaces.ts" {
         showHeader?: boolean;
         defaultChainId?: number;
     }
-    export interface IWalletPlugin {
-        name: string;
-        packageName?: string;
-        provider?: IClientSideProvider;
-    }
     export interface INetworkConfig {
         chainId: number;
         chainName?: string;
@@ -9741,7 +9726,7 @@ declare module "@scom/scom-buyback/global/utils/index.ts" {
     export * from "@scom/scom-buyback/global/utils/helper.ts";
     export { parseContractError } from "@scom/scom-buyback/global/utils/error.ts";
     export { PageBlock } from "@scom/scom-buyback/global/utils/pageBlock.ts";
-    export { isTransactionConfirmed, registerSendTxEvents, approveERC20Max, getERC20Allowance, isAddressValid, getERC20Amount, ITokenObject, TokenMapType } from "@scom/scom-buyback/global/utils/common.ts";
+    export { isTransactionConfirmed, registerSendTxEvents, approveERC20Max, getERC20Allowance, isAddressValid, getERC20Amount, TokenMapType } from "@scom/scom-buyback/global/utils/common.ts";
     export { ApprovalStatus, IERC20ApprovalEventOptions, IERC20ApprovalOptions, IERC20ApprovalAction, ERC20ApprovalModel } from "@scom/scom-buyback/global/utils/approvalModel.ts";
     export * from "@scom/scom-buyback/global/utils/interfaces.ts";
 }
@@ -9814,8 +9799,9 @@ declare module "@scom/scom-buyback/store/data/index.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/store/utils.ts" />
 declare module "@scom/scom-buyback/store/utils.ts" {
-    import { BigNumber, Erc20, IClientSideProvider } from '@ijstech/eth-wallet';
-    import { ICommissionInfo, IExtendedNetwork, ITokenObject, SITE_ENV } from "@scom/scom-buyback/global/index.ts";
+    import { BigNumber, Erc20 } from '@ijstech/eth-wallet';
+    import { ICommissionInfo, IExtendedNetwork, SITE_ENV } from "@scom/scom-buyback/global/index.ts";
+    import { ITokenObject } from '@scom/scom-token-list';
     export * from "@scom/scom-buyback/store/data/index.ts";
     export enum WalletPlugin {
         MetaMask = "metamask",
@@ -9841,8 +9827,6 @@ declare module "@scom/scom-buyback/store/utils.ts" {
     };
     export const getWETH: (chainId: number) => ITokenObject;
     export const setDataFromConfig: (options: any) => void;
-    export function isWalletConnected(): boolean;
-    export function getChainId(): number;
     export function getErc20(address: string): Erc20;
     export const getSlippageTolerance: () => any;
     export const setSlippageTolerance: (value: any) => void;
@@ -9860,15 +9844,12 @@ declare module "@scom/scom-buyback/store/utils.ts" {
         slippageTolerance: number;
         transactionDeadline: number;
         infuraId: string;
-        walletPluginMap: Record<WalletPlugin, IClientSideProvider>;
         proxyAddresses: ProxyAddresses;
         ipfsGatewayUrl: string;
         apiGatewayUrls: Record<string, string>;
         embedderCommissionFee: string;
+        rpcWalletId: string;
     };
-    export const setWalletPluginProvider: (walletPlugin: WalletPlugin, wallet: IClientSideProvider) => void;
-    export const getWalletPluginMap: () => Record<WalletPlugin, IClientSideProvider>;
-    export const getWalletPluginProvider: (walletPlugin: WalletPlugin) => IClientSideProvider;
     export const getTokenObject: (address: string, showBalance?: boolean) => Promise<{
         address: string;
         decimals: number;
@@ -9886,6 +9867,12 @@ declare module "@scom/scom-buyback/store/utils.ts" {
     export const getEmbedderCommissionFee: () => string;
     export const getCurrentCommissions: (commissions: ICommissionInfo[]) => ICommissionInfo[];
     export const getCommissionAmount: (commissions: ICommissionInfo[], amount: BigNumber) => BigNumber;
+    export function isClientWalletConnected(): boolean;
+    export function isRpcWalletConnected(): boolean;
+    export function getChainId(): number;
+    export function initRpcWallet(defaultChainId: number): string;
+    export function getRpcWallet(): import("@ijstech/eth-wallet").IRpcWallet;
+    export function getClientWallet(): import("@ijstech/eth-wallet").IClientWallet;
 }
 /// <amd-module name="@scom/scom-buyback/store/index.ts" />
 declare module "@scom/scom-buyback/store/index.ts" {
@@ -11880,8 +11867,9 @@ declare module "@scom/scom-buyback/contracts/oswap-oracle-adaptor-contract/index
 }
 /// <amd-module name="@scom/scom-buyback/buyback-utils/index.ts" />
 declare module "@scom/scom-buyback/buyback-utils/index.ts" {
-    import { QueueType, ITokenObject, IBuybackCampaign } from "@scom/scom-buyback/global/index.ts";
+    import { QueueType, IBuybackCampaign } from "@scom/scom-buyback/global/index.ts";
     import { BigNumber } from '@ijstech/eth-wallet';
+    import { ITokenObject } from '@scom/scom-token-list';
     export interface AllocationMap {
         address: string;
         allocation: string;
@@ -12505,100 +12493,40 @@ declare module "@scom/scom-buyback/swap-utils/index.ts" {
     const setApprovalModalSpenderAddress: (contractAddress?: string) => void;
     export { SwapData, executeSwap, getHybridRouterAddress, getApprovalModelAction, setApprovalModalSpenderAddress };
 }
-/// <amd-module name="@scom/scom-buyback/common/result.css.ts" />
-declare module "@scom/scom-buyback/common/result.css.ts" {
+/// <amd-module name="@scom/scom-buyback/alert/index.css.ts" />
+declare module "@scom/scom-buyback/alert/index.css.ts" {
     const _default_73: string;
     export default _default_73;
 }
-/// <amd-module name="@scom/scom-buyback/common/result.tsx" />
-declare module "@scom/scom-buyback/common/result.tsx" {
+/// <amd-module name="@scom/scom-buyback/alert/index.tsx" />
+declare module "@scom/scom-buyback/alert/index.tsx" {
     import { Module, ControlElement, Container } from '@ijstech/components';
     global {
         namespace JSX {
             interface IntrinsicElements {
-                ['i-scom-buyback-result']: ControlElement;
+                ['i-scom-buyback-alert']: ControlElement;
             }
         }
     }
-    export interface IMessage {
+    interface IMessage {
         status: 'warning' | 'success' | 'error';
         content?: any;
         txtHash?: string;
         obj?: any;
-        customRedirect?: any;
     }
-    export class Result extends Module {
+    export default class Alert extends Module {
         private confirmModal;
         private mainContent;
         private _message;
-        onCustomClose: any;
         get message(): IMessage;
         set message(value: IMessage);
         constructor(parent?: Container, options?: any);
         init(): Promise<void>;
         closeModal(): void;
         showModal(): void;
-        onCloseRedirect(): void;
-        buildLink(): Promise<void>;
-        renderUI(): Promise<void>;
-        onErrMsgChanged(): Promise<any>;
-        render(): any;
-    }
-}
-/// <amd-module name="@scom/scom-buyback/common/index.tsx" />
-declare module "@scom/scom-buyback/common/index.tsx" {
-    export { Result } from "@scom/scom-buyback/common/result.tsx";
-}
-/// <amd-module name="@scom/scom-buyback/commissions/index.css.ts" />
-declare module "@scom/scom-buyback/commissions/index.css.ts" {
-    export const customStyle: string;
-    export const tableStyle: string;
-}
-/// <amd-module name="@scom/scom-buyback/commissions/index.tsx" />
-declare module "@scom/scom-buyback/commissions/index.tsx" {
-    import { Module, ControlElement } from '@ijstech/components';
-    import { IExtendedNetwork, ICommissionInfo, IEmbedData } from "@scom/scom-buyback/global/index.ts";
-    export interface ISupportedNetworks {
-        chainId: number;
-    }
-    interface ScomBuybackConfigElement extends ControlElement {
-        commissions?: ICommissionInfo;
-    }
-    global {
-        namespace JSX {
-            interface IntrinsicElements {
-                ['i-scom-buyback-config']: ScomBuybackConfigElement;
-            }
-        }
-    }
-    export default class BuybackConfig extends Module {
-        private tableCommissions;
-        private modalAddCommission;
-        private networkPicker;
-        private inputWalletAddress;
-        private lbCommissionShare;
-        private btnAddWallet;
-        private pnlEmptyWallet;
-        private commissionInfoList;
-        private commissionsTableColumns;
-        private btnConfirm;
-        private lbErrMsg;
-        private _onCustomCommissionsChanged;
-        init(): Promise<void>;
-        get data(): IEmbedData;
-        set data(config: IEmbedData);
-        get onCustomCommissionsChanged(): (data: any) => Promise<void>;
-        set onCustomCommissionsChanged(value: (data: any) => Promise<void>);
-        onModalAddCommissionClosed(): void;
-        onAddCommissionClicked(): void;
-        onConfirmCommissionClicked(): Promise<void>;
-        validateModalFields(): boolean;
-        getSupportedChainIds(): {
-            chainId: number;
-        }[];
-        onNetworkSelected(network: IExtendedNetwork): void;
-        onInputWalletAddressChanged(): void;
-        private toggleVisible;
+        private buildLink;
+        private renderUI;
+        private onErrMsgChanged;
         render(): any;
     }
 }
@@ -12658,9 +12586,9 @@ declare module "@scom/scom-buyback/index.css.ts" {
 declare module "@scom/scom-buyback" {
     import { Module, Container, ControlElement, IDataSchema } from '@ijstech/components';
     import '@ijstech/eth-contract';
-    import { IWalletPlugin, ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
-    import { INetworkConfig } from '@scom/scom-network-picker';
-    import BuybackConfig from "@scom/scom-buyback/commissions/index.tsx";
+    import { IBuybackCampaign, ICommissionInfo, INetworkConfig } from "@scom/scom-buyback/global/index.ts";
+    import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
+    import { IWalletPlugin } from '@scom/scom-wallet-modal';
     interface ScomBuybackElement extends ControlElement {
         lazyLoad?: boolean;
         chainId: number;
@@ -12694,7 +12622,7 @@ declare module "@scom/scom-buyback" {
         private loadingElm;
         private buybackComponent;
         private buybackElm;
-        private buybackResult;
+        private buybackAlert;
         private noCampaignSection;
         private buybackInfo;
         private firstInputBox;
@@ -12705,12 +12633,15 @@ declare module "@scom/scom-buyback" {
         private hStackCommission;
         private lbCommissionFee;
         private btnSwap;
+        private mdWallet;
         private approvalModelAction;
         private isApproveButtonShown;
         private dappContainer;
-        private configDApp;
         private contractAddress;
+        private rpcWalletEvents;
+        private clientEvents;
         static create(options?: ScomBuybackElement, parent?: Container): Promise<ScomBuyback>;
+        onHide(): void;
         private getPropertiesSchema;
         private getThemeSchema;
         private _getActions;
@@ -12743,8 +12674,13 @@ declare module "@scom/scom-buyback" {
                 data: string;
             };
             setLinkParams: (params: any) => Promise<void>;
-            bindOnChanged: (element: BuybackConfig, callback: (data: any) => Promise<void>) => void;
-            getData: any;
+            bindOnChanged: (element: ScomCommissionFeeSetup, callback: (data: any) => Promise<void>) => void;
+            getData: () => {
+                fee: string;
+                then<TResult1 = IBuybackCampaign, TResult2 = never>(onfulfilled?: (value: IBuybackCampaign) => TResult1 | PromiseLike<TResult1>, onrejected?: (reason: any) => TResult2 | PromiseLike<TResult2>): Promise<TResult1 | TResult2>;
+                catch<TResult = never>(onrejected?: (reason: any) => TResult | PromiseLike<TResult>): Promise<IBuybackCampaign | TResult>;
+                [Symbol.toStringTag]: string;
+            };
             setData: any;
             getTag: any;
             setTag: any;
@@ -12769,11 +12705,10 @@ declare module "@scom/scom-buyback" {
         set commissions(value: ICommissionInfo[]);
         constructor(parent?: Container, options?: ControlElement);
         private registerEvent;
-        private onWalletConnect;
         private onChainChange;
         private updateContractAddress;
         private refreshUI;
-        private onSetupPage;
+        private initializeWidgetConfig;
         private get isSellDisabled();
         private getFirstAvailableBalance;
         private getSecondAvailableBalance;
@@ -12790,6 +12725,7 @@ declare module "@scom/scom-buyback" {
         private initApprovalModelAction;
         getValueByKey: (key: string) => any;
         private showResultMessage;
+        private connectWallet;
         private initEmptyUI;
         private renderEmpty;
         private renderBuybackCampaign;

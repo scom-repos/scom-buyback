@@ -17,7 +17,7 @@ export async function parseContractError(oMessage: string, tokens: string[]): Pr
         'execution reverted: OAXDEX: LOCKED': 'Locked',
         'execution reverted: OAXDEX: INVALID_SIGNATURE': 'Invalid signature',
         'execution reverted: OAXDEX: EXPIRED': 'Expired',
-        'MetaMask Tx Signature: User denied transaction signature.': 'User denied transaction signature',
+        'Returned error: MetaMask Tx Signature: User denied transaction signature.': 'User denied transaction signature',
         'execution reverted: OracleAdaptor: Price outside allowed range' : 'Circuit Breaker: Exceeds Price Protection Range',
         'execution reverted: PAIR_NOT_MATCH': 'Pair Not Match',
         'execution reverted: No oracle found' : 'No Oracle found',
@@ -28,5 +28,5 @@ export async function parseContractError(oMessage: string, tokens: string[]): Pr
         return s;
     }
 
-    return '';
+    return oMessage;
 }

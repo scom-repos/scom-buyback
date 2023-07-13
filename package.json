@@ -17,11 +17,12 @@
   "dependencies": {
     "@ijstech/components": "^0.1.47",
     "@ijstech/eth-contract": "^0.1.18",
-    "@ijstech/eth-wallet": "0.1.62",
-    "@scom/scom-dapp-container": "^0.1.2",
+    "@ijstech/eth-wallet": "^0.1.69",
+    "@scom/scom-dapp-container": "^0.1.8",
     "@scom/scom-network-list": "^0.1.0",
     "@scom/scom-token-list": "^0.1.1",
-    "@scom/scom-network-picker": "^0.1.1"
+    "@scom/scom-wallet-modal": "^0.1.0",
+    "@scom/scom-commission-fee-setup": "https://github.com/scom-repos/scom-commission-fee-setup"
   },
   "devDependencies": {
     "@ijstech/cli": "^0.1.28",
