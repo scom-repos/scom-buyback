@@ -240,7 +240,7 @@ export function isRpcWalletConnected() {
 
 export function getChainId() {
   const rpcWallet = getRpcWallet();
-  return rpcWallet.chainId;
+  return rpcWallet?.chainId;
 }
 
 export function initRpcWallet(defaultChainId: number) {

@@ -12705,7 +12705,7 @@ declare module "@scom/scom-buyback" {
         set commissions(value: ICommissionInfo[]);
         constructor(parent?: Container, options?: ControlElement);
         private registerEvent;
-        private onChainChange;
+        private onChainChanged;
         private updateContractAddress;
         private refreshUI;
         private initializeWidgetConfig;

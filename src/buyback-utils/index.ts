@@ -4,7 +4,7 @@ import {
   numberToBytes32,
   IBuybackCampaign,
 } from '../global/index';
-import { BigNumber, Utils } from '@ijstech/eth-wallet';
+import { BigNumber, IWallet, Utils, Wallet } from '@ijstech/eth-wallet';
 import {
   getChainNativeToken,
   getAddresses,
@@ -113,7 +113,7 @@ interface GroupQueueOfferDetail {
 }
 
 const getGroupQueueItemsForTrader = async (pairAddress: string, tokenIn: any, tokenOut: any): Promise<GroupQueueOfferDetail[]> => {
-  let wallet = getRpcWallet();
+  let wallet = Wallet.getClientInstance();
   let chainId = getChainId();
   const nativeToken = getChainNativeToken(chainId);
   var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
@@ -134,7 +134,7 @@ const getGroupQueueItemsForTrader = async (pairAddress: string, tokenIn: any, to
 
   for (let i = 0; i < amounts.length; i++) {
     if (amounts[i].eq("0")) continue;
-    let allocation = await getGroupQueueAllocation(trader, traderOffer.index[i].toNumber(), pairAddress, tokenIn, tokenOut);
+    let allocation = await getGroupQueueAllocation(wallet, trader, traderOffer.index[i].toNumber(), pairAddress, tokenIn, tokenOut);
     if (allocation.eq("0")) continue;
     let tokenOutAvailable = new BigNumber(amounts[i]).gt(new BigNumber(allocation)) ? allocation : amounts[i]
     let tokenInAvailable = new BigNumber(tokenOutAvailable).dividedBy(new BigNumber(prices[i])).shiftedBy(18 - tokenOut.decimals).dividedBy(new BigNumber(tradeFee)).decimalPlaces(tokenIn.decimals, 1).toFixed();
@@ -159,7 +159,7 @@ const getGroupQueueItemsForTrader = async (pairAddress: string, tokenIn: any, to
 }
 
 const getGroupQueueItemsForAllowAll = async (pairAddress: string, tokenIn: any, tokenOut: any): Promise<GroupQueueOfferDetail[]> => {
-  let wallet = getRpcWallet();
+  let wallet = Wallet.getClientInstance();
   let chainId = getChainId();
   const nativeToken = getChainNativeToken(chainId);
   var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
@@ -252,14 +252,14 @@ const getGroupQueueTraderDataObj = async (pairAddress: string, tokenIn: any, tok
   }
 }
 
-const getGroupQueueAllocation = async (traderAddress: string, offerIndex: number, pairAddress: string, tokenIn: any, tokenOut: any) => {
+const getGroupQueueAllocation = async (wallet: IWallet, traderAddress: string, offerIndex: number, pairAddress: string, tokenIn: any, tokenOut: any) => {
   let direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-  return await new Contracts.OSWAP_RestrictedPair(getRpcWallet(), pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
+  return await new Contracts.OSWAP_RestrictedPair(wallet, pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
 };
 
 const getLatestOraclePrice = async (queueType: QueueType, token: ITokenObject, againstToken: ITokenObject) => {
   let tokens = mapTokenObjectSet({ token, againstToken });
-  let wallet = getRpcWallet();
+  let wallet = Wallet.getClientInstance();
   let address = getFactoryAddress(queueType);
   let factory = new Contracts.OSWAP_OracleFactory(wallet, address);
   let oracleAdapterAddress = await factory.oracles({ param1: tokens.token.address, param2: tokens.againstToken.address });
@@ -361,7 +361,7 @@ const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddr
   let price = toWeiInv(new BigNumber(offer.amountAndPrice[1]).shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
   let amount = new BigNumber(offer.amountAndPrice[0]).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   const selectedAddress = wallet.address;
-  let available = offer.lockedAndAllowAll[1] ? amount : new BigNumber(await getGroupQueueAllocation(selectedAddress, offerIndex, pairAddress, tokenOut, tokenIn)).shiftedBy(-Number(tokenIn.decimals)).toFixed();
+  let available = offer.lockedAndAllowAll[1] ? amount : new BigNumber(await getGroupQueueAllocation(wallet, selectedAddress, offerIndex, pairAddress, tokenOut, tokenIn)).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   let tokenInAvailable = new BigNumber(available).dividedBy(new BigNumber(price)).dividedBy(new BigNumber(tradeFee)).toFixed();
   return {
     pairAddress: pairAddress.toLowerCase(),
@@ -422,7 +422,7 @@ interface QueueBasicInfo {
 
 const getRangeQueueData = async (pair: string, tokenA: ITokenObject, tokenB: ITokenObject, amountOut: BigNumber) => {
   let data = '0x';
-  let wallet = getRpcWallet();
+  let wallet = Wallet.getClientInstance();
   let chainId = getChainId();
 
   if (!tokenA.address) tokenA = getWETH(chainId);
