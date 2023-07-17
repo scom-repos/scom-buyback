@@ -23,10 +23,6 @@ export async function parseContractError(oMessage: string, tokens: string[]): Pr
         'execution reverted: No oracle found' : 'No Oracle found',
         'execution reverted: Amount exceeds available fund' : 'Insufficient liquidity',
     }
-    let s = staticMessageMap[oMessage];
-    if (s) {
-        return s;
-    }
 
-    return oMessage;
+    return staticMessageMap[oMessage] ?? oMessage;
 }

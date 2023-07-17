@@ -9,6 +9,7 @@ import Alert from './alert/index';
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
+import formSchema from './formSchema.json';
 import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObject } from '@scom/scom-token-list';
 import { buybackComponent, buybackDappContainer } from './index.css';
 import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
@@ -191,9 +192,9 @@ export default class ScomBuyback extends Module {
 		return themeSchema as IDataSchema;
 	}
 
-	private _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema) {
+	private _getActions(category?: string) {
 		const self = this;
-		const actions = [
+		const actions: any = [
 			// {
 			// 	name: 'Commissions',
 			// 	icon: 'dollar-sign',
@@ -243,7 +244,10 @@ export default class ScomBuyback extends Module {
 			// 		}
 			// 	}
 			// },
-			{
+		];
+
+		if (category && category !== 'offers') {
+			actions.push({
 				name: 'Settings',
 				icon: 'cog',
 				command: (builder: any, userInputData: any) => {
@@ -279,9 +283,10 @@ export default class ScomBuyback extends Module {
 						redo: () => { }
 					}
 				},
-				userInputDataSchema: propertiesSchema
-			},
-			{
+				userInputDataSchema: formSchema.general.dataSchema
+			});
+
+			actions.push({
 				name: 'Theme Settings',
 				icon: 'palette',
 				command: (builder: any, userInputData: any) => {
@@ -304,9 +309,10 @@ export default class ScomBuyback extends Module {
 						redo: () => { }
 					}
 				},
-				userInputDataSchema: themeSchema
-			}
-		]
+				userInputDataSchema: formSchema.theme.dataSchema
+			});
+		}
+
 		return actions;
 	}
 
@@ -316,8 +322,8 @@ export default class ScomBuyback extends Module {
 			{
 				name: 'Builder Configurator',
 				target: 'Builders',
-				getActions: () => {
-					return this._getActions(this.getPropertiesSchema(), this.getThemeSchema());
+				getActions: (category?: string) => {
+					return this._getActions(category);
 				},
 				getData: this.getData.bind(this),
 				setData: async (data: any) => {

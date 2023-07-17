@@ -212,6 +212,7 @@ define("@scom/scom-buyback/global/utils/error.ts", ["require", "exports"], funct
     exports.parseContractError = void 0;
     ///<amd-module name='@scom/scom-buyback/global/utils/error.ts'/> 
     async function parseContractError(oMessage, tokens) {
+        var _a;
         const staticMessageMap = {
             'execution reverted: OAXDEX: K': 'x * y = k Violated',
             'execution reverted: OAXDEX: FORBIDDEN': 'Forbidden',
@@ -236,11 +237,7 @@ define("@scom/scom-buyback/global/utils/error.ts", ["require", "exports"], funct
             'execution reverted: No oracle found': 'No Oracle found',
             'execution reverted: Amount exceeds available fund': 'Insufficient liquidity',
         };
-        let s = staticMessageMap[oMessage];
-        if (s) {
-            return s;
-        }
-        return oMessage;
+        return (_a = staticMessageMap[oMessage]) !== null && _a !== void 0 ? _a : oMessage;
     }
     exports.parseContractError = parseContractError;
 });
@@ -17490,6 +17487,98 @@ define("@scom/scom-buyback/data.json.ts", ["require", "exports"], function (requ
         }
     };
 });
+define("@scom/scom-buyback/formSchema.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-buyback/formSchema.json.ts'/> 
+    const theme = {
+        backgroundColor: {
+            type: 'string',
+            format: 'color'
+        },
+        fontColor: {
+            type: 'string',
+            format: 'color'
+        },
+        inputBackgroundColor: {
+            type: 'string',
+            format: 'color'
+        },
+        inputFontColor: {
+            type: 'string',
+            format: 'color'
+        },
+        // buttonBackgroundColor: {
+        // 	type: 'string',
+        // 	format: 'color'
+        // },
+        // buttonFontColor: {
+        // 	type: 'string',
+        // 	format: 'color'
+        // },
+        secondaryColor: {
+            type: 'string',
+            title: 'Timer Background Color',
+            format: 'color'
+        },
+        secondaryFontColor: {
+            type: 'string',
+            title: 'Timer Font Color',
+            format: 'color'
+        }
+    };
+    exports.default = {
+        general: {
+            dataSchema: {
+                type: 'object',
+                properties: {
+                    chainId: {
+                        type: 'number',
+                        enum: [1, 56, 137, 250, 97, 80001, 43113, 43114],
+                        required: true
+                    },
+                    projectName: {
+                        type: 'string',
+                        required: true
+                    },
+                    description: {
+                        type: 'string'
+                    },
+                    offerIndex: {
+                        type: 'number',
+                        required: true
+                    },
+                    tokenIn: {
+                        type: 'string',
+                        required: true
+                    },
+                    tokenOut: {
+                        type: 'string',
+                        required: true
+                    },
+                    detailUrl: {
+                        type: 'string'
+                    }
+                }
+            }
+        },
+        theme: {
+            dataSchema: {
+                type: 'object',
+                properties: {
+                    "dark": {
+                        type: 'object',
+                        properties: theme
+                    },
+                    "light": {
+                        type: 'object',
+                        properties: theme
+                    }
+                }
+            }
+        }
+    };
+});
 define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/components", "@scom/scom-buyback/assets.ts"], function (require, exports, components_7, assets_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -17776,7 +17865,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         }
     });
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/alert/index.tsx", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@ijstech/eth-contract"], function (require, exports, components_8, eth_wallet_8, index_20, index_21, index_22, index_23, index_24, assets_4, data_json_1, scom_token_list_4, index_css_2) {
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/alert/index.tsx", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@ijstech/eth-contract"], function (require, exports, components_8, eth_wallet_8, index_20, index_21, index_22, index_23, index_24, assets_4, data_json_1, formSchema_json_1, scom_token_list_4, index_css_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_8.Styles.Theme.ThemeVars;
@@ -17885,59 +17974,61 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             };
             return themeSchema;
         }
-        _getActions(propertiesSchema, themeSchema) {
+        _getActions(category) {
             const self = this;
             const actions = [
-                // {
-                // 	name: 'Commissions',
-                // 	icon: 'dollar-sign',
-                // 	command: (builder: any, userInputData: any) => {
-                // 		let _oldData: IBuybackCampaign = {
-                // 			chainId: 0,
-                // 			projectName: '',
-                // 			offerIndex: 0,
-                // 			tokenIn: '',
-                // 			tokenOut: '',
-                // 			wallets: [],
-                // 			networks: []
-                // 		}
-                // 		return {
-                // 			execute: async () => {
-                // 				_oldData = { ...this._data };
-                // 				if (userInputData.commissions) this._data.commissions = userInputData.commissions;
-                // 				this.refreshUI();
-                // 				if (builder?.setData) builder.setData(this._data);
-                // 			},
-                // 			undo: () => {
-                // 				this._data = { ..._oldData };
-                // 				this.refreshUI();
-                // 				if (builder?.setData) builder.setData(this._data);
-                // 			},
-                // 			redo: () => { }
-                // 		}
-                // 	},
-                // 	customUI: {
-                // 		render: (data?: any, onConfirm?: (result: boolean, data: any) => void) => {
-                // 			const vstack = new VStack();
-                // 			const config = new ScomCommissionFeeSetup(null, {
-                //         commissions: self._data.commissions,
-                //         fee: getEmbedderCommissionFee(),
-                //         networks: self._data.networks
-                //       });
-                //       const button = new Button(null, {
-                //         caption: 'Confirm',
-                //       });
-                //       vstack.append(config);
-                //       vstack.append(button);
-                //       button.onClick = async () => {
-                //         const commissions = config.commissions;
-                //         if (onConfirm) onConfirm(true, {commissions});
-                //       }
-                //       return vstack;
-                // 		}
-                // 	}
-                // },
-                {
+            // {
+            // 	name: 'Commissions',
+            // 	icon: 'dollar-sign',
+            // 	command: (builder: any, userInputData: any) => {
+            // 		let _oldData: IBuybackCampaign = {
+            // 			chainId: 0,
+            // 			projectName: '',
+            // 			offerIndex: 0,
+            // 			tokenIn: '',
+            // 			tokenOut: '',
+            // 			wallets: [],
+            // 			networks: []
+            // 		}
+            // 		return {
+            // 			execute: async () => {
+            // 				_oldData = { ...this._data };
+            // 				if (userInputData.commissions) this._data.commissions = userInputData.commissions;
+            // 				this.refreshUI();
+            // 				if (builder?.setData) builder.setData(this._data);
+            // 			},
+            // 			undo: () => {
+            // 				this._data = { ..._oldData };
+            // 				this.refreshUI();
+            // 				if (builder?.setData) builder.setData(this._data);
+            // 			},
+            // 			redo: () => { }
+            // 		}
+            // 	},
+            // 	customUI: {
+            // 		render: (data?: any, onConfirm?: (result: boolean, data: any) => void) => {
+            // 			const vstack = new VStack();
+            // 			const config = new ScomCommissionFeeSetup(null, {
+            //         commissions: self._data.commissions,
+            //         fee: getEmbedderCommissionFee(),
+            //         networks: self._data.networks
+            //       });
+            //       const button = new Button(null, {
+            //         caption: 'Confirm',
+            //       });
+            //       vstack.append(config);
+            //       vstack.append(button);
+            //       button.onClick = async () => {
+            //         const commissions = config.commissions;
+            //         if (onConfirm) onConfirm(true, {commissions});
+            //       }
+            //       return vstack;
+            // 		}
+            // 	}
+            // },
+            ];
+            if (category && category !== 'offers') {
+                actions.push({
                     name: 'Settings',
                     icon: 'cog',
                     command: (builder, userInputData) => {
@@ -17975,9 +18066,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: propertiesSchema
-                },
-                {
+                    userInputDataSchema: formSchema_json_1.default.general.dataSchema
+                });
+                actions.push({
                     name: 'Theme Settings',
                     icon: 'palette',
                     command: (builder, userInputData) => {
@@ -18008,9 +18099,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: themeSchema
-                }
-            ];
+                    userInputDataSchema: formSchema_json_1.default.theme.dataSchema
+                });
+            }
             return actions;
         }
         getConfigurators() {
@@ -18019,8 +18110,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 {
                     name: 'Builder Configurator',
                     target: 'Builders',
-                    getActions: () => {
-                        return this._getActions(this.getPropertiesSchema(), this.getThemeSchema());
+                    getActions: (category) => {
+                        return this._getActions(category);
                     },
                     getData: this.getData.bind(this),
                     setData: async (data) => {

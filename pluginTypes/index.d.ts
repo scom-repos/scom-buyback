@@ -12577,6 +12577,115 @@ declare module "@scom/scom-buyback/data.json.ts" {
     };
     export default _default_74;
 }
+/// <amd-module name="@scom/scom-buyback/formSchema.json.ts" />
+declare module "@scom/scom-buyback/formSchema.json.ts" {
+    const _default_75: {
+        general: {
+            dataSchema: {
+                type: string;
+                properties: {
+                    chainId: {
+                        type: string;
+                        enum: number[];
+                        required: boolean;
+                    };
+                    projectName: {
+                        type: string;
+                        required: boolean;
+                    };
+                    description: {
+                        type: string;
+                    };
+                    offerIndex: {
+                        type: string;
+                        required: boolean;
+                    };
+                    tokenIn: {
+                        type: string;
+                        required: boolean;
+                    };
+                    tokenOut: {
+                        type: string;
+                        required: boolean;
+                    };
+                    detailUrl: {
+                        type: string;
+                    };
+                };
+            };
+        };
+        theme: {
+            dataSchema: {
+                type: string;
+                properties: {
+                    dark: {
+                        type: string;
+                        properties: {
+                            backgroundColor: {
+                                type: string;
+                                format: string;
+                            };
+                            fontColor: {
+                                type: string;
+                                format: string;
+                            };
+                            inputBackgroundColor: {
+                                type: string;
+                                format: string;
+                            };
+                            inputFontColor: {
+                                type: string;
+                                format: string;
+                            };
+                            secondaryColor: {
+                                type: string;
+                                title: string;
+                                format: string;
+                            };
+                            secondaryFontColor: {
+                                type: string;
+                                title: string;
+                                format: string;
+                            };
+                        };
+                    };
+                    light: {
+                        type: string;
+                        properties: {
+                            backgroundColor: {
+                                type: string;
+                                format: string;
+                            };
+                            fontColor: {
+                                type: string;
+                                format: string;
+                            };
+                            inputBackgroundColor: {
+                                type: string;
+                                format: string;
+                            };
+                            inputFontColor: {
+                                type: string;
+                                format: string;
+                            };
+                            secondaryColor: {
+                                type: string;
+                                title: string;
+                                format: string;
+                            };
+                            secondaryFontColor: {
+                                type: string;
+                                title: string;
+                                format: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
+    export default _default_75;
+}
 /// <amd-module name="@scom/scom-buyback/index.css.ts" />
 declare module "@scom/scom-buyback/index.css.ts" {
     export const buybackDappContainer: string;
@@ -12584,7 +12693,7 @@ declare module "@scom/scom-buyback/index.css.ts" {
 }
 /// <amd-module name="@scom/scom-buyback" />
 declare module "@scom/scom-buyback" {
-    import { Module, Container, ControlElement, IDataSchema } from '@ijstech/components';
+    import { Module, Container, ControlElement } from '@ijstech/components';
     import '@ijstech/eth-contract';
     import { IBuybackCampaign, ICommissionInfo, INetworkConfig } from "@scom/scom-buyback/global/index.ts";
     import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
@@ -12648,16 +12757,7 @@ declare module "@scom/scom-buyback" {
         getConfigurators(): ({
             name: string;
             target: string;
-            getActions: () => {
-                name: string;
-                icon: string;
-                command: (builder: any, userInputData: any) => {
-                    execute: () => Promise<void>;
-                    undo: () => void;
-                    redo: () => void;
-                };
-                userInputDataSchema: IDataSchema;
-            }[];
+            getActions: (category?: string) => any;
             getData: any;
             setData: (data: any) => Promise<void>;
             getTag: any;
