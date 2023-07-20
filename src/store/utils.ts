@@ -1,34 +1,14 @@
-import { BigNumber, Erc20, INetwork, Wallet } from '@ijstech/eth-wallet';
+import { BigNumber, INetwork, Wallet } from '@ijstech/eth-wallet';
 import {
   ICommissionInfo,
-  IExtendedNetwork,
-  SITE_ENV
+  IExtendedNetwork
 } from '../global/index';
-import { ChainNativeTokenByChainId, WETHByChainId, isWalletConnected, ITokenObject } from '@scom/scom-token-list';
-import { Contracts as OpenSwapContracts } from '../contracts/oswap-openswap-contract/index';
+import { ChainNativeTokenByChainId, WETHByChainId, ITokenObject } from '@scom/scom-token-list';
 import getNetworkList from '@scom/scom-network-list';
 import { CoreContractAddressesByChainId } from './data/index';
 export * from './data/index';
 
 import { application } from '@ijstech/components';
-
-export enum WalletPlugin {
-  MetaMask = 'metamask',
-  Coin98 = 'coin98',
-  TrustWallet = 'trustwallet',
-  BinanceChainWallet = 'binancechainwallet',
-  ONTOWallet = 'onto',
-  WalletConnect = 'walletconnect',
-  BitKeepWallet = 'bitkeepwallet',
-  FrontierWallet = 'frontierwallet',
-}
-
-export const nullAddress = "0x0000000000000000000000000000000000000000";
-export const INFINITE = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-
-export const getSupportedNetworks = () => {
-  return Object.values(state.networkMap);
-}
 
 const setInfuraId = (infuraId: string) => {
   state.infuraId = infuraId;
@@ -36,12 +16,6 @@ const setInfuraId = (infuraId: string) => {
 
 export const getInfuraId = () => {
   return state.infuraId;
-}
-
-export const getSiteSupportedNetworks = () => {
-  let networkFullList = Object.values(state.networkMap);
-  let list = networkFullList.filter(network => !getNetworkInfo(network.chainId).isDisabled);
-  return list;
 }
 
 const setNetworkList = (networkList: IExtendedNetwork[], infuraId?: string) => {
@@ -68,24 +42,12 @@ const setNetworkList = (networkList: IExtendedNetwork[], infuraId?: string) => {
   }
 }
 
-export const getNetworkInfo = (chainId: number) => {
-  return state.networkMap[chainId];
-}
-
-export const setCurrentChainId = (value: number) => {
-  state.currentChainId = value;
-}
-
-export const getCurrentChainId = (): number => {
-  return state.currentChainId;
-}
-
 export const getChainNativeToken = (chainId: number): ITokenObject => {
   return ChainNativeTokenByChainId[chainId];
 }
 
-export function getAddresses(chainId: number) {
-  return CoreContractAddressesByChainId[chainId];
+export function getAddresses(chainId?: number) {
+  return CoreContractAddressesByChainId[chainId || getChainId()] || {};
 }
 
 export const getWETH = (chainId: number): ITokenObject => {
@@ -103,20 +65,9 @@ export const setDataFromConfig = (options: any) => {
   if (options.proxyAddresses) {
     setProxyAddresses(options.proxyAddresses)
   }
-  if (options.ipfsGatewayUrl) {
-    setIPFSGatewayUrl(options.ipfsGatewayUrl);
-  }
-  if (options.apiGatewayUrls) {
-    setAPIGatewayUrls(options.apiGatewayUrls);
-  }
   if (options.embedderCommissionFee) {
     setEmbedderCommissionFee(options.embedderCommissionFee);
   }
-}
-
-export function getErc20(address: string) {
-  const wallet = Wallet.getClientInstance();
-  return new Erc20(wallet, address);
 }
 
 export const getSlippageTolerance = (): any => {
@@ -138,46 +89,13 @@ export const setTransactionDeadline = (value: any) => {
 export type ProxyAddresses = { [key: number]: string };
 
 export const state = {
-  siteEnv: SITE_ENV.TESTNET,
   networkMap: {} as { [key: number]: IExtendedNetwork },
-  currentChainId: 0,
   slippageTolerance: 0.5,
   transactionDeadline: 30,
   infuraId: '',
   proxyAddresses: {} as ProxyAddresses,
-  ipfsGatewayUrl: '',
-  apiGatewayUrls: {} as Record<string, string>,
   embedderCommissionFee: '0',
   rpcWalletId: ''
-}
-
-export const getTokenObject = async (address: string, showBalance?: boolean) => {
-  const ERC20Contract = new OpenSwapContracts.ERC20(Wallet.getClientInstance(), address);
-  const symbol = await ERC20Contract.symbol();
-  const name = await ERC20Contract.name();
-  const decimals = (await ERC20Contract.decimals()).toFixed();
-  let balance;
-  if (showBalance && isWalletConnected()) {
-    balance = (await (ERC20Contract.balanceOf(Wallet.getClientInstance().account.address))).shiftedBy(-decimals).toFixed();
-  }
-  return {
-    address: address.toLowerCase(),
-    decimals: +decimals,
-    name,
-    symbol,
-    balance
-  }
-}
-
-export const getNetworkExplorerName = (chainId: number) => {
-  if (getNetworkInfo(chainId)) {
-    return getNetworkInfo(chainId).explorerName;
-  }
-  return 'Unknown';
-}
-
-export const getNetworkName = (chainId: number) => {
-  return getSiteSupportedNetworks().find(v => v.chainId === chainId)?.chainName || '';
 }
 
 export const setProxyAddresses = (data: ProxyAddresses) => {
@@ -191,18 +109,6 @@ export const getProxyAddress = (chainId?: number) => {
     return proxyAddresses[_chainId];
   }
   return null;
-}
-
-export const setIPFSGatewayUrl = (url: string) => {
-  state.ipfsGatewayUrl = url;
-}
-
-export const getIPFSGatewayUrl = () => {
-  return state.ipfsGatewayUrl;
-}
-
-export const setAPIGatewayUrls = (urls: Record<string, string>) => {
-  state.apiGatewayUrls = urls;
 }
 
 const setEmbedderCommissionFee = (fee: string) => {

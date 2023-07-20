@@ -34,24 +34,12 @@ export default Styles.style({
       color: '#FD4A4C',
       textDecoration: 'none'
     },
-    '.mb': {
+    '.mb-1': {
       marginBottom: '1rem'
     },
     'i-button': {
       padding: '1rem 2rem',
       textAlign: 'center'
-    },
-    '.address-txt > *': {
-      lineHeight: '1.5rem'
-    },
-    '.btn-submit': {
-      padding: '.35rem 2.438rem',
-      borderRadius: 5
-    },
-    '.btn-cancel': {
-      padding: '.35rem 2.438rem',
-      borderRadius: 5,
-      background: '#2B304A 0% 0% no-repeat padding-box'
     },
     '.btn-os': {
       background: 'transparent linear-gradient(90deg, #AC1D78 0%, #E04862 100%) 0% 0% no-repeat padding-box',

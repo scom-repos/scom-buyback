@@ -1,12 +1,6 @@
 import { BigNumber } from '@ijstech/eth-wallet';
 import { moment } from '@ijstech/components';
 
-export enum SITE_ENV {
-  DEV = 'dev',
-  TESTNET = 'testnet',
-  MAINNET = 'mainnet',
-}
-
 export const explorerTxUrlsByChainId: { [key: number]: string } = {
   1: 'https://etherscan.io/tx/',
   4: 'https://rinkeby.etherscan.io/tx/',
@@ -23,7 +17,6 @@ export const explorerTxUrlsByChainId: { [key: number]: string } = {
   421613: 'https://goerli.arbiscan.io/tx/'
 }
 
-export const DefaultDateTimeFormat = 'DD/MM/YYYY HH:mm:ss';
 export const DefaultDateFormat = 'DD/MM/YYYY';
 
 export const formatDate = (date: any, customType?: string, showTimezone?: boolean) => {
@@ -33,19 +26,6 @@ export const formatDate = (date: any, customType?: string, showTimezone?: boolea
     return `${formatted} (UTC+${moment().utcOffset() / 60})`;
   }
   return formatted;
-}
-
-export const formatUTCDate = (date: any, customType?: string, showTimezone?: boolean) => {
-  const formatType = customType || DefaultDateFormat;
-  const formatted = moment(date).utc().format(formatType);
-  return showTimezone ? `${formatted} (UTC)` : formatted;
-}
-
-export const compareDate = (fromDate: any, toDate?: any) => {
-  if (!toDate) {
-    toDate = moment();
-  }
-  return moment(fromDate).isSameOrBefore(toDate);
 }
 
 export const formatNumber = (value: any, decimals?: number) => {
@@ -60,16 +40,6 @@ export const formatNumber = (value: any, decimals?: number) => {
     return `<${minValue}`;
   }
   return formatNumberWithSeparators(val, decimals || 4);
-};
-
-export const formatPercentNumber = (value: any, decimals?: number) => {
-  let val = value;
-  if (typeof value === 'string') {
-    val = new BigNumber(value).toNumber();
-  } else if (typeof value === 'object') {
-    val = value.toNumber();
-  }
-  return formatNumberWithSeparators(val, decimals || 2);
 };
 
 export const formatNumberWithSeparators = (value: number, precision?: number) => {
@@ -89,11 +59,6 @@ export const formatNumberWithSeparators = (value: number, precision?: number) =>
     return outputStr;
   }
   return value.toLocaleString('en-US');
-}
-
-export const isValidNumber = (value: string | number) => {
-  const val = new BigNumber(value);
-  return val.gte(0);
 }
 
 export const isInvalidInput = (val: any) => {
@@ -170,8 +135,4 @@ export const viewOnExplorerByTxHash = (chainId: number, txHash: string) => {
     let url = `${explorerTxUrlsByChainId[chainId]}${txHash}`;
     window.open(url);
   }
-}
-
-export function isWalletAddress(address: string) {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
 }

@@ -11,26 +11,19 @@ import {
 
 import {
   Market,
-  CoreContractAddressesByChainId,
   getSlippageTolerance,
   getTransactionDeadline,
   getChainId,
   getProxyAddress,
+  getWETH,
+  getAddresses,
 } from '../store/index';
 
 import { getRangeQueueData, getGroupQueueTraderDataObj } from '../buyback-utils/index';
-import { WETHByChainId, ITokenObject } from '@scom/scom-token-list';
-
-function getAddresses() {
-  return CoreContractAddressesByChainId[getChainId()] || {};
-}
-
-const getWETH = (): ITokenObject => {
-  return WETHByChainId[getChainId()];
-}
+import { ITokenObject } from '@scom/scom-token-list';
 
 const getWrappedTokenAddress = (): string => {
-  return getWETH().address!;
+  return getWETH(getChainId()).address!;
 }
 
 const getHybridRouterAddress = (): string => {

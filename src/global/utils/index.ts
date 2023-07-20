@@ -2,16 +2,10 @@ export * from './helper';
 
 export { parseContractError } from './error';
 
-export { PageBlock } from './pageBlock';
-
 export {
-  isTransactionConfirmed,
   registerSendTxEvents,
   approveERC20Max,
-  getERC20Allowance,
-  isAddressValid,
-  getERC20Amount,
-  TokenMapType
+  getERC20Allowance
 } from './common';
 
 export {

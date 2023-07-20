@@ -2,7 +2,7 @@ import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement
 import { BigNumber, Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import '@ijstech/eth-contract';
 import { formatNumber, formatDate, EventId, limitInputNumber, limitDecimals, IERC20ApprovalAction, QueueType, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
-import { getChainId, setCurrentChainId, fallBackUrl, getProxyAddress, setDataFromConfig, getCurrentCommissions, getCommissionAmount, getEmbedderCommissionFee, getRpcWallet, initRpcWallet, isClientWalletConnected, isRpcWalletConnected } from './store/index';
+import { getChainId, fallBackUrl, getProxyAddress, setDataFromConfig, getCurrentCommissions, getCommissionAmount, getEmbedderCommissionFee, getRpcWallet, initRpcWallet, isClientWalletConnected, isRpcWalletConnected } from './store/index';
 import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
 import { executeSwap, getApprovalModelAction, getHybridRouterAddress, setApprovalModalSpenderAddress } from './swap-utils/index';
 import Alert from './alert/index';
@@ -123,12 +123,12 @@ export default class ScomBuyback extends Module {
 			// 			execute: async () => {
 			// 				_oldData = { ...this._data };
 			// 				if (userInputData.commissions) this._data.commissions = userInputData.commissions;
-			// 				this.refreshUI();
+			// 				this.refreshWidget();
 			// 				if (builder?.setData) builder.setData(this._data);
 			// 			},
 			// 			undo: () => {
 			// 				this._data = { ..._oldData };
-			// 				this.refreshUI();
+			// 				this.refreshWidget();
 			// 				if (builder?.setData) builder.setData(this._data);
 			// 			},
 			// 			redo: () => { }
@@ -181,15 +181,11 @@ export default class ScomBuyback extends Module {
 							this._data.tokenIn = userInputData.tokenIn;
 							this._data.tokenOut = userInputData.tokenOut;
 							this._data.detailUrl = userInputData.detailUrl;
-							setCurrentChainId(this._data.chainId);
-							this.refreshUI();
-							if (builder?.setData) builder.setData(this._data);
+							this.refreshData(builder);
 						},
 						undo: async () => {
 							this._data = { ..._oldData };
-							setCurrentChainId(this._data.chainId);
-							this.refreshUI();
-							if (builder?.setData) builder.setData(this._data);
+							this.refreshData(builder);
 						},
 						redo: () => { }
 					}
@@ -296,21 +292,12 @@ export default class ScomBuyback extends Module {
 		const rpcWalletId = initRpcWallet(this.defaultChainId);
 		const rpcWallet = getRpcWallet();
 		const event = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
-			this.updateContractAddress();
-			await this.initializeWidgetConfig();
+			this.refreshWidget();
 		});
 		this.rpcWalletEvents.push(event);
 
-		const containerData = {
-			defaultChainId: this.defaultChainId,
-			wallets: this.wallets,
-			networks: this.networks,
-			showHeader: this.showHeader,
-			rpcWalletId: rpcWallet.instanceId
-		}
-		if (this.dappContainer?.setData) this.dappContainer.setData(containerData);
-		this.updateContractAddress();
-		await this.refreshUI();
+		this.refreshDappContainer();
+		await this.refreshWidget();
 	}
 
 	async getTag() {
@@ -378,7 +365,7 @@ export default class ScomBuyback extends Module {
 		const { chainId, networks } = this._data;
 		if (chainId && networks) {
 			const matchNetwork = networks.find(v => v.chainId == chainId);
-			return matchNetwork ? [matchNetwork] : networks;
+			return matchNetwork ? [matchNetwork] : [{ chainId }];
 		}
 		return networks ?? [];
 	}
@@ -411,11 +398,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	private registerEvent = () => {
-		this.clientEvents.push(this.$eventBus.register(this, EventId.chainChanged, this.onChainChanged));
-	}
-
-	private onChainChanged = async () => {
-		this.initializeWidgetConfig();
+		this.clientEvents.push(this.$eventBus.register(this, EventId.chainChanged, this.refreshWidget));
 	}
 
 	private updateContractAddress = () => {
@@ -431,7 +414,26 @@ export default class ScomBuyback extends Module {
 		}
 	}
 
-	private refreshUI = async () => {
+	private refreshData = (builder: any) => {
+		this.refreshDappContainer();
+		this.refreshWidget();
+		if (builder?.setData) builder.setData(this._data);
+	}
+
+	private refreshDappContainer = () => {
+		const rpcWallet = getRpcWallet();
+		const containerData = {
+			defaultChainId: this._data.chainId || this.defaultChainId,
+			wallets: this.wallets,
+			networks: this.networks,
+			showHeader: this.showHeader,
+			rpcWalletId: rpcWallet.instanceId
+		}
+		if (this.dappContainer?.setData) this.dappContainer.setData(containerData);
+	}
+
+	private refreshWidget = async () => {
+		this.updateContractAddress();
 		await this.initializeWidgetConfig();
 	}
 
@@ -802,7 +804,6 @@ export default class ScomBuyback extends Module {
 			this.noCampaignSection = await Panel.create({ width: '100%', height: '100%' });
 		}
 		const isClientConnected = isClientWalletConnected();
-		const isRpcConnected = isRpcWalletConnected();
 		this.noCampaignSection.clearInnerHTML();
 		this.noCampaignSection.appendChild(
 			<i-vstack class="no-buyback" height="100%" background={{ color: Theme.background.main }} verticalAlignment="center">
@@ -810,8 +811,8 @@ export default class ScomBuyback extends Module {
 					<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
 					<i-label caption={isClientConnected ? 'No Buybacks' : 'Please connect with your wallet!'} />
 				</i-vstack>
-				{!isClientConnected || !isRpcConnected ? <i-button
-					caption={!isClientConnected ? 'Connect Wallet' : 'Switch Network'}
+				{!isClientConnected ? <i-button
+					caption="Connect Wallet"
 					class="btn-os"
 					minHeight={43}
 					width={300}
@@ -1075,7 +1076,6 @@ export default class ScomBuyback extends Module {
 		if (!lazyLoad) {
 			const defaultChainId = this.getAttribute('defaultChainId', true);
 			const chainId = this.getAttribute('chainId', true, defaultChainId || 0);
-			setCurrentChainId(chainId);
 			const projectName = this.getAttribute('projectName', true, '');
 			const description = this.getAttribute('description', true, '');
 			const offerIndex = this.getAttribute('offerIndex', true, 0);
