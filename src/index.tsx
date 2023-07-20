@@ -103,95 +103,6 @@ export default class ScomBuyback extends Module {
 		this.clientEvents = [];
 	}
 
-	private getPropertiesSchema() {
-		const propertiesSchema: any = {
-			type: 'object',
-			properties: {
-				chainId: {
-					type: 'number',
-					enum: [1, 56, 137, 250, 97, 80001, 43113, 43114],
-					required: true
-				},
-				projectName: {
-					type: 'string',
-					required: true
-				},
-				description: {
-					type: 'string'
-				},
-				offerIndex: {
-					type: 'number',
-					required: true
-				},
-				tokenIn: {
-					type: 'string',
-					required: true
-				},
-				tokenOut: {
-					type: 'string',
-					required: true
-				},
-				detailUrl: {
-					type: 'string'
-				}
-			}
-		}
-		return propertiesSchema;
-	}
-
-	private getThemeSchema() {
-		const _props = {
-			backgroundColor: {
-				type: 'string',
-				format: 'color'
-			},
-			fontColor: {
-				type: 'string',
-				format: 'color'
-			},
-			inputBackgroundColor: {
-				type: 'string',
-				format: 'color'
-			},
-			inputFontColor: {
-				type: 'string',
-				format: 'color'
-			},
-			// buttonBackgroundColor: {
-			// 	type: 'string',
-			// 	format: 'color'
-			// },
-			// buttonFontColor: {
-			// 	type: 'string',
-			// 	format: 'color'
-			// },
-			secondaryColor: {
-				type: 'string',
-				title: 'Timer Background Color',
-				format: 'color'
-			},
-			secondaryFontColor: {
-				type: 'string',
-				title: 'Timer Font Color',
-				format: 'color'
-			}
-		}
-		const themeSchema = {
-			type: 'object',
-			properties: {
-				'dark': {
-					type: 'object',
-					properties: _props
-				},
-				'light': {
-					type: 'object',
-					properties: _props
-				}
-			}
-		}
-		return themeSchema as IDataSchema;
-	}
-
 	private _getActions(category?: string) {
 		const self = this;
 		const actions: any = [
@@ -464,7 +375,12 @@ export default class ScomBuyback extends Module {
 	}
 
 	get networks() {
-		return this._data.networks ?? [];
+		const { chainId, networks } = this._data;
+		if (chainId && networks) {
+			const matchNetwork = networks.find(v => v.chainId == chainId);
+			return matchNetwork ? [matchNetwork] : networks;
+		}
+		return networks ?? [];
 	}
 
 	set networks(value: INetworkConfig[]) {
@@ -540,7 +456,7 @@ export default class ScomBuyback extends Module {
 				await Wallet.getClientInstance().init();
 				this.buybackInfo = await getGuaranteedBuyBackInfo(this._data);
 				this.updateCommissionInfo();
-				this.renderBuybackCampaign();
+				await this.renderBuybackCampaign();
 				this.renderLeftPart();
 				const firstToken = this.getTokenObject('toTokenAddress');
 				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[getChainId()]?.symbol && isRpcWalletConnected()) {
@@ -677,6 +593,10 @@ export default class ScomBuyback extends Module {
 	}
 
 	private updateBtnSwap = () => {
+		if (!isRpcWalletConnected()) {
+			this.btnSwap.enabled = true;
+			return;
+		}
 		if (!this.buybackInfo) return;
 		if (this.isSellDisabled) {
 			this.btnSwap.enabled = false;
@@ -1068,7 +988,7 @@ export default class ScomBuyback extends Module {
 								id="btnSwap"
 								minWidth={150}
 								minHeight={36}
-								caption="Sell"
+								caption={isRpcWalletConnected() ? 'Sell' : 'Switch Network'}
 								border={{ radius: 12 }}
 								rightIcon={{ spin: true, visible: false, fill: '#fff' }}
 								padding={{ top: 4, bottom: 4, left: 16, right: 16 }}
