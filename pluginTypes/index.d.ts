@@ -12751,8 +12751,6 @@ declare module "@scom/scom-buyback" {
         private clientEvents;
         static create(options?: ScomBuybackElement, parent?: Container): Promise<ScomBuyback>;
         onHide(): void;
-        private getPropertiesSchema;
-        private getThemeSchema;
         private _getActions;
         getConfigurators(): ({
             name: string;

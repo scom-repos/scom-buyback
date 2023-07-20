@@ -17887,93 +17887,6 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             }
             this.clientEvents = [];
         }
-        getPropertiesSchema() {
-            const propertiesSchema = {
-                type: 'object',
-                properties: {
-                    chainId: {
-                        type: 'number',
-                        enum: [1, 56, 137, 250, 97, 80001, 43113, 43114],
-                        required: true
-                    },
-                    projectName: {
-                        type: 'string',
-                        required: true
-                    },
-                    description: {
-                        type: 'string'
-                    },
-                    offerIndex: {
-                        type: 'number',
-                        required: true
-                    },
-                    tokenIn: {
-                        type: 'string',
-                        required: true
-                    },
-                    tokenOut: {
-                        type: 'string',
-                        required: true
-                    },
-                    detailUrl: {
-                        type: 'string'
-                    }
-                }
-            };
-            return propertiesSchema;
-        }
-        getThemeSchema() {
-            const _props = {
-                backgroundColor: {
-                    type: 'string',
-                    format: 'color'
-                },
-                fontColor: {
-                    type: 'string',
-                    format: 'color'
-                },
-                inputBackgroundColor: {
-                    type: 'string',
-                    format: 'color'
-                },
-                inputFontColor: {
-                    type: 'string',
-                    format: 'color'
-                },
-                // buttonBackgroundColor: {
-                // 	type: 'string',
-                // 	format: 'color'
-                // },
-                // buttonFontColor: {
-                // 	type: 'string',
-                // 	format: 'color'
-                // },
-                secondaryColor: {
-                    type: 'string',
-                    title: 'Timer Background Color',
-                    format: 'color'
-                },
-                secondaryFontColor: {
-                    type: 'string',
-                    title: 'Timer Font Color',
-                    format: 'color'
-                }
-            };
-            const themeSchema = {
-                type: 'object',
-                properties: {
-                    'dark': {
-                        type: 'object',
-                        properties: _props
-                    },
-                    'light': {
-                        type: 'object',
-                        properties: _props
-                    }
-                }
-            };
-            return themeSchema;
-        }
         _getActions(category) {
             const self = this;
             const actions = [
@@ -18237,8 +18150,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this._data.wallets = value;
         }
         get networks() {
-            var _a;
-            return (_a = this._data.networks) !== null && _a !== void 0 ? _a : [];
+            const { chainId, networks } = this._data;
+            if (chainId && networks) {
+                const matchNetwork = networks.find(v => v.chainId == chainId);
+                return matchNetwork ? [matchNetwork] : networks;
+            }
+            return networks !== null && networks !== void 0 ? networks : [];
         }
         set networks(value) {
             this._data.networks = value;
@@ -18316,7 +18233,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         await eth_wallet_8.Wallet.getClientInstance().init();
                         this.buybackInfo = await (0, index_22.getGuaranteedBuyBackInfo)(this._data);
                         this.updateCommissionInfo();
-                        this.renderBuybackCampaign();
+                        await this.renderBuybackCampaign();
                         this.renderLeftPart();
                         const firstToken = this.getTokenObject('toTokenAddress');
                         if (firstToken && firstToken.symbol !== ((_a = scom_token_list_4.ChainNativeTokenByChainId[(0, index_21.getChainId)()]) === null || _a === void 0 ? void 0 : _a.symbol) && (0, index_21.isRpcWalletConnected)()) {
@@ -18437,6 +18354,10 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.updateBtnSwap();
             };
             this.updateBtnSwap = () => {
+                if (!(0, index_21.isRpcWalletConnected)()) {
+                    this.btnSwap.enabled = true;
+                    return;
+                }
                 if (!this.buybackInfo)
                     return;
                 if (this.isSellDisabled) {
@@ -18732,7 +18653,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             this.$render("i-label", { id: "lbCommissionFee", caption: `0 ${firstSymbol}`, font: { size: '0.75rem' } })),
                         this.$render("i-vstack", { margin: { top: 15 }, verticalAlignment: "center", horizontalAlignment: "center" },
                             this.$render("i-panel", null,
-                                this.$render("i-button", { id: "btnSwap", minWidth: 150, minHeight: 36, caption: "Sell", border: { radius: 12 }, rightIcon: { spin: true, visible: false, fill: '#fff' }, padding: { top: 4, bottom: 4, left: 16, right: 16 }, 
+                                this.$render("i-button", { id: "btnSwap", minWidth: 150, minHeight: 36, caption: (0, index_21.isRpcWalletConnected)() ? 'Sell' : 'Switch Network', border: { radius: 12 }, rightIcon: { spin: true, visible: false, fill: '#fff' }, padding: { top: 4, bottom: 4, left: 16, right: 16 }, 
                                     // font={{ size: '0.875rem', color: Theme.colors.primary.contrastText }}
                                     // rightIcon={{ visible: false, fill: Theme.colors.primary.contrastText }}
                                     class: "btn-os", onClick: this.onSwap.bind(this) }))),
