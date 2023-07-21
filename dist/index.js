@@ -17882,9 +17882,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             };
             this.refreshData = (builder) => {
                 this.refreshDappContainer();
-                this.refreshWidget();
-                if (builder === null || builder === void 0 ? void 0 : builder.setData)
+                if (builder === null || builder === void 0 ? void 0 : builder.setData) {
                     builder.setData(this._data);
+                }
+                else {
+                    this.refreshWidget();
+                }
             };
             this.refreshDappContainer = () => {
                 var _a;
@@ -17923,7 +17926,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             scom_token_list_3.tokenStore.updateAllTokenBalances(rpcWallet);
                         }
                         await eth_wallet_8.Wallet.getClientInstance().init();
-                        this.buybackInfo = await (0, index_19.getGuaranteedBuyBackInfo)(this._data);
+                        this.buybackInfo = await (0, index_19.getGuaranteedBuyBackInfo)(Object.assign({}, this._data));
                         this.updateCommissionInfo();
                         await this.renderBuybackCampaign();
                         this.renderLeftPart();

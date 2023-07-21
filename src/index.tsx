@@ -416,8 +416,11 @@ export default class ScomBuyback extends Module {
 
 	private refreshData = (builder: any) => {
 		this.refreshDappContainer();
-		this.refreshWidget();
-		if (builder?.setData) builder.setData(this._data);
+		if (builder?.setData) {
+			builder.setData(this._data);
+		} else {
+			this.refreshWidget();
+		}
 	}
 
 	private refreshDappContainer = () => {
@@ -456,7 +459,7 @@ export default class ScomBuyback extends Module {
 					tokenStore.updateAllTokenBalances(rpcWallet);
 				}
 				await Wallet.getClientInstance().init();
-				this.buybackInfo = await getGuaranteedBuyBackInfo(this._data);
+				this.buybackInfo = await getGuaranteedBuyBackInfo({ ...this._data });
 				this.updateCommissionInfo();
 				await this.renderBuybackCampaign();
 				this.renderLeftPart();
