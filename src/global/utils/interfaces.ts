@@ -34,16 +34,3 @@ export interface INetworkConfig {
   chainId: number;
   chainName?: string;
 }
-
-export interface IEmbedData {
-  chainId?: number;
-  projectName?: string;
-  pairAddress?: string;
-  offerIndex?: number;
-  description?: string;
-  tokenIn?: string;
-  tokenOut?: string;
-  detailUrl?: string;
-
-  commissions?: ICommissionInfo[]
-}

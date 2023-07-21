@@ -14,13 +14,8 @@ export interface IExtendedNetwork extends INetwork {
 };
 
 export const enum EventId {
-    IsWalletConnected = 'isWalletConnected',
-    IsWalletDisconnected = 'IsWalletDisconnected',
     Paid = 'Paid',
     chainChanged = 'chainChanged',
-    EmitButtonStatus = 'buybackEmitButtonStatus',
-    EmitInput = 'buybackEmitInput',
-    EmitNewToken = 'emitNewToken',
 }
 
 export * from './utils/index';

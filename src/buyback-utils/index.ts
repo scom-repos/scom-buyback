@@ -9,19 +9,15 @@ import {
   getChainNativeToken,
   getAddresses,
   getChainId,
-  getRpcWallet
+  getRpcWallet,
+  getWETH
 } from '../store/index';
 import { Contracts } from '../contracts/oswap-openswap-contract/index';
 import { Contracts as AdaptorContracts } from '../contracts/oswap-oracle-adaptor-contract/index';
 import { moment } from '@ijstech/components';
-import { ITokenObject, WETHByChainId, tokenStore } from '@scom/scom-token-list';
+import { ITokenObject, tokenStore } from '@scom/scom-token-list';
 
 export interface AllocationMap { address: string, allocation: string }
-
-const getWETH = (chainId: number): ITokenObject => {
-  let wrappedToken = WETHByChainId[chainId];
-  return wrappedToken;
-};
 
 const getAddressByKey = (key: string) => {
   let Address = getAddresses(getChainId());

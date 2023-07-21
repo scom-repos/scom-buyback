@@ -10,47 +10,8 @@ const colorVar = {
 }
 
 Styles.fontFace({
-  fontFamily: "Apple SD Gothic Neo",
-  src: `url("${Assets.fullPath('fonts/FontsFree-Net-Apple-SD-Gothic-Neo-Bold.ttf')}") format("truetype")`,
-  fontWeight: 'bold',
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
   fontFamily: "Montserrat Regular",
   src: `url("${Assets.fullPath('fonts/montserrat/Montserrat-Regular.ttf')}") format("truetype")`,
-  fontWeight: 'nomal',
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Montserrat Bold",
-  src: `url("${Assets.fullPath('fonts/montserrat/Montserrat-Bold.ttf')}") format("truetype")`,
-  fontWeight: 'bold',
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Montserrat Light",
-  src: `url("${Assets.fullPath('fonts/montserrat/Montserrat-Light.ttf')}") format("truetype")`,
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Montserrat Medium",
-  src: `url("${Assets.fullPath('fonts/montserrat/Montserrat-Medium.ttf')}") format("truetype")`,
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Montserrat SemiBold",
-  src: `url("${Assets.fullPath('fonts/montserrat/Montserrat-SemiBold.ttf')}") format("truetype")`,
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Raleway Regular",
-  src: `url("${Assets.fullPath('fonts/raleway/Raleway-Regular.ttf')}") format("truetype")`,
   fontWeight: 'nomal',
   fontStyle: 'normal'
 })
@@ -59,24 +20,6 @@ Styles.fontFace({
   fontFamily: "Raleway Bold",
   src: `url("${Assets.fullPath('fonts/raleway/Raleway-Bold.ttf')}") format("truetype")`,
   fontWeight: 'bold',
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Raleway Light",
-  src: `url("${Assets.fullPath('fonts/raleway/Raleway-Light.ttf')}") format("truetype")`,
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Raleway Medium",
-  src: `url("${Assets.fullPath('fonts/raleway/Raleway-Medium.ttf')}") format("truetype")`,
-  fontStyle: 'normal'
-})
-
-Styles.fontFace({
-  fontFamily: "Raleway SemiBold",
-  src: `url("${Assets.fullPath('fonts/raleway/Raleway-SemiBold.ttf')}") format("truetype")`,
   fontStyle: 'normal'
 })
 
@@ -114,9 +57,6 @@ export const buybackComponent = Styles.style({
     '.i-loading-overlay': {
       background: Theme.background.main,
     },
-    '.overflow-inherit': {
-      overflow: 'inherit',
-    },
     '.btn-os': {
       background: colorVar.primaryButton,
       height: 'auto !important',
@@ -151,43 +91,8 @@ export const buybackComponent = Styles.style({
       background: colorVar.primaryDisabled,
       opacity: 1
     },
-    '.dark-bg, .dark-modal > div > div': {
-      background: colorVar.darkBg,
-      borderRadius: 5
-    },
-    '.btn-transparent, .btn-transparent:not(.disabled):focus, .btn-transparent:not(.disabled):hover': {
-      background: 'transparent',
-      boxShadow: 'none',
-      backgroundColor: 'transparent'
-    },
-    '.mr-0-5': {
-      marginRight: '.5rem'
-    },
-    '.ml-0-5': {
-      marginLeft: '.5rem'
-    },
-    '.mb-0-5': {
-      marginBottom: '.5rem'
-    },
     '.hidden': {
       display: 'none !important'
-    },
-    '.no-wrap': {
-      whiteSpace: 'nowrap'
-    },
-    '.flex-nowrap': {
-      flexWrap: 'nowrap',
-    },
-    '.py-1': {
-      paddingTop: '1rem',
-      paddingBottom: '1rem'
-    },
-    '.px-1': {
-      paddingLeft: '1rem',
-      paddingRight: '1rem'
-    },
-    '.align-middle': {
-      alignItems: 'center'
     },
     '.buyback-layout': {
       width: '100%',
@@ -195,31 +100,11 @@ export const buybackComponent = Styles.style({
       marginInline: 'auto',
       overflow: 'hidden',
     },
-    'i-link': {
-      display: 'flex',
-      $nest: {
-        '&:hover *': {
-          color: '#fff',
-          opacity: 0.9,
-        },
-      },
-    },
     '.opacity-50': {
       opacity: 0.5
     },
     '.cursor-default': {
       cursor: 'default',
-    },
-    '.text-overflow': {
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-    },
-    '.ml-auto': {
-      marginLeft: 'auto',
-    },
-    '.mr-025': {
-      marginRight: '0.25rem',
     },
     '.custom-timer': {
       display: 'flex',
@@ -253,23 +138,6 @@ export const buybackComponent = Styles.style({
     '.highlight-box': {
       borderColor: '#E53780 !important'
     },
-    '.best-price': {
-      position: 'absolute',
-      top: '-10px',
-      left: '10px',
-      background: 'linear-gradient(255deg,#f15e61,#b52082)',
-      borderRadius:' 0.75rem',
-      padding: '0.1rem 0.5rem',
-    },
-    '.input-disabled': {
-      opacity: 0.4,
-      cursor: 'default',
-      $nest: {
-        '*': {
-          cursor: 'default',
-        }
-      }
-    },
     'i-modal .modal': {
       background: Theme.background.modal,
     },
@@ -287,11 +155,6 @@ export const buybackComponent = Styles.style({
           marginTop: '2rem',
         },
       },
-    },
-    '.connect-wallet': {
-      display: 'block',
-      textAlign: 'center',
-      paddingTop: '1rem',
     }
   }
 })

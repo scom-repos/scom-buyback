@@ -4,23 +4,13 @@
 /// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
 declare module "@scom/scom-buyback/global/utils/helper.ts" {
     import { BigNumber } from '@ijstech/eth-wallet';
-    export enum SITE_ENV {
-        DEV = "dev",
-        TESTNET = "testnet",
-        MAINNET = "mainnet"
-    }
     export const explorerTxUrlsByChainId: {
         [key: number]: string;
     };
-    export const DefaultDateTimeFormat = "DD/MM/YYYY HH:mm:ss";
     export const DefaultDateFormat = "DD/MM/YYYY";
     export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
-    export const formatUTCDate: (date: any, customType?: string, showTimezone?: boolean) => string;
-    export const compareDate: (fromDate: any, toDate?: any) => boolean;
     export const formatNumber: (value: any, decimals?: number) => string;
-    export const formatPercentNumber: (value: any, decimals?: number) => string;
     export const formatNumberWithSeparators: (value: number, precision?: number) => string;
-    export const isValidNumber: (value: string | number) => boolean;
     export const isInvalidInput: (val: any) => boolean;
     export const limitInputNumber: (input: any, decimals?: number) => void;
     export const limitDecimals: (value: any, decimals: number) => any;
@@ -28,30 +18,10 @@ declare module "@scom/scom-buyback/global/utils/helper.ts" {
     export const padLeft: (string: string, chars: number, sign?: string) => string;
     export const numberToBytes32: (value: any, prefix?: string) => any;
     export const viewOnExplorerByTxHash: (chainId: number, txHash: string) => void;
-    export function isWalletAddress(address: string): boolean;
 }
 /// <amd-module name="@scom/scom-buyback/global/utils/error.ts" />
 declare module "@scom/scom-buyback/global/utils/error.ts" {
     export function parseContractError(oMessage: string, tokens: string[]): Promise<string>;
-}
-/// <amd-module name="@scom/scom-buyback/global/utils/pageBlock.ts" />
-declare module "@scom/scom-buyback/global/utils/pageBlock.ts" {
-    export interface PageBlock {
-        getData: () => any;
-        setData: (data: any) => Promise<void>;
-        getTag: () => any;
-        setTag: (tag: any) => Promise<void>;
-        validate?: () => boolean;
-        defaultEdit?: boolean;
-        tag?: any;
-        readonly onEdit: () => Promise<void>;
-        readonly onConfirm: () => Promise<void>;
-        readonly onDiscard: () => Promise<void>;
-        edit: () => Promise<void>;
-        confirm: () => Promise<void>;
-        discard: () => Promise<void>;
-        config: () => Promise<void>;
-    }
 }
 /// <amd-module name="@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts" />
 declare module "@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts" {
@@ -9625,17 +9595,11 @@ declare module "@scom/scom-buyback/contracts/oswap-openswap-contract/index.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/global/utils/common.ts" />
 declare module "@scom/scom-buyback/global/utils/common.ts" {
-    import { Wallet, BigNumber, ISendTxEventsOptions } from '@ijstech/eth-wallet';
+    import { BigNumber, ISendTxEventsOptions } from '@ijstech/eth-wallet';
     import { ITokenObject } from '@scom/scom-token-list';
-    export type TokenMapType = {
-        [token: string]: ITokenObject;
-    };
-    export const isTransactionConfirmed: (txHash: string) => Promise<boolean>;
     export const registerSendTxEvents: (sendTxEventHandlers: ISendTxEventsOptions) => void;
-    export function getERC20Amount(wallet: Wallet, token: string, decimals: number): Promise<BigNumber>;
     export const approveERC20Max: (token: ITokenObject, spenderAddress: string, callback?: any, confirmationCallback?: any) => Promise<import("@ijstech/eth-contract").TransactionReceipt>;
     export const getERC20Allowance: (token: ITokenObject, spenderAddress: string) => Promise<BigNumber>;
-    export const isAddressValid: (address: string) => Promise<any>;
 }
 /// <amd-module name="@scom/scom-buyback/global/utils/approvalModel.ts" />
 declare module "@scom/scom-buyback/global/utils/approvalModel.ts" {
@@ -9709,24 +9673,12 @@ declare module "@scom/scom-buyback/global/utils/interfaces.ts" {
         chainId: number;
         chainName?: string;
     }
-    export interface IEmbedData {
-        chainId?: number;
-        projectName?: string;
-        pairAddress?: string;
-        offerIndex?: number;
-        description?: string;
-        tokenIn?: string;
-        tokenOut?: string;
-        detailUrl?: string;
-        commissions?: ICommissionInfo[];
-    }
 }
 /// <amd-module name="@scom/scom-buyback/global/utils/index.ts" />
 declare module "@scom/scom-buyback/global/utils/index.ts" {
     export * from "@scom/scom-buyback/global/utils/helper.ts";
     export { parseContractError } from "@scom/scom-buyback/global/utils/error.ts";
-    export { PageBlock } from "@scom/scom-buyback/global/utils/pageBlock.ts";
-    export { isTransactionConfirmed, registerSendTxEvents, approveERC20Max, getERC20Allowance, isAddressValid, getERC20Amount, TokenMapType } from "@scom/scom-buyback/global/utils/common.ts";
+    export { registerSendTxEvents, approveERC20Max, getERC20Allowance } from "@scom/scom-buyback/global/utils/common.ts";
     export { ApprovalStatus, IERC20ApprovalEventOptions, IERC20ApprovalOptions, IERC20ApprovalAction, ERC20ApprovalModel } from "@scom/scom-buyback/global/utils/approvalModel.ts";
     export * from "@scom/scom-buyback/global/utils/interfaces.ts";
 }
@@ -9746,13 +9698,8 @@ declare module "@scom/scom-buyback/global/index.ts" {
         env?: string;
     }
     export const enum EventId {
-        IsWalletConnected = "isWalletConnected",
-        IsWalletDisconnected = "IsWalletDisconnected",
         Paid = "Paid",
-        chainChanged = "chainChanged",
-        EmitButtonStatus = "buybackEmitButtonStatus",
-        EmitInput = "buybackEmitInput",
-        EmitNewToken = "emitNewToken"
+        chainChanged = "chainChanged"
     }
     export * from "@scom/scom-buyback/global/utils/index.ts";
 }
@@ -9799,35 +9746,17 @@ declare module "@scom/scom-buyback/store/data/index.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/store/utils.ts" />
 declare module "@scom/scom-buyback/store/utils.ts" {
-    import { BigNumber, Erc20 } from '@ijstech/eth-wallet';
-    import { ICommissionInfo, IExtendedNetwork, SITE_ENV } from "@scom/scom-buyback/global/index.ts";
+    import { BigNumber } from '@ijstech/eth-wallet';
+    import { ICommissionInfo, IExtendedNetwork } from "@scom/scom-buyback/global/index.ts";
     import { ITokenObject } from '@scom/scom-token-list';
     export * from "@scom/scom-buyback/store/data/index.ts";
-    export enum WalletPlugin {
-        MetaMask = "metamask",
-        Coin98 = "coin98",
-        TrustWallet = "trustwallet",
-        BinanceChainWallet = "binancechainwallet",
-        ONTOWallet = "onto",
-        WalletConnect = "walletconnect",
-        BitKeepWallet = "bitkeepwallet",
-        FrontierWallet = "frontierwallet"
-    }
-    export const nullAddress = "0x0000000000000000000000000000000000000000";
-    export const INFINITE = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    export const getSupportedNetworks: () => IExtendedNetwork[];
     export const getInfuraId: () => string;
-    export const getSiteSupportedNetworks: () => IExtendedNetwork[];
-    export const getNetworkInfo: (chainId: number) => IExtendedNetwork;
-    export const setCurrentChainId: (value: number) => void;
-    export const getCurrentChainId: () => number;
     export const getChainNativeToken: (chainId: number) => ITokenObject;
-    export function getAddresses(chainId: number): {
+    export function getAddresses(chainId?: number): {
         [contract: string]: string;
     };
     export const getWETH: (chainId: number) => ITokenObject;
     export const setDataFromConfig: (options: any) => void;
-    export function getErc20(address: string): Erc20;
     export const getSlippageTolerance: () => any;
     export const setSlippageTolerance: (value: any) => void;
     export const getTransactionDeadline: () => any;
@@ -9836,34 +9765,18 @@ declare module "@scom/scom-buyback/store/utils.ts" {
         [key: number]: string;
     };
     export const state: {
-        siteEnv: SITE_ENV;
         networkMap: {
             [key: number]: IExtendedNetwork;
         };
-        currentChainId: number;
         slippageTolerance: number;
         transactionDeadline: number;
         infuraId: string;
         proxyAddresses: ProxyAddresses;
-        ipfsGatewayUrl: string;
-        apiGatewayUrls: Record<string, string>;
         embedderCommissionFee: string;
         rpcWalletId: string;
     };
-    export const getTokenObject: (address: string, showBalance?: boolean) => Promise<{
-        address: string;
-        decimals: number;
-        name: string;
-        symbol: string;
-        balance: any;
-    }>;
-    export const getNetworkExplorerName: (chainId: number) => string;
-    export const getNetworkName: (chainId: number) => string;
     export const setProxyAddresses: (data: ProxyAddresses) => void;
     export const getProxyAddress: (chainId?: number) => string;
-    export const setIPFSGatewayUrl: (url: string) => void;
-    export const getIPFSGatewayUrl: () => string;
-    export const setAPIGatewayUrls: (urls: Record<string, string>) => void;
     export const getEmbedderCommissionFee: () => string;
     export const getCurrentCommissions: (commissions: ICommissionInfo[]) => ICommissionInfo[];
     export const getCommissionAmount: (commissions: ICommissionInfo[], amount: BigNumber) => BigNumber;
@@ -12557,7 +12470,6 @@ declare module "@scom/scom-buyback/data.json.ts" {
             "97": string;
             "43113": string;
         };
-        ipfsGatewayUrl: string;
         embedderCommissionFee: string;
         defaultBuilderData: {
             defaultChainId: number;
@@ -12803,9 +12715,10 @@ declare module "@scom/scom-buyback" {
         set commissions(value: ICommissionInfo[]);
         constructor(parent?: Container, options?: ControlElement);
         private registerEvent;
-        private onChainChanged;
         private updateContractAddress;
-        private refreshUI;
+        private refreshData;
+        private refreshDappContainer;
+        private refreshWidget;
         private initializeWidgetConfig;
         private get isSellDisabled();
         private getFirstAvailableBalance;
