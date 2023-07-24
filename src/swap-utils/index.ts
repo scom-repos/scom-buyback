@@ -15,16 +15,11 @@ import {
   getTransactionDeadline,
   getChainId,
   getProxyAddress,
-  getWETH,
   getAddresses,
 } from '../store/index';
 
-import { getRangeQueueData, getGroupQueueTraderDataObj } from '../buyback-utils/index';
+import { getGroupQueueExecuteData } from '../buyback-utils/index';
 import { ITokenObject } from '@scom/scom-token-list';
-
-const getWrappedTokenAddress = (): string => {
-  return getWETH(getChainId()).address!;
-}
 
 const getHybridRouterAddress = (): string => {
   let Address = getAddresses();
@@ -99,52 +94,13 @@ const getPathsByTokenIn = (tradeFeeMap: any, pairInfoList: any[], routeObj: any,
   return routeObjList;
 }
 
-const getHybridAmountsOut = async (wallet: IWallet, amountIn: BigNumber, tokenIn: string, pair: string[], data: string = '0x') => {
-  let result
-  try {
-    let Address = getAddresses();
-    let hybridRouter = new Contracts.OSWAP_HybridRouter2(wallet as any, Address['OSWAP_HybridRouter2']);
-    result = await hybridRouter.getAmountsOutStartsWith({
-      amountIn,
-      pair,
-      tokenIn,
-      data
-    })
-  }
-  catch (err) {
-    console.log('getHybrid2AmountsOut', err)
-  }
-  return result;
-}
-
-const hybridTradeExactIn = async (wallet: IWallet, bestSmartRoute: any[], path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[], callback?: any, confirmationCallback?: any) => {
+const hybridTradeExactIn = async (wallet: IWallet, path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[]) => {
   if (path.length < 2) {
-    return null;
+    return null
   }
 
   let tokenIn = path[0];
   let tokenOut = path[path.length - 1];
-
-  if (bestSmartRoute && bestSmartRoute.length > 0) {
-    let pairIndex = bestSmartRoute.findIndex(n => n.queueType == QueueType.RANGE_QUEUE);
-    if (pairIndex != -1) {
-      if (bestSmartRoute[pairIndex].orderIds) {
-        let orderIds: number[] = bestSmartRoute[pairIndex].orderIds;
-        data = "0x" + Utils.numberToBytes32(0x20 * (orderIds.length + 1)) + Utils.numberToBytes32(orderIds.length) + orderIds.map(e => Utils.numberToBytes32(e)).join('');
-      }
-      else {
-        let amountInTokenAmount = Utils.toDecimals(amountIn, tokenIn.decimals).dp(0);
-        let tokenInAddress = tokenIn.address ? tokenIn.address : getWrappedTokenAddress();
-        let amountsOutObj = await getHybridAmountsOut(wallet, amountInTokenAmount, tokenInAddress, pairs);
-        if (!amountsOutObj) return null;
-        let pair = pairs[pairIndex];
-        let tokenA = path[pairIndex];
-        let tokenB = path[pairIndex + 1];
-        let rangeAmountOut = amountsOutObj[pairIndex + 1];
-        data = await getRangeQueueData(pair, tokenA, tokenB, rangeAmountOut);
-      }
-    }
-  }
 
   const hybridRouterAddress = getHybridRouterAddress();
   const hybridRouter = new Contracts.OSWAP_HybridRouter2(wallet, hybridRouterAddress);
@@ -161,7 +117,7 @@ const hybridTradeExactIn = async (wallet: IWallet, bestSmartRoute: any[], path: 
   });
   const commissionsAmount = _commissions.length ? _commissions.map(v => v.amount).reduce((a, b) => a.plus(b)).dp(0) : new BigNumber(0);
 
-  let receipt;
+  let receipt:TransactionReceipt;
   if (!tokenIn.address) {
     let params = {
       amountOutMin: _amountOutMin,
@@ -304,23 +260,14 @@ const executeSwap: (swapData: SwapData) => Promise<{
       Date.now() / 1000 + transactionDeadlineInMinutes * 60
     );
     if (swapData.provider === "RestrictedOracle") {
-      const obj = await getGroupQueueTraderDataObj(
-        swapData.pairs[0],
-        swapData.routeTokens[0],
-        swapData.routeTokens[1],
-        swapData.fromAmount.toString(),
-        swapData.groupQueueOfferIndex?.toString()
-      );
-      if (!obj || !obj.data)
-        return {
-          receipt: null,
-          error: { message: "No data from Group Queue Trader" },
-        };
-      const data = obj.data;
+      const data = getGroupQueueExecuteData(swapData.groupQueueOfferIndex)
+      if (!data) return {
+        receipt: null,
+        error: { message: "No data from Group Queue Trader" },
+      };
       const amountOutMin = swapData.toAmount.times(1 - slippageTolerance / 100);
       receipt = await hybridTradeExactIn(
         wallet,
-        swapData.bestSmartRoute,
         swapData.routeTokens,
         swapData.pairs,
         swapData.fromAmount.toString(),
@@ -351,7 +298,7 @@ const getApprovalModelAction = async (options: IERC20ApprovalEventOptions) => {
 }
 
 const setApprovalModalSpenderAddress = (contractAddress?: string) => {
-  let spender;
+  let spender:string;
   if (contractAddress) {
     spender = contractAddress;
   } else {

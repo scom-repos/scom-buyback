@@ -4,7 +4,7 @@ import {
   numberToBytes32,
   IBuybackCampaign,
 } from '../global/index';
-import { BigNumber, IWallet, Utils, Wallet } from '@ijstech/eth-wallet';
+import { BigNumber } from '@ijstech/eth-wallet';
 import {
   getChainNativeToken,
   getAddresses,
@@ -13,8 +13,6 @@ import {
   getWETH
 } from '../store/index';
 import { Contracts } from '../contracts/oswap-openswap-contract/index';
-import { Contracts as AdaptorContracts } from '../contracts/oswap-oracle-adaptor-contract/index';
-import { moment } from '@ijstech/components';
 import { ITokenObject, tokenStore } from '@scom/scom-token-list';
 
 export interface AllocationMap { address: string, allocation: string }
@@ -22,10 +20,6 @@ export interface AllocationMap { address: string, allocation: string }
 const getAddressByKey = (key: string) => {
   let Address = getAddresses(getChainId());
   return Address[key];
-}
-
-function toTokenAmount(token: any, amount: any) {
-  return (BigNumber.isBigNumber(amount) ? amount : new BigNumber(amount.toString())).shiftedBy(Number(token.decimals)).decimalPlaces(0, BigNumber.ROUND_FLOOR);
 }
 
 const mapTokenObjectSet = (obj: any) => {
@@ -90,8 +84,8 @@ const getPair = async (queueType: QueueType, tokenA: any, tokenB: any) => {
       return await groupQ.getPair({ ...params, param3: 0 });
   }
 }
-
-interface GroupQueueOfferDetail {
+/*
+interface GroupQueueOffer {
   pairAddress: string,
   tokenIn: string,
   tokenOut: string,
@@ -107,171 +101,58 @@ interface GroupQueueOfferDetail {
   locked: boolean,
   tradeFee: string,
 }
+interface GroupQueueOfferDetail extends GroupQueueOffer {
+  amountIn:string,
+  amountOut:string,
+}
 
-const getGroupQueueItemsForTrader = async (pairAddress: string, tokenIn: any, tokenOut: any): Promise<GroupQueueOfferDetail[]> => {
+async function getGroupQueueOffer(pairAddress: string, tokenIn: ITokenObject, tokenOut: ITokenObject, offerIndex: number|BigNumber):Promise<GroupQueueOffer> {
   let wallet = Wallet.getClientInstance();
-  let chainId = getChainId();
-  const nativeToken = getChainNativeToken(chainId);
+  let chainId = wallet.chainId;
+
   var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-  let trader = wallet.address;
   const pairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
-  let traderOffer = await pairContract.getTraderOffer({ trader, direction, start: 0, length: 100 });
-  let amounts = traderOffer.amountAndPrice.slice(0, traderOffer.amountAndPrice.length / 2);
-  let prices = traderOffer.amountAndPrice.slice(traderOffer.amountAndPrice.length / 2, traderOffer.amountAndPrice.length);
-  let startDates = traderOffer.startDateAndExpire.slice(0, traderOffer.startDateAndExpire.length / 2);
-  let endDates = traderOffer.startDateAndExpire.slice(traderOffer.startDateAndExpire.length / 2, traderOffer.startDateAndExpire.length);
-  let locked = traderOffer.lockedAndAllowAll.slice(0, traderOffer.lockedAndAllowAll.length);
-  let queueArr: GroupQueueOfferDetail[] = [];
-  let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
-  let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-  const WETH9Address = getAddressByKey('WETH9');
-  const isTokenInNative = tokenIn.address.toLowerCase() == WETH9Address.toLowerCase();
-  const isTokenOutNative = tokenOut.address.toLowerCase() == WETH9Address.toLowerCase();
-
-  for (let i = 0; i < amounts.length; i++) {
-    if (amounts[i].eq("0")) continue;
-    let allocation = await getGroupQueueAllocation(wallet, trader, traderOffer.index[i].toNumber(), pairAddress, tokenIn, tokenOut);
-    if (allocation.eq("0")) continue;
-    let tokenOutAvailable = new BigNumber(amounts[i]).gt(new BigNumber(allocation)) ? allocation : amounts[i]
-    let tokenInAvailable = new BigNumber(tokenOutAvailable).dividedBy(new BigNumber(prices[i])).shiftedBy(18 - tokenOut.decimals).dividedBy(new BigNumber(tradeFee)).decimalPlaces(tokenIn.decimals, 1).toFixed();
-    queueArr.push({
-      pairAddress,
-      tokenIn: isTokenInNative ? nativeToken.symbol : tokenIn.address,
-      tokenOut: isTokenOutNative ? nativeToken.symbol : tokenOut.address,
-      index: traderOffer.index[i],
-      provider: traderOffer.provider[i],
-      amount: amounts[i],
-      allocation,
-      tokenInAvailable,
-      price: prices[i],
-      start: startDates[i].toNumber() * 1000,
-      expire: endDates[i].toNumber() * 1000,
-      allowAll: false,
-      locked: locked[i],
-      tradeFee
-    });
-  }
-  return queueArr.filter(v => moment().isBetween(v.start, v.expire));
-}
-
-const getGroupQueueItemsForAllowAll = async (pairAddress: string, tokenIn: any, tokenOut: any): Promise<GroupQueueOfferDetail[]> => {
-  let wallet = Wallet.getClientInstance();
-  let chainId = getChainId();
-  const nativeToken = getChainNativeToken(chainId);
-  var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-  const oracleContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
-  let allOffer = await oracleContract.getOffers({ direction, start: 0, length: 100 });
-  let amounts = allOffer.amountAndPrice.slice(0, allOffer.amountAndPrice.length / 2);
-  let prices = allOffer.amountAndPrice.slice(allOffer.amountAndPrice.length / 2, allOffer.amountAndPrice.length);
-  let startDates = allOffer.startDateAndExpire.slice(0, allOffer.startDateAndExpire.length / 2);
-  let endDates = allOffer.startDateAndExpire.slice(allOffer.startDateAndExpire.length / 2, allOffer.startDateAndExpire.length);
-  let allowAll = allOffer.lockedAndAllowAll.slice(allOffer.lockedAndAllowAll.length / 2, allOffer.lockedAndAllowAll.length);
-  let locked = allOffer.lockedAndAllowAll.slice(0, allOffer.lockedAndAllowAll.length);
-  let queueArr: GroupQueueOfferDetail[] = [];
-  let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
-  let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-  const WETH9Address = getAddressByKey('WETH9');
-  const isTokenInNative = tokenIn.address.toLowerCase() == WETH9Address.toLowerCase();
-  const isTokenOutNative = tokenOut.address.toLowerCase() == WETH9Address.toLowerCase();
-
-  for (let i = 0; i < amounts.length; i++) {
-    let tokenOutAvailable = amounts[i]
-    let tokenInAvailable = tokenOutAvailable.dividedBy(prices[i]).shiftedBy(18 - tokenOut.decimals).dividedBy(new BigNumber(tradeFee)).decimalPlaces(tokenIn.decimals, 1).toFixed();
-
-    queueArr.push({
-      pairAddress,
-      tokenIn: isTokenInNative ? nativeToken.symbol : tokenIn.address,
-      tokenOut: isTokenOutNative ? nativeToken.symbol : tokenOut.address,
-      index: allOffer.index[i],
-      provider: allOffer.provider[i],
-      amount: amounts[i],
-      allocation: amounts[i],
-      tokenInAvailable,
-      price: prices[i],
-      start: startDates[i].toNumber() * 1000,
-      expire: endDates[i].toNumber() * 1000,
-      allowAll: allowAll[i],
-      locked: locked[i],
-      tradeFee
-    });
-  }
-
-  return queueArr.filter(v => (moment().isBetween(v.start, v.expire) && v.allowAll == true));
-}
-
-const getGroupQueueTraderDataObj = async (pairAddress: string, tokenIn: any, tokenOut: any, amountIn: string, offerIndex?: string) => {
-  let tokens = mapTokenObjectSet({ tokenIn, tokenOut });
-  let tokenAmountIn = toTokenAmount(tokens.tokenIn, amountIn).toFixed();
-  let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
-  let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-  let queueArr = await getGroupQueueItemsForTrader(pairAddress, tokens.tokenIn, tokens.tokenOut);
-  let queueAll = await getGroupQueueItemsForAllowAll(pairAddress, tokens.tokenIn, tokens.tokenOut);
-  queueArr = queueArr.concat(queueAll);
-  queueArr = queueArr.map(v => {
-    return {
-      ...v,
-      amountIn: new BigNumber(tokenAmountIn).shiftedBy(-tokens.tokenIn.decimals).toFixed(),
-      amountOut: new BigNumber(tokenAmountIn).times(v.price).shiftedBy(-18 - Number(tokens.tokenIn.decimals) + Number(tokens.tokenOut.decimals)).times(tradeFee).toFixed()
-    }
-  }).filter(v => new BigNumber(v.tokenInAvailable).gte(new BigNumber(v.amountIn))).sort((a, b) => new BigNumber(b.amountOut).minus(a.amountOut).toNumber());
-
-  if (queueArr.length == 0) {
-    return {
-      sufficientLiquidity: false
-    }
-  }
-
-  let ratioArr = [toWeiInv('1')];
-  let queueItem;
-  if (offerIndex) {
-    queueItem = queueArr.find(o => o.index.eq(offerIndex));
-    if (!queueItem) return null;
-  }
-  else {
-    queueItem = queueArr[0];
-  }
-
-  let indexArr = [queueItem.index];
-  let amountOut = queueItem.amount; //was amountOut
-  let price = new BigNumber(1).shiftedBy(18).div(queueItem.price).toFixed();
-  let priceSwap = new BigNumber(queueItem.price).shiftedBy(-18).toFixed();
-
-  let data = "0x" + numberToBytes32((indexArr.length * 2 + 1) * 32) + numberToBytes32(indexArr.length) + indexArr.map(e => numberToBytes32(e)).join('') + ratioArr.map(e => numberToBytes32(e)).join('');
-  return {
-    sufficientLiquidity: true,
-    price: parseFloat(price),
-    priceSwap: parseFloat(priceSwap),
-    amountIn,
-    amountOut: new BigNumber(amountOut).shiftedBy(-tokens.tokenOut.decimals).toFixed(),
-    data,
-    tradeFeeObj
-  }
-}
-
-const getGroupQueueAllocation = async (wallet: IWallet, traderAddress: string, offerIndex: number, pairAddress: string, tokenIn: any, tokenOut: any) => {
-  let direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-  return await new Contracts.OSWAP_RestrictedPair(wallet, pairAddress).traderAllocation({ param1: direction, param2: offerIndex, param3: traderAddress });
-};
-
-const getLatestOraclePrice = async (queueType: QueueType, token: ITokenObject, againstToken: ITokenObject) => {
-  let tokens = mapTokenObjectSet({ token, againstToken });
-  let wallet = Wallet.getClientInstance();
-  let address = getFactoryAddress(queueType);
-  let factory = new Contracts.OSWAP_OracleFactory(wallet, address);
-  let oracleAdapterAddress = await factory.oracles({ param1: tokens.token.address, param2: tokens.againstToken.address });
-  let price = '0';
   try {
-    const oracleAdaptorContract = new AdaptorContracts.OSWAP_OracleChainlink(wallet, oracleAdapterAddress);
-    price = (await oracleAdaptorContract.getLatestPrice({
-      from: tokens.token.address,
-      to: tokens.againstToken.address,
-      payload: "0x"
-    })).toFixed();
+    let traderOffer = await pairContract.offers({param1:direction, param2:offerIndex});
+    //assuming if allowAll, allocation for anyone is 0
+    let allocation = new BigNumber("0");
+    if (!traderOffer.allowAll) allocation = await pairContract.traderAllocation({ param1: direction, param2: offerIndex, param3: wallet.address });
+    let tokenOutAvailable = (!traderOffer.allowAll && traderOffer.amount.gt(allocation))? allocation : traderOffer.amount
+    
+    let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
+    let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
+    let tokenInAvailable = tokenOutAvailable.dividedBy(traderOffer.restrictedPrice).shiftedBy(18 - tokenOut.decimals).dividedBy(new BigNumber(tradeFee)).decimalPlaces(tokenIn.decimals, 1).toFixed();
+    const WETH9Address = getAddressByKey('WETH9');
+    const isTokenInNative =  tokenIn.address.toLowerCase() == WETH9Address.toLowerCase();
+    const isTokenOutNative = tokenOut.address.toLowerCase() == WETH9Address.toLowerCase();
+    const nativeToken = getChainNativeToken(chainId);
+  
+    return {
+      pairAddress,
+      tokenIn: isTokenInNative ? nativeToken.symbol : tokenIn.address,
+      tokenOut: isTokenOutNative ? nativeToken.symbol : tokenOut.address,
+      index: new BigNumber(offerIndex),
+      provider: traderOffer.provider,
+      amount: traderOffer.amount,
+      allocation, //will be 0 if allowAll
+      tokenInAvailable,
+      price: traderOffer.restrictedPrice,
+      start: traderOffer.startDate.shiftedBy(3).toNumber(),
+      expire: traderOffer.expire.shiftedBy(3).toNumber(),
+      allowAll: traderOffer.allowAll,
+      locked: traderOffer.locked,
+      tradeFee
+    }
+  } catch (error) { // most likely error in pairContract.offers
+    return null;
   }
-  catch (err) {
-    console.log("Fail to get latest price from oracle");
-  }
-  return price;
+}
+*/
+const getGroupQueueExecuteData = (offerIndex: number|BigNumber) => {
+  let indexArr = [offerIndex];
+  let ratioArr = [toWeiInv('1')];
+  let data = "0x" + numberToBytes32((indexArr.length * 2 + 1) * 32) + numberToBytes32(indexArr.length) + indexArr.map(e => numberToBytes32(e)).join('') + ratioArr.map(e => numberToBytes32(e)).join('');
+  return data;
 }
 
 interface GuaranteedBuyBackInfo extends IBuybackCampaign {
@@ -346,34 +227,35 @@ const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddr
   }
   let totalAllocation = new BigNumber('0');
   let [offer, addresses] = await Promise.all([
-    oracleContract.getOffers({ direction, start: offerIndex, length: 1 }),
+    oracleContract.offers({ param1:direction, param2: offerIndex}),
     getTradersAllocation(oracleContract, direction, offerIndex, Number(tokenIn.decimals), (address: string, allocation: string) => {
       totalAllocation = totalAllocation.plus(allocation)
     })
   ]);
+
+  let price = toWeiInv(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
+  let amount = new BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
+  let userAllo:AllocationMap  = addresses.find(v=>v.address===wallet.address) || {address: wallet.address,allocation:"0"};
+  let available = offer.allowAll ? amount : new BigNumber(userAllo.allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
   let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-
-  let price = toWeiInv(new BigNumber(offer.amountAndPrice[1]).shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
-  let amount = new BigNumber(offer.amountAndPrice[0]).shiftedBy(-Number(tokenIn.decimals)).toFixed();
-  const selectedAddress = wallet.address;
-  let available = offer.lockedAndAllowAll[1] ? amount : new BigNumber(await getGroupQueueAllocation(wallet, selectedAddress, offerIndex, pairAddress, tokenOut, tokenIn)).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   let tokenInAvailable = new BigNumber(available).dividedBy(new BigNumber(price)).dividedBy(new BigNumber(tradeFee)).toFixed();
+  
   return {
     pairAddress: pairAddress.toLowerCase(),
     fromTokenAddress: tokenInAddress == WETH9Address.toLowerCase() ? nativeToken.symbol : tokenInAddress,
     toTokenAddress: tokenOut.address ? tokenOut.address.toLowerCase() == WETH9Address.toLowerCase() ? nativeToken.symbol : tokenOut.address.toLowerCase() : "",
     amount,
     offerPrice: price,
-    startDate: offer.startDateAndExpire[0].times(1000).toNumber(),
-    endDate: offer.startDateAndExpire[1].times(1000).toNumber(),
-    state: offer.lockedAndAllowAll[0] ? 'Locked' : 'Unlocked',
-    allowAll: offer.lockedAndAllowAll[1],
+    startDate: offer.startDate.times(1000).toNumber(),
+    endDate: offer.expire.times(1000).toNumber(),
+    state: offer.locked ? 'Locked' : 'Unlocked',
+    allowAll: offer.allowAll,
     direct: true,
     offerIndex,
     addresses,
     allocation: totalAllocation.toFixed(),
-    willGet: new BigNumber(offer.amountAndPrice[0]).times(new BigNumber(price)).shiftedBy(-Number(tokenIn.decimals)).toFixed(),
+    willGet: offer.amount.times(new BigNumber(price)).shiftedBy(-Number(tokenIn.decimals)).toFixed(),
     tradeFee,
     tokenInAvailable,
     available
@@ -416,71 +298,10 @@ interface QueueBasicInfo {
   isOdd: boolean,
 }
 
-const getRangeQueueData = async (pair: string, tokenA: ITokenObject, tokenB: ITokenObject, amountOut: BigNumber) => {
-  let data = '0x';
-  let wallet = Wallet.getClientInstance();
-  let chainId = getChainId();
-
-  if (!tokenA.address) tokenA = getWETH(chainId);
-  if (!tokenB.address) tokenB = getWETH(chainId);
-  let direction = (new BigNumber(tokenA.address!.toLowerCase()).lt(tokenB.address!.toLowerCase()));
-  let rangePair = new Contracts.OSWAP_RangePair(wallet, pair);
-  let offers = await rangePair.getOffers({
-    direction,
-    start: 0,
-    end: 100
-  });
-  let amounts = offers.amountAndReserve.slice(0, offers.amountAndReserve.length / 2);
-  let reserves = offers.amountAndReserve.slice(offers.amountAndReserve.length / 2, offers.amountAndReserve.length);
-  let expiryDates = offers.startDateAndExpire.slice(offers.startDateAndExpire.length / 2, offers.startDateAndExpire.length);
-  let lowerLimits = offers.lowerLimitAndUpperLimit.slice(0, offers.lowerLimitAndUpperLimit.length / 2);
-  let upperLimits = offers.lowerLimitAndUpperLimit.slice(offers.lowerLimitAndUpperLimit.length / 2, offers.lowerLimitAndUpperLimit.length);
-
-  if (amounts.length > 1) {
-    let index = [];
-    let remainingAmt = new BigNumber(amountOut);
-    const priceSwap = await getLatestOraclePrice(QueueType.RANGE_QUEUE, tokenA, tokenB);
-    let offerArr = [...Array(amounts.length).keys()].map(i => i + 1).map(v => {
-      return {
-        index: v,
-        provider: offers.provider[v],
-        amount: amounts[v],
-        reserve: reserves[v],
-        lowerLimit: lowerLimits[v],
-        upperLimit: upperLimits[v],
-        expire: expiryDates[v],
-        privateReplenish: offers.privateReplenish[v]
-      }
-    }).sort((a, b) => new BigNumber(b.amount).minus(a.amount).toNumber())
-
-    for (let i = 0; i < offerArr.length; i++) {
-      let offer = offerArr[i];
-      let lowerLimit = offer.lowerLimit;
-      let upperLimit = offer.upperLimit;
-      let expire = offer.expire.toNumber() * 1000;
-      if (moment(expire).isBefore(moment())) continue;
-      if (new BigNumber(lowerLimit).gt(priceSwap)) continue;
-      if (new BigNumber(upperLimit).gt(0) && new BigNumber(upperLimit).lt(priceSwap)) continue;
-      if (remainingAmt.gt(offer.amount)) {
-        index.push(offer.index);
-        remainingAmt = remainingAmt.minus(offer.amount);
-      }
-      else {
-        index.push(offer.index);
-        break;
-      }
-    }
-    data = "0x" + Utils.numberToBytes32(0x20 * (index.length + 1)) + Utils.numberToBytes32(index.length) + index.map(e => Utils.numberToBytes32(e)).join('');
-  }
-  return data;
-}
-
 export {
   QueueBasicInfo,
-  getRangeQueueData,
   getPair,
-  getLatestOraclePrice,
-  getGroupQueueTraderDataObj,
+  getGroupQueueExecuteData,
   getGuaranteedBuyBackInfo,
   GuaranteedBuyBackInfo,
   ProviderGroupQueueInfo,
