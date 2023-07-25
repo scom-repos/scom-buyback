@@ -23,16 +23,16 @@ const theme = {
     // 	type: 'string',
     // 	format: 'color'
     // },
-    secondaryColor: {
-        type: 'string',
-        title: 'Timer Background Color',
-        format: 'color'
-    },
-    secondaryFontColor: {
-        type: 'string',
-        title: 'Timer Font Color',
-        format: 'color'
-    }
+    // secondaryColor: {
+    //     type: 'string',
+    //     title: 'Timer Background Color',
+    //     format: 'color'
+    // },
+    // secondaryFontColor: {
+    //     type: 'string',
+    //     title: 'Timer Font Color',
+    //     format: 'color'
+    // }
 }
 
 export default {

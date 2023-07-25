@@ -1,11 +1,10 @@
-import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, IEventBus, application, customModule, Input, moment, HStack, customElements, IDataSchema } from '@ijstech/components';
+import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, IEventBus, application, customModule, Input, moment, HStack, customElements } from '@ijstech/components';
 import { BigNumber, Constants, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
 import '@ijstech/eth-contract';
 import { formatNumber, formatDate, EventId, limitInputNumber, limitDecimals, IERC20ApprovalAction, QueueType, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
 import { getChainId, fallBackUrl, getProxyAddress, setDataFromConfig, getCurrentCommissions, getCommissionAmount, getEmbedderCommissionFee, getRpcWallet, initRpcWallet, isClientWalletConnected, isRpcWalletConnected } from './store/index';
 import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
 import { executeSwap, getApprovalModelAction, getHybridRouterAddress, setApprovalModalSpenderAddress } from './swap-utils/index';
-import Alert from './alert/index';
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
@@ -14,6 +13,7 @@ import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObj
 import { buybackComponent, buybackDappContainer } from './index.css';
 import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
+import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -58,13 +58,14 @@ export default class ScomBuyback extends Module {
 
 	private infoStack: HStack;
 	private leftStack: VStack;
+	private rightStack: VStack;
 	private emptyStack: VStack;
+	private pnlDivider: Panel;
 
 	private $eventBus: IEventBus;
 	private loadingElm: Panel;
 	private buybackComponent: Panel;
-	private buybackElm: Panel;
-	private buybackAlert: Alert;
+	private buybackTxStatusModal: ScomTxStatusModal;
 	private noCampaignSection: Panel;
 	private buybackInfo: GuaranteedBuyBackInfo | null;
 	private firstInputBox: VStack;
@@ -250,17 +251,17 @@ export default class ScomBuyback extends Module {
 						data: window.btoa(JSON.stringify(commissions))
 					}
 				},
-				setLinkParams: async (params: any) => {
-					if (params.data) {
-						const decodedString = window.atob(params.data);
-						const commissions = JSON.parse(decodedString);
-						let resultingData = {
-							...self._data,
-							commissions
-						};
-						await this.setData(resultingData);
-					}
-				},
+				// setLinkParams: async (params: any) => {
+				// 	if (params.data) {
+				// 		const decodedString = window.atob(params.data);
+				// 		const commissions = JSON.parse(decodedString);
+				// 		let resultingData = {
+				// 			...self._data,
+				// 			commissions
+				// 		};
+				// 		await this.setData(resultingData);
+				// 	}
+				// },
 				bindOnChanged: (element: ScomCommissionFeeSetup, callback: (data: any) => Promise<void>) => {
 					element.onChanged = async (data: any) => {
 						let resultingData = {
@@ -275,7 +276,17 @@ export default class ScomBuyback extends Module {
 					const fee = getEmbedderCommissionFee();
 					return { ...this.getData(), fee }
 				},
-				setData: this.setData.bind(this),
+				setData: async (properties: IBuybackCampaign, linkParams?: Record<string, any>) => {
+					let resultingData = {
+						...properties
+					}
+					if (linkParams?.data) {
+						const decodedString = window.atob(linkParams.data);
+						const commissions = JSON.parse(decodedString);
+						resultingData.commissions = commissions;
+					}
+					await this.setData(resultingData);
+				},
 				getTag: this.getTag.bind(this),
 				setTag: this.setTag.bind(this)
 			}
@@ -288,7 +299,6 @@ export default class ScomBuyback extends Module {
 
 	private async setData(data: IBuybackCampaign) {
 		this._data = data;
-
 		const rpcWalletId = initRpcWallet(this.defaultChainId);
 		const rpcWallet = getRpcWallet();
 		const event = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
@@ -325,6 +335,7 @@ export default class ScomBuyback extends Module {
 		if (this.dappContainer)
 			this.dappContainer.setTag(this.tag);
 		this.updateTheme();
+		// this.resizeWidget();
 	}
 
 	private updateStyle(name: string, value: any) {
@@ -339,8 +350,8 @@ export default class ScomBuyback extends Module {
 		this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
 		// this.updateStyle('--colors-primary-main', this.tag[themeVar]?.buttonBackgroundColor);
 		// this.updateStyle('--colors-primary-contrast_text', this.tag[themeVar]?.buttonFontColor);
-		this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryColor);
-		this.updateStyle('--colors-secondary-contrast_text', this.tag[themeVar]?.secondaryFontColor);
+		// this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryColor);
+		// this.updateStyle('--colors-secondary-contrast_text', this.tag[themeVar]?.secondaryFontColor);
 		this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
 		this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
 	}
@@ -389,6 +400,10 @@ export default class ScomBuyback extends Module {
 	set commissions(value: ICommissionInfo[]) {
 		this._data.commissions = value;
 	}
+
+	// set width(value: string | number) {
+	//   this.resizeWidget();
+	// }
 
 	constructor(parent?: Container, options?: ControlElement) {
 		super(parent, options);
@@ -443,28 +458,29 @@ export default class ScomBuyback extends Module {
 	private initializeWidgetConfig = async (hideLoading?: boolean) => {
 		setTimeout(async () => {
 			const rpcWallet = getRpcWallet();
+			const chainId = getChainId();
 			if (!hideLoading && this.loadingElm) {
 				this.loadingElm.visible = true;
 			}
-			if (!isClientWalletConnected() || !this._data || this._data.chainId !== getChainId()) {
+			if (!isClientWalletConnected() || !this._data || this._data.chainId !== chainId) {
 				this.renderEmpty();
 				return;
 			}
 			try {
 				this.infoStack.visible = true;
 				this.emptyStack.visible = false;
-				const currentChainId = getChainId();
-				tokenStore.updateTokenMapData(currentChainId);
+				tokenStore.updateTokenMapData(chainId);
 				if (rpcWallet.address) {
 					tokenStore.updateAllTokenBalances(rpcWallet);
 				}
-				await Wallet.getClientInstance().init();
+				await this.initWallet();
 				this.buybackInfo = await getGuaranteedBuyBackInfo({ ...this._data });
 				this.updateCommissionInfo();
 				await this.renderBuybackCampaign();
-				this.renderLeftPart();
+				await this.renderLeftPart();
+				// this.resizeWidget();
 				const firstToken = this.getTokenObject('toTokenAddress');
-				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[getChainId()]?.symbol && isRpcWalletConnected()) {
+				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[chainId]?.symbol && isRpcWalletConnected()) {
 					await this.initApprovalModelAction();
 				}
 			} catch {
@@ -476,7 +492,17 @@ export default class ScomBuyback extends Module {
 		});
 	}
 
-	private get isSellDisabled() {
+	private initWallet = async () => {
+		try {
+			await Wallet.getClientInstance().init();
+			const rpcWallet = getRpcWallet();
+			await rpcWallet.init();
+		} catch (err) {
+			console.log(err);
+		}
+	}
+
+	private get isSwapDisabled() {
 		if (!this.buybackInfo) return true;
 		const info = this.buybackInfo.queueInfo;
 		if (!info) return true;
@@ -496,7 +522,7 @@ export default class ScomBuyback extends Module {
 
 	private getFirstAvailableBalance = () => {
 		const tokenBalances = tokenStore.tokenBalances;
-		if (!this.buybackInfo || this.isSellDisabled || !tokenBalances) {
+		if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
 			return '0';
 		}
 		const { queueInfo } = this.buybackInfo;
@@ -597,13 +623,34 @@ export default class ScomBuyback extends Module {
 		this.updateBtnSwap();
 	}
 
+	private onSetMaxBalance = async () => {
+		const { tradeFee, offerPrice } = this.buybackInfo.queueInfo || {};
+		const firstAvailable = this.getFirstAvailableBalance();
+		const firstToken = this.getTokenObject('toTokenAddress');
+		const secondToken = this.getTokenObject('fromTokenAddress');
+
+		const tokenBalances = tokenStore.tokenBalances || {};
+		let totalAmount = new BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')] || 0);
+		const commissionAmount = getCommissionAmount(this.commissions, totalAmount);
+		if (commissionAmount.gt(0)) {
+			const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
+			totalAmount = totalAmount.dividedBy(totalFee);
+		}
+		this.firstInput.value = limitDecimals(totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount, firstToken?.decimals || 18);
+		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
+		this.secondInput.value = limitDecimals(inputVal, secondToken?.decimals || 18);
+		this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstToken?.symbol || ''}`;
+		this.updateCommissionInfo();
+		this.updateBtnSwap();
+	}
+
 	private updateBtnSwap = () => {
 		if (!isRpcWalletConnected()) {
 			this.btnSwap.enabled = true;
 			return;
 		}
 		if (!this.buybackInfo) return;
-		if (this.isSellDisabled) {
+		if (this.isSwapDisabled) {
 			this.btnSwap.enabled = false;
 			return;
 		}
@@ -647,7 +694,7 @@ export default class ScomBuyback extends Module {
 		const { pairAddress, offerIndex } = this.buybackInfo.queueInfo;
 		const amount = new BigNumber(this.firstInput?.value || 0);
 		const commissionAmount = getCommissionAmount(this.commissions, amount);
-		this.showResultMessage(this.buybackAlert, 'warning', `Swapping ${formatNumber(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
+		this.showResultMessage('warning', `Swapping ${formatNumber(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
 		const params = {
 			provider: "RestrictedOracle",
 			queueType: QueueType.GROUP_QUEUE,
@@ -662,7 +709,7 @@ export default class ScomBuyback extends Module {
 		}
 		const { error } = await executeSwap(params);
 		if (error) {
-			this.showResultMessage(this.buybackAlert, 'error', error as any);
+			this.showResultMessage('error', error as any);
 		}
 	}
 
@@ -699,9 +746,9 @@ export default class ScomBuyback extends Module {
 			}
 		}
 		if (this.btnSwap?.rightIcon.visible) {
-			return 'Selling';
+			return 'Swapping';
 		}
-		return 'Sell';
+		return 'Swap';
 	};
 
 	private initApprovalModelAction = async () => {
@@ -721,7 +768,7 @@ export default class ScomBuyback extends Module {
 					this.isApproveButtonShown = false
 				},
 				onApproving: async (token: ITokenObject, receipt?: string, data?: any) => {
-					this.showResultMessage(this.buybackAlert, 'success', receipt || '');
+					this.showResultMessage('success', receipt || '');
 					this.btnSwap.rightIcon.visible = true;
 					this.btnSwap.caption = 'Approving';
 					this.updateInput(false);
@@ -734,13 +781,13 @@ export default class ScomBuyback extends Module {
 					this.updateBtnSwap();
 				},
 				onApprovingError: async (token: ITokenObject, err: Error) => {
-					this.showResultMessage(this.buybackAlert, 'error', err);
+					this.showResultMessage('error', err);
 					this.updateInput(true);
 					this.btnSwap.caption = 'Approve';
 					this.btnSwap.rightIcon.visible = false;
 				},
 				onPaying: async (receipt?: string, data?: any) => {
-					this.showResultMessage(this.buybackAlert, 'success', receipt || '');
+					this.showResultMessage('success', receipt || '');
 					this.btnSwap.rightIcon.visible = true;
 					this.btnSwap.caption = this.submitButtonText;
 					this.updateInput(false);
@@ -753,7 +800,7 @@ export default class ScomBuyback extends Module {
 					this.btnSwap.caption = this.submitButtonText;
 				},
 				onPayingError: async (err: Error) => {
-					this.showResultMessage(this.buybackAlert, 'error', err);
+					this.showResultMessage('error', err);
 					this.btnSwap.rightIcon.visible = false;
 					this.btnSwap.enabled = true;
 					this.btnSwap.caption = this.submitButtonText;
@@ -764,25 +811,22 @@ export default class ScomBuyback extends Module {
 		await this.approvalModelAction.checkAllowance(firstToken, this.getFirstAvailableBalance());
 	}
 
-	getValueByKey = (key: string) => {
+	private getValueByKey = (key: string) => {
 		const item = this.buybackInfo;
-		if (!item) return null;
-		if (item.queueInfo) {
-			return item.queueInfo[key];
-		}
-		return null;
+		if (!item?.queueInfo) return null;
+		return item.queueInfo[key];
 	}
 
-	private showResultMessage = (alert: Alert, status: 'warning' | 'success' | 'error', content?: string | Error) => {
-		if (!alert) return;
+	private showResultMessage = (status: 'warning' | 'success' | 'error', content?: string | Error) => {
+		if (!this.buybackTxStatusModal) return;
 		let params: any = { status };
 		if (status === 'success') {
 			params.txtHash = content;
 		} else {
 			params.content = content;
 		}
-		alert.message = { ...params };
-		alert.showModal();
+		this.buybackTxStatusModal.message = { ...params };
+		this.buybackTxStatusModal.showModal();
 	}
 
 	private connectWallet = async () => {
@@ -801,6 +845,16 @@ export default class ScomBuyback extends Module {
 			await clientWallet.switchNetwork(chainId);
 		}
 	}
+
+	// private resizeWidget() {
+	// 	if (!this.infoStack) return;
+	//   const tagWidth = Number(this.tag?.width);
+	//   if ((this.offsetWidth !== 0 && this.offsetWidth < 720) || window.innerWidth < 720 || (!isNaN(tagWidth) && tagWidth !== 0 && tagWidth < 720)) {
+	//     this.infoStack.classList.add('flex-col--wrap');
+	//   } else {
+	//     this.infoStack.classList.remove('flex-col--wrap');
+	//   }
+	// }
 
 	private initEmptyUI = async () => {
 		if (!this.noCampaignSection) {
@@ -843,13 +897,164 @@ export default class ScomBuyback extends Module {
 
 	private renderBuybackCampaign = async () => {
 		if (this.buybackInfo) {
-			this.buybackElm.clearInnerHTML();
-			const { queueInfo, pairAddress } = this.buybackInfo;
-			const info = queueInfo || {} as ProviderGroupQueueInfo;
-			const { startDate, endDate } = info;
+			this.rightStack.clearInnerHTML();
+			const chainId = getChainId();
+			const isRpcConnected = isRpcWalletConnected();
+			const { queueInfo } = this.buybackInfo;
+			const { amount, allowAll, allocation, tradeFee } = queueInfo || {};
 			const firstTokenObj = tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
 			const secondTokenObj = tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
 			const firstSymbol = firstTokenObj?.symbol ?? '';
+			const secondSymbol = secondTokenObj?.symbol ?? '';
+
+			const commissionFee = getEmbedderCommissionFee();
+			const hasCommission = !!getCurrentCommissions(this.commissions).length;
+			this.rightStack.clearInnerHTML();
+			this.rightStack.appendChild(
+				<i-panel padding={{ bottom: 15, top: 15, right: 15, left: 15 }} height="auto">
+					<i-vstack gap={10} width="100%">
+						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
+							<i-label caption="Group Queue Balance" />
+							<i-label caption={`${formatNumber(amount || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+						</i-hstack>
+						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
+							<i-label caption="Your Allocation" />
+							<i-label caption={allowAll ? 'Unlimited' : `${formatNumber(allocation || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+						</i-hstack>
+						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
+							<i-label caption="Your Balance" />
+							<i-label caption={`${formatNumber(tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
+						</i-hstack>
+						<i-panel width="100%" height={2} background={{ color: Theme.input.background }} margin={{ top: 8, bottom: 8 }} />
+						<i-hstack gap={4} wrap="wrap">
+							<i-label caption="Swap Available" />
+							<i-vstack gap={4} margin={{ left: 'auto' }} horizontalAlignment="end">
+								<i-label caption={`${formatNumber(this.getFirstAvailableBalance())} ${firstSymbol}`} font={{ color: Theme.colors.primary.main }} />
+								<i-label caption={`(${formatNumber(this.getSecondAvailableBalance())} ${secondSymbol})`} font={{ color: Theme.colors.primary.main }} />
+							</i-vstack>
+						</i-hstack>
+						<i-hstack
+							id="firstInputBox"
+							gap={8}
+							width="100%"
+							height={50}
+							verticalAlignment="center"
+							background={{ color: Theme.input.background }}
+							border={{ radius: 5, width: 2, style: 'solid', color: 'transparent' }}
+							padding={{ left: 7, right: 7 }}
+						>
+							<i-input
+								id="firstInput"
+								inputType="number"
+								placeholder="0.0"
+								class="input-amount"
+								width="100%"
+								height="100%"
+								enabled={isRpcConnected}
+								onChanged={this.firstInputChange}
+								onFocus={() => this.handleFocusInput(true, true)}
+								onBlur={() => this.handleFocusInput(true, false)}
+							/>
+							<i-hstack gap={4} width={130} verticalAlignment="center">
+								<i-button
+									caption="Max"
+									enabled={isRpcConnected && new BigNumber(this.getFirstAvailableBalance()).gt(0)}
+									padding={{ top: 3, bottom: 3, left: 6, right: 6 }}
+									border={{ radius: 6 }}
+									font={{ size: '14px' }}
+									class="btn-os"
+									onClick={this.onSetMaxBalance}
+								/>
+								<i-image width={24} height={24} url={tokenAssets.tokenPath(firstTokenObj, chainId)} fallbackUrl={fallBackUrl} />
+								<i-label caption={firstSymbol} font={{ color: Theme.input.fontColor, bold: true }} />
+							</i-hstack>
+						</i-hstack>
+						<i-vstack width="100%" margin={{ top: 4, bottom: 4 }} horizontalAlignment="center">
+							<i-icon name="arrow-down" width={20} height={20} fill={Theme.text.primary} />
+						</i-vstack>
+						<i-hstack
+							id="secondInputBox"
+							gap={8}
+							width="100%"
+							height={50}
+							verticalAlignment="center"
+							background={{ color: Theme.input.background }}
+							border={{ radius: 5, width: 2, style: 'solid', color: 'transparent' }}
+							padding={{ left: 7, right: 7 }}
+						>
+							<i-input
+								id="secondInput"
+								inputType="number"
+								placeholder="0.0"
+								class="input-amount"
+								width="100%"
+								height="100%"
+								enabled={isRpcConnected}
+								onChanged={this.secondInputChange}
+								onFocus={() => this.handleFocusInput(false, true)}
+								onBlur={() => this.handleFocusInput(false, false)}
+							/>
+							<i-hstack gap={4} margin={{ right: 8 }} width={130} verticalAlignment="center">
+								<i-button
+									caption="Max"
+									enabled={isRpcConnected && new BigNumber(this.getSecondAvailableBalance()).gt(0)}
+									padding={{ top: 3, bottom: 3, left: 6, right: 6 }}
+									border={{ radius: 6 }}
+									font={{ size: '14px' }}
+									class="btn-os"
+									onClick={this.onSetMaxBalance}
+								/>
+								<i-image width={24} height={24} url={tokenAssets.tokenPath(secondTokenObj, chainId)} fallbackUrl={fallBackUrl} />
+								<i-label caption={secondSymbol} font={{ color: Theme.input.fontColor, bold: true }} />
+							</i-hstack>
+						</i-hstack>
+					</i-vstack>
+					<i-hstack gap={10} margin={{ top: 6 }} verticalAlignment="center" horizontalAlignment="space-between">
+						<i-label caption={`Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`} font={{ size: '0.75rem' }} />
+						<i-label id="lbFee" caption={`0 ${firstSymbol}`} font={{ size: '0.75rem' }} />
+					</i-hstack>
+					<i-hstack id="hStackCommission" visible={hasCommission} gap={10} margin={{ top: 6 }} verticalAlignment="center" horizontalAlignment="space-between">
+						<i-hstack gap={4} verticalAlignment="center">
+							<i-label caption="Commission Fee" font={{ size: '0.75rem' }} />
+							<i-icon tooltip={{ content: `A commission fee of ${new BigNumber(commissionFee).times(100)}% will be applied to the amount you input.` }} name="question-circle" width={14} height={14} />
+						</i-hstack>
+						<i-label id="lbCommissionFee" caption={`0 ${firstSymbol}`} font={{ size: '0.75rem' }} />
+					</i-hstack>
+					<i-vstack margin={{ top: 15 }} verticalAlignment="center" horizontalAlignment="center">
+						<i-panel>
+							<i-button
+								id="btnSwap"
+								minWidth={150}
+								minHeight={36}
+								caption={isRpcWalletConnected() ? 'Swap' : 'Switch Network'}
+								border={{ radius: 12 }}
+								rightIcon={{ spin: true, visible: false, fill: '#fff' }}
+								padding={{ top: 4, bottom: 4, left: 16, right: 16 }}
+								// font={{ size: '0.875rem', color: Theme.colors.primary.contrastText }}
+								// rightIcon={{ visible: false, fill: Theme.colors.primary.contrastText }}
+								class="btn-os"
+								onClick={this.onSwap.bind(this)}
+							/>
+						</i-panel>
+					</i-vstack>
+				</i-panel>
+			)
+		} else {
+			this.renderEmpty();
+		}
+	}
+
+	private renderLeftPart = async () => {
+		if (this.buybackInfo) {
+			this.leftStack.clearInnerHTML();
+			const chainId = getChainId();
+			const { tokenOut, tokenIn, projectName, description, detailUrl, queueInfo } = this.buybackInfo;
+			const info = queueInfo || {} as ProviderGroupQueueInfo;
+			const { startDate, endDate, pairAddress } = info;
+			const firstToken = tokenOut?.startsWith('0x') ? tokenOut.toLowerCase() : tokenOut;
+			const secondToken = tokenIn?.startsWith('0x') ? tokenIn.toLowerCase() : tokenIn;
+			const firstTokenObj = tokenStore.tokenMap[firstToken];
+			const secondTokenObj = tokenStore.tokenMap[secondToken];
 			const secondSymbol = secondTokenObj?.symbol ?? '';
 
 			// const optionTimer = { background: { color: Theme.colors.secondary.main }, font: { color: Theme.colors.secondary.contrastText } };
@@ -875,10 +1080,10 @@ export default class ScomBuyback extends Module {
 			// 	</i-vstack>
 			// );
 
-			const vStackEndTime = await HStack.create({ gap: 4, verticalAlignment: 'center', margin: { top: '0.75rem' } });
-			const lbEndTime = await Label.create({ caption: 'Estimated End Time: ', font: { size: '0.875rem', bold: true } });
+			const vStackEndTime = await HStack.create({ gap: 4, verticalAlignment: 'center' });
+			const lbEndTime = await Label.create({ caption: 'End Time: ', font: { size: '0.875rem', bold: true } });
 			vStackEndTime.appendChild(lbEndTime);
-			vStackEndTime.appendChild(<i-label caption={formatDate(endDate)} font={{ size: '0.875rem' }} />);
+			vStackEndTime.appendChild(<i-label caption={formatDate(endDate)} font={{ size: '0.875rem', bold: true, color: Theme.colors.primary.main }} />);
 			// let interval: any;
 			// const setTimer = () => {
 			// 	let days = 0;
@@ -886,7 +1091,7 @@ export default class ScomBuyback extends Module {
 			// 	let mins = 0;
 			// 	if (moment().isBefore(moment(startDate))) {
 			// 		lbTimer.caption = 'Starts In: ';
-			// 		lbEndTime.caption = 'Estimated End Time: ';
+			// 		lbEndTime.caption = 'End Time: ';
 			// 		days = moment(startDate).diff(moment(), 'days');
 			// 		hours = moment(startDate).diff(moment(), 'hours') - days * 24;
 			// 		mins = moment(startDate).diff(moment(), 'minutes') - days * 24 * 60 - hours * 60;
@@ -911,120 +1116,7 @@ export default class ScomBuyback extends Module {
 			// interval = setInterval(() => {
 			// 	setTimer();
 			// }, 1000);
-			const commissionFee = getEmbedderCommissionFee();
-			const hasCommission = !!getCurrentCommissions(this.commissions).length;
-			this.buybackElm.clearInnerHTML();
-			this.buybackElm.appendChild(
-				<i-panel padding={{ bottom: 15, top: 15, right: 15, left: 15 }} height="auto">
-					<i-vstack gap="0.5rem" width="100%" verticalAlignment="center" margin={{ bottom: '1rem' }}>
-						<i-vstack>
-							<i-hstack gap={4} verticalAlignment="center">
-								<i-label caption="Buyback Price: " font={{ bold: true }} />
-								<i-label
-									caption={`${1 / this.getValueByKey('offerPrice')} ${secondSymbol}`}
-									font={{ bold: true }}
-								/>
-							</i-hstack>
-							<i-label caption="I don't have a digital wallet" font={{ size: '0.8125rem' }} link={{ href: 'https://metamask.io/' }}></i-label>
-						</i-vstack>
-						{/* { vStackTimer } */}
-						{vStackEndTime}
-					</i-vstack>
-					<i-hstack gap={20} margin={{ top: 15 }} verticalAlignment="center">
-						<i-vstack gap={4} width="100%" verticalAlignment="space-between">
-							<i-hstack gap={4} horizontalAlignment="end">
-								<i-label
-									id="lbBalance"
-									caption={`Balance Available: ${formatNumber(this.getFirstAvailableBalance())} ${firstSymbol}`}
-									font={{ size: '0.75rem' }}
-								/>
-							</i-hstack>
-							<i-hstack id="firstInputBox" gap={8} width="100%" height={50} verticalAlignment="center" background={{ color: Theme.input.background }} border={{ radius: 5, width: 2, style: 'solid', color: 'transparent' }} padding={{ left: 7, right: 7 }}>
-								<i-hstack gap={4} width={100} verticalAlignment="center">
-									<i-image width={20} height={20} url={tokenAssets.tokenPath(firstTokenObj, getChainId())} fallbackUrl={fallBackUrl} />
-									<i-label caption={firstSymbol} font={{ color: Theme.input.fontColor }} />
-								</i-hstack>
-								<i-input
-									id="firstInput"
-									inputType="number"
-									placeholder="0.0"
-									class="input-amount"
-									width="100%"
-									height="100%"
-									onChanged={this.firstInputChange}
-									onFocus={() => this.handleFocusInput(true, true)}
-									onBlur={() => this.handleFocusInput(true, false)}
-								/>
-							</i-hstack>
-							<i-hstack id="secondInputBox" visible={false} width="100%" height={40} position="relative" verticalAlignment="center" background={{ color: Theme.input.background }} border={{ radius: 5, width: 2, style: 'solid', color: 'transparent' }} padding={{ left: 7, right: 7 }}>
-								<i-hstack gap={4} margin={{ right: 8 }} width={100} verticalAlignment="center">
-									<i-image width={20} height={20} url={tokenAssets.tokenPath(secondTokenObj, getChainId())} fallbackUrl={fallBackUrl} />
-									<i-label caption={secondSymbol} font={{ color: Theme.input.fontColor }} />
-								</i-hstack>
-								<i-input
-									id="secondInput"
-									inputType="number"
-									placeholder="0.0"
-									class="input-amount"
-									width="100%"
-									height="100%"
-									onChanged={this.secondInputChange}
-									onFocus={() => this.handleFocusInput(false, true)}
-									onBlur={() => this.handleFocusInput(false, false)}
-								/>
-							</i-hstack>
-						</i-vstack>
-					</i-hstack>
-					<i-hstack gap={10} margin={{ top: 6 }} verticalAlignment="center" horizontalAlignment="space-between">
-						<i-label caption="Trade Fee" font={{ size: '0.75rem' }} />
-						<i-label id="lbFee" caption={`0 ${firstSymbol}`} font={{ size: '0.75rem' }} />
-					</i-hstack>
-					<i-hstack id="hStackCommission" visible={hasCommission} gap={10} margin={{ top: 6 }} verticalAlignment="center" horizontalAlignment="space-between">
-						<i-hstack gap={4} verticalAlignment="center">
-							<i-label caption="Commission Fee" font={{ size: '0.75rem' }} />
-							<i-icon tooltip={{ content: `A commission fee of ${new BigNumber(commissionFee).times(100)}% will be applied to the amount you input.` }} name="question-circle" width={14} height={14} />
-						</i-hstack>
-						<i-label id="lbCommissionFee" caption={`0 ${firstSymbol}`} font={{ size: '0.75rem' }} />
-					</i-hstack>
-					<i-vstack margin={{ top: 15 }} verticalAlignment="center" horizontalAlignment="center">
-						<i-panel>
-							<i-button
-								id="btnSwap"
-								minWidth={150}
-								minHeight={36}
-								caption={isRpcWalletConnected() ? 'Sell' : 'Switch Network'}
-								border={{ radius: 12 }}
-								rightIcon={{ spin: true, visible: false, fill: '#fff' }}
-								padding={{ top: 4, bottom: 4, left: 16, right: 16 }}
-								// font={{ size: '0.875rem', color: Theme.colors.primary.contrastText }}
-								// rightIcon={{ visible: false, fill: Theme.colors.primary.contrastText }}
-								class="btn-os"
-								onClick={this.onSwap.bind(this)}
-							/>
-						</i-panel>
-					</i-vstack>
-					<i-vstack gap="0.5rem" margin={{ top: 8 }}>
-						<i-vstack gap="0.25rem">
-							<i-label caption="Smart contract" font={{ size: '0.75rem' }} />
-							<i-label caption={pairAddress} font={{ size: '0.75rem' }} overflowWrap="anywhere" />
-						</i-vstack>
-						<i-label caption="Terms & Condition" font={{ size: '0.75rem' }} link={{ href: 'https://docs.scom.dev/' }} />
-					</i-vstack>
-				</i-panel>
-			)
-		} else {
-			this.renderEmpty();
-		}
-	}
 
-	private renderLeftPart = async () => {
-		if (this.buybackInfo) {
-			this.leftStack.clearInnerHTML();
-			const { tokenOut, tokenIn, projectName, description, detailUrl } = this.buybackInfo;
-			const firstToken = tokenOut?.startsWith('0x') ? tokenOut.toLowerCase() : tokenOut;
-			const secondToken = tokenIn?.startsWith('0x') ? tokenIn.toLowerCase() : tokenIn;
-			const firstTokenObj = tokenStore.tokenMap[firstToken];
-			const secondTokenObj = tokenStore.tokenMap[secondToken];
 			this.leftStack.clearInnerHTML();
 			this.leftStack.appendChild(
 				<i-panel padding={{ bottom: 15, top: 15, right: 15, left: 15 }} height="auto">
@@ -1034,13 +1126,13 @@ export default class ScomBuyback extends Module {
 								<i-image
 									width={80}
 									height={80}
-									url={tokenAssets.tokenPath(firstTokenObj, getChainId())}
+									url={tokenAssets.tokenPath(firstTokenObj, chainId)}
 									fallbackUrl={fallBackUrl}
 								/>
 								<i-image
 									width={50}
 									height={50}
-									url={tokenAssets.tokenPath(secondTokenObj, getChainId())}
+									url={tokenAssets.tokenPath(secondTokenObj, chainId)}
 									fallbackUrl={fallBackUrl}
 									position="absolute"
 									bottom={-15}
@@ -1053,6 +1145,17 @@ export default class ScomBuyback extends Module {
 							font={{ weight: 600 }}
 						/>
 						<i-label caption={description || ''} font={{ size: '0.875rem' }} />
+						<i-hstack gap={8} width="100%" verticalAlignment="center" horizontalAlignment="space-between" margin={{ bottom: 10, top: 10 }} wrap="wrap">
+							<i-hstack gap={4} verticalAlignment="center">
+								<i-label caption="Buyback Price: " font={{ bold: true }} />
+								<i-label
+									caption={`${1 / this.getValueByKey('offerPrice')} ${secondSymbol}`}
+									font={{ bold: true, color: Theme.colors.primary.main }}
+								/>
+							</i-hstack>
+							{/* { vStackTimer } */}
+							{vStackEndTime}
+						</i-hstack>
 						<i-hstack visible={!!detailUrl} verticalAlignment="center" gap="0.25rem" wrap="wrap">
 							<i-label caption="Details here: " font={{ size: '0.875rem' }} />
 							<i-label
@@ -1060,6 +1163,13 @@ export default class ScomBuyback extends Module {
 								link={{ href: detailUrl }}
 							/>
 						</i-hstack>
+						<i-vstack gap={8} margin={{ top: 8 }}>
+							<i-vstack gap={4}>
+								<i-label caption="Smart contract" font={{ size: '0.75rem' }} />
+								<i-label caption={pairAddress} font={{ size: '0.75rem' }} overflowWrap="anywhere" />
+							</i-vstack>
+							<i-label caption="Terms & Condition" font={{ size: '0.75rem' }} link={{ href: 'https://docs.scom.dev/' }} />
+						</i-vstack>
 					</i-vstack>
 				</i-panel>
 			)
@@ -1073,8 +1183,8 @@ export default class ScomBuyback extends Module {
 	async init() {
 		this.isReadyCallbackQueued = true;
 		super.init();
-		this.buybackAlert = new Alert();
-		this.buybackComponent.appendChild(this.buybackAlert);
+		this.buybackTxStatusModal = new ScomTxStatusModal();
+		this.buybackComponent.appendChild(this.buybackTxStatusModal);
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);
 		if (!lazyLoad) {
 			const defaultChainId = this.getAttribute('defaultChainId', true);
@@ -1111,6 +1221,11 @@ export default class ScomBuyback extends Module {
 		}
 		this.isReadyCallbackQueued = false;
 		this.executeReadyCallback();
+		// window.addEventListener('resize', () => {
+		//   setTimeout(() => {
+		//     this.resizeWidget();
+		//   }, 300);
+		// });
 	}
 
 	render() {
@@ -1139,8 +1254,9 @@ export default class ScomBuyback extends Module {
 							wrap="wrap"
 							gap={20}
 						>
-							<i-vstack id="leftStack" minWidth={300} maxWidth="50%" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} />
-							<i-vstack id="buybackElm" minWidth={300} gap="0.5rem" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} background={{ color: Theme.background.main }} verticalAlignment="space-between" />
+							<i-vstack id="leftStack" minWidth={320} width="calc(50% - 20px)" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} />
+							{/* <i-panel id="pnlDivider" width={2} height="auto" background={{ color: '#E53780' }} opacity={0.75} margin={{ top: 16, bottom: 16 }} /> */}
+							<i-vstack id="rightStack" minWidth={320} maxWidth={500} width="calc(50% - 20px)" gap="0.5rem" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} background={{ color: Theme.background.main }} verticalAlignment="space-between" />
 						</i-hstack>
 					</i-panel>
 					<i-scom-commission-fee-setup id="configDApp" visible={false} />

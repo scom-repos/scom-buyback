@@ -1,7 +1,5 @@
 export * from './helper';
 
-export { parseContractError } from './error';
-
 export {
   registerSendTxEvents,
   approveERC20Max,

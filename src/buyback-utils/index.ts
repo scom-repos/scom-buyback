@@ -84,71 +84,8 @@ const getPair = async (queueType: QueueType, tokenA: any, tokenB: any) => {
       return await groupQ.getPair({ ...params, param3: 0 });
   }
 }
-/*
-interface GroupQueueOffer {
-  pairAddress: string,
-  tokenIn: string,
-  tokenOut: string,
-  index: BigNumber,
-  provider: string,
-  amount: BigNumber,
-  allocation: BigNumber,
-  tokenInAvailable: string,
-  price: BigNumber,
-  start: number,
-  expire: number,
-  allowAll: boolean,
-  locked: boolean,
-  tradeFee: string,
-}
-interface GroupQueueOfferDetail extends GroupQueueOffer {
-  amountIn:string,
-  amountOut:string,
-}
 
-async function getGroupQueueOffer(pairAddress: string, tokenIn: ITokenObject, tokenOut: ITokenObject, offerIndex: number|BigNumber):Promise<GroupQueueOffer> {
-  let wallet = Wallet.getClientInstance();
-  let chainId = wallet.chainId;
-
-  var direction = new BigNumber(tokenIn.address.toLowerCase()).lt(tokenOut.address.toLowerCase());
-  const pairContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
-  try {
-    let traderOffer = await pairContract.offers({param1:direction, param2:offerIndex});
-    //assuming if allowAll, allocation for anyone is 0
-    let allocation = new BigNumber("0");
-    if (!traderOffer.allowAll) allocation = await pairContract.traderAllocation({ param1: direction, param2: offerIndex, param3: wallet.address });
-    let tokenOutAvailable = (!traderOffer.allowAll && traderOffer.amount.gt(allocation))? allocation : traderOffer.amount
-    
-    let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
-    let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-    let tokenInAvailable = tokenOutAvailable.dividedBy(traderOffer.restrictedPrice).shiftedBy(18 - tokenOut.decimals).dividedBy(new BigNumber(tradeFee)).decimalPlaces(tokenIn.decimals, 1).toFixed();
-    const WETH9Address = getAddressByKey('WETH9');
-    const isTokenInNative =  tokenIn.address.toLowerCase() == WETH9Address.toLowerCase();
-    const isTokenOutNative = tokenOut.address.toLowerCase() == WETH9Address.toLowerCase();
-    const nativeToken = getChainNativeToken(chainId);
-  
-    return {
-      pairAddress,
-      tokenIn: isTokenInNative ? nativeToken.symbol : tokenIn.address,
-      tokenOut: isTokenOutNative ? nativeToken.symbol : tokenOut.address,
-      index: new BigNumber(offerIndex),
-      provider: traderOffer.provider,
-      amount: traderOffer.amount,
-      allocation, //will be 0 if allowAll
-      tokenInAvailable,
-      price: traderOffer.restrictedPrice,
-      start: traderOffer.startDate.shiftedBy(3).toNumber(),
-      expire: traderOffer.expire.shiftedBy(3).toNumber(),
-      allowAll: traderOffer.allowAll,
-      locked: traderOffer.locked,
-      tradeFee
-    }
-  } catch (error) { // most likely error in pairContract.offers
-    return null;
-  }
-}
-*/
-const getGroupQueueExecuteData = (offerIndex: number|BigNumber) => {
+const getGroupQueueExecuteData = (offerIndex: number | BigNumber) => {
   let indexArr = [offerIndex];
   let ratioArr = [toWeiInv('1')];
   let data = "0x" + numberToBytes32((indexArr.length * 2 + 1) * 32) + numberToBytes32(indexArr.length) + indexArr.map(e => numberToBytes32(e)).join('') + ratioArr.map(e => numberToBytes32(e)).join('');
@@ -227,7 +164,7 @@ const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddr
   }
   let totalAllocation = new BigNumber('0');
   let [offer, addresses] = await Promise.all([
-    oracleContract.offers({ param1:direction, param2: offerIndex}),
+    oracleContract.offers({ param1: direction, param2: offerIndex }),
     getTradersAllocation(oracleContract, direction, offerIndex, Number(tokenIn.decimals), (address: string, allocation: string) => {
       totalAllocation = totalAllocation.plus(allocation)
     })
@@ -235,12 +172,12 @@ const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddr
 
   let price = toWeiInv(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
   let amount = new BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
-  let userAllo:AllocationMap  = addresses.find(v=>v.address===wallet.address) || {address: wallet.address,allocation:"0"};
+  let userAllo: AllocationMap = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
   let available = offer.allowAll ? amount : new BigNumber(userAllo.allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
   let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
   let tokenInAvailable = new BigNumber(available).dividedBy(new BigNumber(price)).dividedBy(new BigNumber(tradeFee)).toFixed();
-  
+
   return {
     pairAddress: pairAddress.toLowerCase(),
     fromTokenAddress: tokenInAddress == WETH9Address.toLowerCase() ? nativeToken.symbol : tokenInAddress,
@@ -287,19 +224,7 @@ async function getTradersAllocation(pair: Contracts.OSWAP_RestrictedPair, direct
   return allo;
 }
 
-interface QueueBasicInfo {
-  firstToken: string,
-  secondToken: string,
-  queueSize: BigNumber,
-  topStake: BigNumber | undefined,
-  totalOrder: BigNumber,
-  totalStake: BigNumber | undefined,
-  pairAddress: string,
-  isOdd: boolean,
-}
-
 export {
-  QueueBasicInfo,
   getPair,
   getGroupQueueExecuteData,
   getGuaranteedBuyBackInfo,
