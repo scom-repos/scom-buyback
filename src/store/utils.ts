@@ -1,8 +1,5 @@
 import { BigNumber, INetwork, Wallet } from '@ijstech/eth-wallet';
-import {
-  ICommissionInfo,
-  IExtendedNetwork
-} from '../global/index';
+import { ICommissionInfo} from '../global/index';
 import { ChainNativeTokenByChainId, WETHByChainId, ITokenObject } from '@scom/scom-token-list';
 import getNetworkList from '@scom/scom-network-list';
 import { CoreContractAddressesByChainId } from './data/index';
@@ -18,7 +15,7 @@ export const getInfuraId = () => {
   return state.infuraId;
 }
 
-const setNetworkList = (networkList: IExtendedNetwork[], infuraId?: string) => {
+const setNetworkList = (networkList: INetwork[], infuraId?: string) => {
   const wallet = Wallet.getClientInstance();
   state.networkMap = {};
   const defaultNetworkList = getNetworkList();
@@ -89,7 +86,7 @@ export const setTransactionDeadline = (value: any) => {
 export type ProxyAddresses = { [key: number]: string };
 
 export const state = {
-  networkMap: {} as { [key: number]: IExtendedNetwork },
+  networkMap: {} as { [key: number]: INetwork },
   slippageTolerance: 0.5,
   transactionDeadline: 30,
   infuraId: '',

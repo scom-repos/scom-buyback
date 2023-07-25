@@ -4,10 +4,7 @@
 /// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
 declare module "@scom/scom-buyback/global/utils/helper.ts" {
     import { BigNumber } from '@ijstech/eth-wallet';
-    export const explorerTxUrlsByChainId: {
-        [key: number]: string;
-    };
-    export const DefaultDateFormat = "DD/MM/YYYY";
+    export const DefaultDateFormat = "DD/MM/YYYY hh:mm:ss";
     export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
     export const formatNumber: (value: any, decimals?: number) => string;
     export const formatNumberWithSeparators: (value: number, precision?: number) => string;
@@ -17,11 +14,6 @@ declare module "@scom/scom-buyback/global/utils/helper.ts" {
     export const toWeiInv: (n: string, unit?: number) => BigNumber;
     export const padLeft: (string: string, chars: number, sign?: string) => string;
     export const numberToBytes32: (value: any, prefix?: string) => any;
-    export const viewOnExplorerByTxHash: (chainId: number, txHash: string) => void;
-}
-/// <amd-module name="@scom/scom-buyback/global/utils/error.ts" />
-declare module "@scom/scom-buyback/global/utils/error.ts" {
-    export function parseContractError(oMessage: string, tokens: string[]): Promise<string>;
 }
 /// <amd-module name="@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts" />
 declare module "@scom/scom-buyback/contracts/oswap-openswap-contract/contracts/OpenSwap.json.ts" {
@@ -9677,26 +9669,12 @@ declare module "@scom/scom-buyback/global/utils/interfaces.ts" {
 /// <amd-module name="@scom/scom-buyback/global/utils/index.ts" />
 declare module "@scom/scom-buyback/global/utils/index.ts" {
     export * from "@scom/scom-buyback/global/utils/helper.ts";
-    export { parseContractError } from "@scom/scom-buyback/global/utils/error.ts";
     export { registerSendTxEvents, approveERC20Max, getERC20Allowance } from "@scom/scom-buyback/global/utils/common.ts";
     export { ApprovalStatus, IERC20ApprovalEventOptions, IERC20ApprovalOptions, IERC20ApprovalAction, ERC20ApprovalModel } from "@scom/scom-buyback/global/utils/approvalModel.ts";
     export * from "@scom/scom-buyback/global/utils/interfaces.ts";
 }
 /// <amd-module name="@scom/scom-buyback/global/index.ts" />
 declare module "@scom/scom-buyback/global/index.ts" {
-    import { INetwork } from '@ijstech/eth-wallet';
-    export interface IExtendedNetwork extends INetwork {
-        shortName?: string;
-        isDisabled?: boolean;
-        isMainChain?: boolean;
-        isCrossChainSupported?: boolean;
-        explorerName?: string;
-        explorerTxUrl?: string;
-        explorerAddressUrl?: string;
-        isTestnet?: boolean;
-        symbol?: string;
-        env?: string;
-    }
     export const enum EventId {
         Paid = "Paid",
         chainChanged = "chainChanged"
@@ -9745,8 +9723,8 @@ declare module "@scom/scom-buyback/store/data/index.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/store/utils.ts" />
 declare module "@scom/scom-buyback/store/utils.ts" {
-    import { BigNumber } from '@ijstech/eth-wallet';
-    import { ICommissionInfo, IExtendedNetwork } from "@scom/scom-buyback/global/index.ts";
+    import { BigNumber, INetwork } from '@ijstech/eth-wallet';
+    import { ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
     import { ITokenObject } from '@scom/scom-token-list';
     export * from "@scom/scom-buyback/store/data/index.ts";
     export const getInfuraId: () => string;
@@ -9765,7 +9743,7 @@ declare module "@scom/scom-buyback/store/utils.ts" {
     };
     export const state: {
         networkMap: {
-            [key: number]: IExtendedNetwork;
+            [key: number]: INetwork;
         };
         slippageTolerance: number;
         transactionDeadline: number;
@@ -9827,17 +9805,7 @@ declare module "@scom/scom-buyback/buyback-utils/index.ts" {
         tokenInAvailable: string;
         available: string;
     }
-    interface QueueBasicInfo {
-        firstToken: string;
-        secondToken: string;
-        queueSize: BigNumber;
-        topStake: BigNumber | undefined;
-        totalOrder: BigNumber;
-        totalStake: BigNumber | undefined;
-        pairAddress: string;
-        isOdd: boolean;
-    }
-    export { QueueBasicInfo, getPair, getGroupQueueExecuteData, getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo, };
+    export { getPair, getGroupQueueExecuteData, getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo, };
 }
 /// <amd-module name="@scom/scom-buyback/contracts/scom-commission-proxy-contract/contracts/Proxy.json.ts" />
 declare module "@scom/scom-buyback/contracts/scom-commission-proxy-contract/contracts/Proxy.json.ts" {
@@ -10397,46 +10365,9 @@ declare module "@scom/scom-buyback/swap-utils/index.ts" {
     const setApprovalModalSpenderAddress: (contractAddress?: string) => void;
     export { SwapData, executeSwap, getHybridRouterAddress, getApprovalModelAction, setApprovalModalSpenderAddress };
 }
-/// <amd-module name="@scom/scom-buyback/alert/index.css.ts" />
-declare module "@scom/scom-buyback/alert/index.css.ts" {
-    const _default_52: string;
-    export default _default_52;
-}
-/// <amd-module name="@scom/scom-buyback/alert/index.tsx" />
-declare module "@scom/scom-buyback/alert/index.tsx" {
-    import { Module, ControlElement, Container } from '@ijstech/components';
-    global {
-        namespace JSX {
-            interface IntrinsicElements {
-                ['i-scom-buyback-alert']: ControlElement;
-            }
-        }
-    }
-    interface IMessage {
-        status: 'warning' | 'success' | 'error';
-        content?: any;
-        txtHash?: string;
-        obj?: any;
-    }
-    export default class Alert extends Module {
-        private confirmModal;
-        private mainContent;
-        private _message;
-        get message(): IMessage;
-        set message(value: IMessage);
-        constructor(parent?: Container, options?: any);
-        init(): Promise<void>;
-        closeModal(): void;
-        showModal(): void;
-        private buildLink;
-        private renderUI;
-        private onErrMsgChanged;
-        render(): any;
-    }
-}
 /// <amd-module name="@scom/scom-buyback/data.json.ts" />
 declare module "@scom/scom-buyback/data.json.ts" {
-    const _default_53: {
+    const _default_52: {
         infuraId: string;
         networks: ({
             chainId: number;
@@ -10478,11 +10409,11 @@ declare module "@scom/scom-buyback/data.json.ts" {
             }[];
         };
     };
-    export default _default_53;
+    export default _default_52;
 }
 /// <amd-module name="@scom/scom-buyback/formSchema.json.ts" />
 declare module "@scom/scom-buyback/formSchema.json.ts" {
-    const _default_54: {
+    const _default_53: {
         general: {
             dataSchema: {
                 type: string;
@@ -10540,16 +10471,6 @@ declare module "@scom/scom-buyback/formSchema.json.ts" {
                                 type: string;
                                 format: string;
                             };
-                            secondaryColor: {
-                                type: string;
-                                title: string;
-                                format: string;
-                            };
-                            secondaryFontColor: {
-                                type: string;
-                                title: string;
-                                format: string;
-                            };
                         };
                     };
                     light: {
@@ -10571,23 +10492,13 @@ declare module "@scom/scom-buyback/formSchema.json.ts" {
                                 type: string;
                                 format: string;
                             };
-                            secondaryColor: {
-                                type: string;
-                                title: string;
-                                format: string;
-                            };
-                            secondaryFontColor: {
-                                type: string;
-                                title: string;
-                                format: string;
-                            };
                         };
                     };
                 };
             };
         };
     };
-    export default _default_54;
+    export default _default_53;
 }
 /// <amd-module name="@scom/scom-buyback/index.css.ts" />
 declare module "@scom/scom-buyback/index.css.ts" {
@@ -10629,12 +10540,13 @@ declare module "@scom/scom-buyback" {
         defaultEdit: boolean;
         private infoStack;
         private leftStack;
+        private rightStack;
         private emptyStack;
+        private pnlDivider;
         private $eventBus;
         private loadingElm;
         private buybackComponent;
-        private buybackElm;
-        private buybackAlert;
+        private buybackTxStatusModal;
         private noCampaignSection;
         private buybackInfo;
         private firstInputBox;
@@ -10665,7 +10577,6 @@ declare module "@scom/scom-buyback" {
             setTag: any;
             elementName?: undefined;
             getLinkParams?: undefined;
-            setLinkParams?: undefined;
             bindOnChanged?: undefined;
         } | {
             name: string;
@@ -10674,7 +10585,6 @@ declare module "@scom/scom-buyback" {
             getLinkParams: () => {
                 data: string;
             };
-            setLinkParams: (params: any) => Promise<void>;
             bindOnChanged: (element: ScomCommissionFeeSetup, callback: (data: any) => Promise<void>) => void;
             getData: () => {
                 fee: string;
@@ -10682,7 +10592,7 @@ declare module "@scom/scom-buyback" {
                 catch<TResult = never>(onrejected?: (reason: any) => TResult | PromiseLike<TResult>): Promise<IBuybackCampaign | TResult>;
                 [Symbol.toStringTag]: string;
             };
-            setData: any;
+            setData: (properties: IBuybackCampaign, linkParams?: Record<string, any>) => Promise<void>;
             getTag: any;
             setTag: any;
             getActions?: undefined;
@@ -10711,7 +10621,8 @@ declare module "@scom/scom-buyback" {
         private refreshDappContainer;
         private refreshWidget;
         private initializeWidgetConfig;
-        private get isSellDisabled();
+        private initWallet;
+        private get isSwapDisabled();
         private getFirstAvailableBalance;
         private getSecondAvailableBalance;
         private getTokenObject;
@@ -10719,13 +10630,14 @@ declare module "@scom/scom-buyback" {
         private updateCommissionInfo;
         private firstInputChange;
         private secondInputChange;
+        private onSetMaxBalance;
         private updateBtnSwap;
         private onSwap;
         private onSubmit;
         private updateInput;
         private get submitButtonText();
         private initApprovalModelAction;
-        getValueByKey: (key: string) => any;
+        private getValueByKey;
         private showResultMessage;
         private connectWallet;
         private initEmptyUI;

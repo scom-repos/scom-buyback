@@ -100,8 +100,14 @@ export const buybackComponent = Styles.style({
       marginInline: 'auto',
       overflow: 'hidden',
     },
-    '.opacity-50': {
-      opacity: 0.5
+    'i-link': {
+      display: 'flex',
+      $nest: {
+        '&:hover *': {
+          color: '#fff',
+          opacity: 0.9,
+        },
+      },
     },
     '.cursor-default': {
       cursor: 'default',
@@ -128,16 +134,29 @@ export const buybackComponent = Styles.style({
     },
     '.input-amount > input': {
       border: 'none',
-      width: '100% !important',
-      height: '100% !important',
       backgroundColor: 'transparent',
       fontSize: '1rem',
-      textAlign: 'right',
       color: Theme.input.fontColor
     },
     '.highlight-box': {
       borderColor: '#E53780 !important'
     },
+    // '.flex-col--wrap': {
+    //   $nest: {
+    //     '#pnlDivider': {
+    //       height: '2px !important',
+    //       width: '90% !important',
+    //       marginBlock: '0 !important'
+    //     },
+    //     '#leftStack': {
+    //       maxWidth: '100% !important'
+    //     },
+    //     '#rightStack': {
+    //       width: '100% !important',
+    //       maxWidth: '100% !important'
+    //     }
+    //   }
+    // },
     'i-modal .modal': {
       background: Theme.background.modal,
     },
