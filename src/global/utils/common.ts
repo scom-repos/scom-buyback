@@ -1,4 +1,4 @@
-import { Wallet, BigNumber, ISendTxEventsOptions } from '@ijstech/eth-wallet';
+import { Wallet, BigNumber, ISendTxEventsOptions, Utils } from '@ijstech/eth-wallet';
 import { Contracts } from '../../contracts/oswap-openswap-contract/index';
 import { ITokenObject } from '@scom/scom-token-list';
 
@@ -41,5 +41,5 @@ export const getERC20Allowance = async (token: ITokenObject, spenderAddress: str
     owner: wallet.account.address,
     spender: spenderAddress
   });
-  return allowance;
+  return Utils.fromDecimals(allowance, token.decimals || 18);
 }

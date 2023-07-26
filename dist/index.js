@@ -13123,7 +13123,7 @@ define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijs
             owner: wallet.account.address,
             spender: spenderAddress
         });
-        return allowance;
+        return eth_wallet_2.Utils.fromDecimals(allowance, token.decimals || 18);
     };
     exports.getERC20Allowance = getERC20Allowance;
 });
