@@ -271,9 +271,10 @@ export default class ScomBuyback extends Module {
 						await callback(data);
 					}
 				},
-				getData: () => {
+				getData: async () => {
 					const fee = getEmbedderCommissionFee();
-					return { ...this.getData(), fee }
+					const data = await this.getData();
+					return { ...data, fee }
 				},
 				setData: this.setData.bind(this),
 				getTag: this.getTag.bind(this),

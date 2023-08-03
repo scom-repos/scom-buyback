@@ -15369,9 +15369,10 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             await callback(data);
                         };
                     },
-                    getData: () => {
+                    getData: async () => {
                         const fee = (0, index_17.getEmbedderCommissionFee)();
-                        return Object.assign(Object.assign({}, this.getData()), { fee });
+                        const data = await this.getData();
+                        return Object.assign(Object.assign({}, data), { fee });
                     },
                     setData: this.setData.bind(this),
                     getTag: this.getTag.bind(this),

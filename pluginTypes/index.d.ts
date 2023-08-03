@@ -10598,7 +10598,7 @@ declare module "@scom/scom-buyback/index.css.ts" {
 declare module "@scom/scom-buyback" {
     import { Module, Container, ControlElement } from '@ijstech/components';
     import '@ijstech/eth-contract';
-    import { IBuybackCampaign, ICommissionInfo, INetworkConfig } from "@scom/scom-buyback/global/index.ts";
+    import { ICommissionInfo, INetworkConfig } from "@scom/scom-buyback/global/index.ts";
     import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
     import { IWalletPlugin } from '@scom/scom-wallet-modal';
     interface ScomBuybackElement extends ControlElement {
@@ -10676,12 +10676,22 @@ declare module "@scom/scom-buyback" {
             };
             setLinkParams: (params: any) => Promise<void>;
             bindOnChanged: (element: ScomCommissionFeeSetup, callback: (data: any) => Promise<void>) => void;
-            getData: () => {
+            getData: () => Promise<{
                 fee: string;
-                then<TResult1 = IBuybackCampaign, TResult2 = never>(onfulfilled?: (value: IBuybackCampaign) => TResult1 | PromiseLike<TResult1>, onrejected?: (reason: any) => TResult2 | PromiseLike<TResult2>): Promise<TResult1 | TResult2>;
-                catch<TResult = never>(onrejected?: (reason: any) => TResult | PromiseLike<TResult>): Promise<IBuybackCampaign | TResult>;
-                [Symbol.toStringTag]: string;
-            };
+                chainId: number;
+                projectName: string;
+                pairAddress?: string;
+                offerIndex: number;
+                description?: string;
+                tokenIn: string;
+                tokenOut: string;
+                detailUrl?: string;
+                commissions?: ICommissionInfo[];
+                wallets: IWalletPlugin[];
+                networks: INetworkConfig[];
+                showHeader?: boolean;
+                defaultChainId?: number;
+            }>;
             setData: any;
             getTag: any;
             setTag: any;
