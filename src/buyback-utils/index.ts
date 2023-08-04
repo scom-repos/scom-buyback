@@ -12,7 +12,7 @@ import {
   getRpcWallet,
   getWETH
 } from '../store/index';
-import { Contracts } from '../contracts/oswap-openswap-contract/index';
+import { Contracts } from '@scom/oswap-openswap-contract';
 import { ITokenObject, tokenStore } from '@scom/scom-token-list';
 
 export interface AllocationMap { address: string, allocation: string }

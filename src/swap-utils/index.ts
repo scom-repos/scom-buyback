@@ -1,6 +1,6 @@
 import { BigNumber, Utils, TransactionReceipt, Wallet, IWallet } from '@ijstech/eth-wallet';
-import { Contracts } from '../contracts/oswap-openswap-contract/index';
-import { Contracts as ProxyContracts } from '../contracts/scom-commission-proxy-contract/index';
+import { Contracts } from '@scom/oswap-openswap-contract';
+import { Contracts as ProxyContracts } from '@scom/scom-commission-proxy-contract';
 
 import {
   QueueType,

@@ -6,9 +6,11 @@
         "@ijstech/components",
         "@ijstech/eth-wallet",
         "@ijstech/eth-contract",
+        "@scom/oswap-openswap-contract",
         "@scom/scom-token-list",
         "@scom/scom-wallet-modal",
         "@scom/scom-network-list",
+        "@scom/scom-commission-proxy-contract",
         "@scom/scom-dapp-container",
         "@scom/scom-commission-fee-setup"
     ]
