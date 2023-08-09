@@ -7,23 +7,21 @@ import {
 import { BigNumber } from '@ijstech/eth-wallet';
 import {
   getChainNativeToken,
-  getAddresses,
-  getChainId,
-  getRpcWallet,
-  getWETH
+  getWETH,
+  State
 } from '../store/index';
-import { Contracts } from '../contracts/oswap-openswap-contract/index';
+import { Contracts } from '@scom/oswap-openswap-contract';
 import { ITokenObject, tokenStore } from '@scom/scom-token-list';
 
 export interface AllocationMap { address: string, allocation: string }
 
-const getAddressByKey = (key: string) => {
-  let Address = getAddresses(getChainId());
+const getAddressByKey = (state: State, key: string) => {
+  let Address = state.getAddresses();
   return Address[key];
 }
 
-const mapTokenObjectSet = (obj: any) => {
-  let chainId = getChainId();
+const mapTokenObjectSet = (state: State, obj: any) => {
+  let chainId = state.getChainId();
   const WETH9 = getWETH(chainId);
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
@@ -33,25 +31,26 @@ const mapTokenObjectSet = (obj: any) => {
   return obj;
 }
 
-const getTokenObjectByAddress = (address: string) => {
-  let chainId = getChainId();
-  if (address.toLowerCase() === getAddressByKey('WETH9').toLowerCase()) {
+const getTokenObjectByAddress = (state: State, address: string) => {
+  let chainId = state.getChainId();
+  if (address.toLowerCase() === getAddressByKey(state, 'WETH9').toLowerCase()) {
     return getWETH(chainId);
   }
+
   let tokenMap = tokenStore.tokenMap;
   return tokenMap[address.toLowerCase()];
 }
 
-const getFactoryAddress = (queueType: QueueType) => {
+const getFactoryAddress = (state: State, queueType: QueueType) => {
   switch (queueType) {
     case QueueType.PRIORITY_QUEUE:
-      return getAddressByKey("OSWAP_OracleFactory");
+      return getAddressByKey(state, "OSWAP_OracleFactory");
     case QueueType.RANGE_QUEUE:
-      return getAddressByKey("OSWAP_RangeFactory");
+      return getAddressByKey(state, "OSWAP_RangeFactory");
     case QueueType.PEGGED_QUEUE:
-      return getAddressByKey("OSWAP_PeggedOracleFactory");
+      return getAddressByKey(state, "OSWAP_PeggedOracleFactory");
     case QueueType.GROUP_QUEUE:
-      return getAddressByKey("OSWAP_RestrictedFactory");
+      return getAddressByKey(state, "OSWAP_RestrictedFactory");
   }
 }
 
@@ -66,11 +65,11 @@ const getTradeFee = (queueType: QueueType) => {
   }
 }
 
-const getPair = async (queueType: QueueType, tokenA: any, tokenB: any) => {
-  const wallet = getRpcWallet();
-  let tokens = mapTokenObjectSet({ tokenA, tokenB });
+const getPair = async (state: State, queueType: QueueType, tokenA: any, tokenB: any) => {
+  const wallet = state.getRpcWallet();
+  let tokens = mapTokenObjectSet(state, { tokenA, tokenB });
   let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
-  let factoryAddress = getFactoryAddress(queueType);
+  let factoryAddress = getFactoryAddress(state, queueType);
   switch (queueType) {
     case QueueType.PEGGED_QUEUE:
     case QueueType.PRIORITY_QUEUE:
@@ -96,22 +95,23 @@ interface GuaranteedBuyBackInfo extends IBuybackCampaign {
   queueInfo: ProviderGroupQueueInfo;
 }
 
-const getGuaranteedBuyBackInfo = async (buybackCampaign: IBuybackCampaign): Promise<GuaranteedBuyBackInfo | null> => {
+const getGuaranteedBuyBackInfo = async (state: State, buybackCampaign: IBuybackCampaign): Promise<GuaranteedBuyBackInfo | null> => {
   let info = buybackCampaign;
   let allInfo: GuaranteedBuyBackInfo;
   if (!info) return null;
   info.tokenIn = info.tokenIn?.startsWith('0x') ? info.tokenIn.toLowerCase() : info.tokenIn;
   info.tokenOut = info.tokenOut?.startsWith('0x') ? info.tokenOut.toLowerCase() : info.tokenOut;
   if (!info.pairAddress) {
-    info.pairAddress = await getPair(QueueType.GROUP_QUEUE, getTokenObjectByAddress(info.tokenIn), getTokenObjectByAddress(info.tokenOut));
+    info.pairAddress = await getPair(state, QueueType.GROUP_QUEUE, getTokenObjectByAddress(state, info.tokenIn), getTokenObjectByAddress(state, info.tokenOut));
   }
   const queueInfo = await getProviderGroupQueueInfoByIndex(
+    state,
     info.pairAddress,
     info.tokenIn,
     info.offerIndex
   );
 
-  queueInfo.offerPrice = new BigNumber(queueInfo.offerPrice).shiftedBy(getTokenObjectByAddress(info.tokenIn).decimals - getTokenObjectByAddress(info.tokenOut).decimals).toFixed();
+  queueInfo.offerPrice = new BigNumber(queueInfo.offerPrice).shiftedBy(getTokenObjectByAddress(state, info.tokenIn).decimals - getTokenObjectByAddress(state, info.tokenOut).decimals).toFixed();
 
   allInfo = {
     ...info,
@@ -140,11 +140,11 @@ interface ProviderGroupQueueInfo {
   available: string
 }
 
-const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddress: string, offerIndex: number): Promise<ProviderGroupQueueInfo> => {
-  let wallet = getRpcWallet();
-  let chainId = getChainId();
+const getProviderGroupQueueInfoByIndex = async (state: State, pairAddress: string, tokenInAddress: string, offerIndex: number): Promise<ProviderGroupQueueInfo> => {
+  let wallet = state.getRpcWallet();
+  let chainId = state.getChainId();
   const nativeToken = getChainNativeToken(chainId);
-  const WETH9Address = getAddressByKey('WETH9');
+  const WETH9Address = getAddressByKey(state, 'WETH9');
   const oracleContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
   let [token0Address, token1Address] = await Promise.all([oracleContract.token0(), oracleContract.token1()]);
   let direction: boolean;
@@ -155,12 +155,12 @@ const getProviderGroupQueueInfoByIndex = async (pairAddress: string, tokenInAddr
   token1Address = token1Address.toLowerCase()
   if (token0Address == tokenInAddress) {
     direction = !(new BigNumber(token0Address).lt(token1Address));
-    tokenIn = getTokenObjectByAddress(token0Address);
-    tokenOut = getTokenObjectByAddress(token1Address);
+    tokenIn = getTokenObjectByAddress(state, token0Address);
+    tokenOut = getTokenObjectByAddress(state, token1Address);
   } else {
     direction = new BigNumber(token0Address).lt(token1Address);
-    tokenIn = getTokenObjectByAddress(token1Address);
-    tokenOut = getTokenObjectByAddress(token0Address);
+    tokenIn = getTokenObjectByAddress(state, token1Address);
+    tokenOut = getTokenObjectByAddress(state, token0Address);
   }
   let totalAllocation = new BigNumber('0');
   let [offer, addresses] = await Promise.all([
