@@ -1,0 +1,17 @@
+{
+    "name": "@scom/scom-buyback",
+    "type": "widget",
+    "version": "0.1.3",
+    "dependencies": [
+        "@ijstech/components",
+        "@ijstech/eth-wallet",
+        "@scom/scom-wallet-modal",
+        "@scom/scom-token-list",
+        "@scom/scom-network-list",
+        "@scom/oswap-openswap-contract",
+        "@scom/scom-commission-proxy-contract",
+        "@scom/scom-dapp-container",
+        "@scom/scom-commission-fee-setup",
+        "@scom/scom-tx-status-modal"
+    ]
+}

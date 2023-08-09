@@ -1,28 +1,22 @@
 import { BigNumber, Utils, TransactionReceipt, Wallet, IWallet } from '@ijstech/eth-wallet';
-import { Contracts } from '../contracts/oswap-openswap-contract/index';
-import { Contracts as ProxyContracts } from '../contracts/scom-commission-proxy-contract/index';
+import { Contracts } from '@scom/oswap-openswap-contract';
+import { Contracts as ProxyContracts } from '@scom/scom-commission-proxy-contract';
 
 import {
   QueueType,
-  IERC20ApprovalEventOptions,
-  ERC20ApprovalModel,
   ICommissionInfo,
 } from '../global/index';
 
 import {
   Market,
-  getSlippageTolerance,
-  getTransactionDeadline,
-  getChainId,
-  getProxyAddress,
-  getAddresses,
+  State
 } from '../store/index';
 
 import { getGroupQueueExecuteData } from '../buyback-utils/index';
 import { ITokenObject } from '@scom/scom-token-list';
 
-const getHybridRouterAddress = (): string => {
-  let Address = getAddresses();
+const getHybridRouterAddress = (state: State): string => {
+  let Address = state.getAddresses();
   return Address['OSWAP_HybridRouter2'];
 }
 
@@ -94,7 +88,7 @@ const getPathsByTokenIn = (tradeFeeMap: any, pairInfoList: any[], routeObj: any,
   return routeObjList;
 }
 
-const hybridTradeExactIn = async (wallet: IWallet, path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[]) => {
+const hybridTradeExactIn = async (state: State, wallet: IWallet, path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[]) => {
   if (path.length < 2) {
     return null
   }
@@ -102,14 +96,14 @@ const hybridTradeExactIn = async (wallet: IWallet, path: any[], pairs: string[],
   let tokenIn = path[0];
   let tokenOut = path[path.length - 1];
 
-  const hybridRouterAddress = getHybridRouterAddress();
+  const hybridRouterAddress = getHybridRouterAddress(state);
   const hybridRouter = new Contracts.OSWAP_HybridRouter2(wallet, hybridRouterAddress);
 
-  const proxyAddress = getProxyAddress();
+  const proxyAddress = state.getProxyAddress();
   const proxy = new ProxyContracts.Proxy(wallet, proxyAddress);
   const amount = tokenIn.address ? Utils.toDecimals(amountIn.toString(), tokenIn.decimals).dp(0) : Utils.toDecimals(amountIn.toString()).dp(0);
   const _amountOutMin = Utils.toDecimals(amountOutMin, tokenOut.decimals).dp(0);
-  const _commissions = (commissions || []).filter(v => v.chainId == getChainId()).map(v => {
+  const _commissions = (commissions || []).filter(v => v.chainId == state.getChainId()).map(v => {
     return {
       to: v.walletAddress,
       amount: amount.times(v.share).dp(0)
@@ -117,7 +111,7 @@ const hybridTradeExactIn = async (wallet: IWallet, path: any[], pairs: string[],
   });
   const commissionsAmount = _commissions.length ? _commissions.map(v => v.amount).reduce((a, b) => a.plus(b)).dp(0) : new BigNumber(0);
 
-  let receipt:TransactionReceipt;
+  let receipt: TransactionReceipt;
   if (!tokenIn.address) {
     let params = {
       amountOutMin: _amountOutMin,
@@ -246,16 +240,16 @@ interface SwapData {
   commissions?: ICommissionInfo[];
 }
 
-const executeSwap: (swapData: SwapData) => Promise<{
+const executeSwap: (state: State, swapData: SwapData) => Promise<{
   receipt: TransactionReceipt | null;
   error: Record<string, string> | null;
-}> = async (swapData: SwapData) => {
+}> = async (state: State, swapData: SwapData) => {
   let receipt: TransactionReceipt | null = null;
   const wallet = Wallet.getClientInstance();
   try {
     const toAddress = wallet.account.address;
-    const slippageTolerance = getSlippageTolerance();
-    const transactionDeadlineInMinutes = getTransactionDeadline();
+    const slippageTolerance = state.slippageTolerance;
+    const transactionDeadlineInMinutes = state.transactionDeadline;
     const transactionDeadline = Math.floor(
       Date.now() / 1000 + transactionDeadlineInMinutes * 60
     );
@@ -267,6 +261,7 @@ const executeSwap: (swapData: SwapData) => Promise<{
       };
       const amountOutMin = swapData.toAmount.times(1 - slippageTolerance / 100);
       receipt = await hybridTradeExactIn(
+        state,
         wallet,
         swapData.routeTokens,
         swapData.pairs,
@@ -285,32 +280,9 @@ const executeSwap: (swapData: SwapData) => Promise<{
   return { receipt, error: null };
 };
 
-var approvalModel: ERC20ApprovalModel;
-
-const getApprovalModelAction = async (options: IERC20ApprovalEventOptions) => {
-  const approvalOptions = {
-    ...options,
-    spenderAddress: ''
-  };
-  approvalModel = new ERC20ApprovalModel(approvalOptions);
-  let approvalModelAction = approvalModel.getAction();
-  return approvalModelAction;
-}
-
-const setApprovalModalSpenderAddress = (contractAddress?: string) => {
-  let spender:string;
-  if (contractAddress) {
-    spender = contractAddress;
-  } else {
-    spender = getHybridRouterAddress();
-  }
-  approvalModel.spenderAddress = spender;
-}
 
 export {
   SwapData,
   executeSwap,
-  getHybridRouterAddress,
-  getApprovalModelAction,
-  setApprovalModalSpenderAddress
+  getHybridRouterAddress
 }

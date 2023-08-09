@@ -141,22 +141,6 @@ export const buybackComponent = Styles.style({
     '.highlight-box': {
       borderColor: '#E53780 !important'
     },
-    // '.flex-col--wrap': {
-    //   $nest: {
-    //     '#pnlDivider': {
-    //       height: '2px !important',
-    //       width: '90% !important',
-    //       marginBlock: '0 !important'
-    //     },
-    //     '#leftStack': {
-    //       maxWidth: '100% !important'
-    //     },
-    //     '#rightStack': {
-    //       width: '100% !important',
-    //       maxWidth: '100% !important'
-    //     }
-    //   }
-    // },
     'i-modal .modal': {
       background: Theme.background.modal,
     },

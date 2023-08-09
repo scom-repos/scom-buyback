@@ -16,13 +16,12 @@ export enum QueueType {
 
 export interface IBuybackCampaign {
   chainId: number;
-  projectName: string;
+  title?: string;
+  logo?: string;
   pairAddress?: string;
   offerIndex: number;
-  description?: string;
   tokenIn: string;
   tokenOut: string;
-  detailUrl?: string;
 
   commissions?: ICommissionInfo[];
   wallets: IWalletPlugin[];

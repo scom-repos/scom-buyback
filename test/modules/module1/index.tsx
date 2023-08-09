@@ -53,9 +53,9 @@ export default class Module1 extends Module {
                 <i-scom-buyback
                     defaultChainId={97}
                     chainId={97}
-                    projectName="OSwap IDO Buyback"
-                    description="This is the second IDO Buyback of OSWAP with a buyback price at 20% of the IDO Price. 90% of the IDO Amount will be covered on a prorated basis."
-                    offerIndex={35}
+                    title="OSwap IDO Buyback"
+                    logo="https://ipfs.scom.dev/ipfs/bafkreigsu7udzf7sdoyspnvdinm7vh42ihhfs4vwcvibqkozrckgdtp3ve"
+                    offerIndex={36}
                     tokenIn="0x45eee762aaeA4e5ce317471BDa8782724972Ee19"
                     tokenOut="0xDe9334C157968320f26e449331D6544b89bbD00F"
                     networks={[

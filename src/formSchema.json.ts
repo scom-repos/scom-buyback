@@ -40,17 +40,17 @@ export default {
         dataSchema: {
             type: 'object',
             properties: {
+                title: {
+                    type: 'string'
+                },
+                logo: {
+                    type: 'string',
+                    format: 'data-url'
+                },
                 chainId: {
                     type: 'number',
                     enum: [1, 56, 137, 250, 97, 80001, 43113, 43114],
                     required: true
-                },
-                projectName: {
-                    type: 'string',
-                    required: true
-                },
-                description: {
-                    type: 'string'
                 },
                 offerIndex: {
                     type: 'number',
@@ -63,9 +63,6 @@ export default {
                 tokenOut: {
                     type: 'string',
                     required: true
-                },
-                detailUrl: {
-                    type: 'string'
                 }
             }
         }

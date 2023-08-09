@@ -73,7 +73,7 @@ export const limitDecimals = (value: any, decimals: number) => {
   } else if (val.includes(',')) {
     chart = ',';
   } else {
-    return value;
+    return val;
   }
   const parts = val.split(chart);
   let decimalsPart = parts[1];
