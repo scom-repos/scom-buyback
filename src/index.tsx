@@ -1,6 +1,6 @@
 import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, application, customModule, Input, moment, HStack, customElements } from '@ijstech/components';
 import { BigNumber, Constants, IERC20ApprovalAction, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
-import { formatNumber, formatDate, limitInputNumber, limitDecimals, QueueType, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
+import { formatNumber, formatDate, limitInputNumber, limitDecimals, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
 import { State, fallBackUrl, isClientWalletConnected } from './store/index';
 import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
 import { executeSwap, getHybridRouterAddress } from './swap-utils/index';
@@ -696,7 +696,6 @@ export default class ScomBuyback extends Module {
 		this.showResultMessage('warning', `Swapping ${formatNumber(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
 		const params = {
 			provider: "RestrictedOracle",
-			queueType: QueueType.GROUP_QUEUE,
 			routeTokens: [firstToken, secondToken],
 			bestSmartRoute: [firstToken, secondToken],
 			pairs: [pairAddress],

@@ -28,13 +28,6 @@ declare module "@scom/scom-buyback/global/utils/interfaces.ts" {
         walletAddress: string;
         share: string;
     }
-    export enum QueueType {
-        PRIORITY_QUEUE = 0,
-        RANGE_QUEUE = 1,
-        GROUP_QUEUE = 2,
-        PEGGED_QUEUE = 3,
-        OTC_QUEUE = 4
-    }
     export interface IBuybackCampaign {
         chainId: number;
         title?: string;
@@ -79,30 +72,6 @@ declare module "@scom/scom-buyback/store/data/index.ts" {
             [contract: string]: string;
         };
     };
-    export enum Market {
-        OPENSWAP = 0,
-        UNISWAP = 1,
-        SUSHISWAP = 2,
-        PANCAKESWAPV1 = 3,
-        PANCAKESWAP = 4,
-        BAKERYSWAP = 5,
-        BURGERSWAP = 6,
-        IFSWAPV1 = 7,
-        OPENSWAPV1 = 8,
-        HYBRID = 9,
-        MIXED_QUEUE = 10,
-        GROUP_QUEUE = 11,
-        QUICKSWAP = 12,
-        BISWAP = 13,
-        PANGOLIN = 14,
-        TRADERJOE = 15,
-        SPIRITSWAP = 16,
-        SPOOKYSWAP = 17,
-        PEGGED_QUEUE = 18,
-        HAKUSWAP = 19,
-        JETSWAP = 20,
-        IFSWAPV3 = 21
-    }
 }
 /// <amd-module name="@scom/scom-buyback/store/utils.ts" />
 declare module "@scom/scom-buyback/store/utils.ts" {
@@ -150,14 +119,9 @@ declare module "@scom/scom-buyback/store/index.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/buyback-utils/index.ts" />
 declare module "@scom/scom-buyback/buyback-utils/index.ts" {
-    import { QueueType, IBuybackCampaign } from "@scom/scom-buyback/global/index.ts";
+    import { IBuybackCampaign } from "@scom/scom-buyback/global/index.ts";
     import { BigNumber } from '@ijstech/eth-wallet';
     import { State } from "@scom/scom-buyback/store/index.ts";
-    export interface AllocationMap {
-        address: string;
-        allocation: string;
-    }
-    const getPair: (state: State, queueType: QueueType, tokenA: any, tokenB: any) => Promise<string>;
     const getGroupQueueExecuteData: (offerIndex: number | BigNumber) => string;
     interface GuaranteedBuyBackInfo extends IBuybackCampaign {
         queueInfo: ProviderGroupQueueInfo;
@@ -185,17 +149,16 @@ declare module "@scom/scom-buyback/buyback-utils/index.ts" {
         tokenInAvailable: string;
         available: string;
     }
-    export { getPair, getGroupQueueExecuteData, getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo, };
+    export { getGroupQueueExecuteData, getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo };
 }
 /// <amd-module name="@scom/scom-buyback/swap-utils/index.ts" />
 declare module "@scom/scom-buyback/swap-utils/index.ts" {
     import { BigNumber, TransactionReceipt } from '@ijstech/eth-wallet';
-    import { QueueType, ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
+    import { ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
     import { State } from "@scom/scom-buyback/store/index.ts";
     const getHybridRouterAddress: (state: State) => string;
     interface SwapData {
         provider: string;
-        queueType?: QueueType;
         routeTokens: any[];
         bestSmartRoute: any[];
         pairs: string[];

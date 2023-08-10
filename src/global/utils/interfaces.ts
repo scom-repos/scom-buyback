@@ -6,14 +6,6 @@ export interface ICommissionInfo {
   share: string;
 }
 
-export enum QueueType {
-  PRIORITY_QUEUE,
-  RANGE_QUEUE,
-  GROUP_QUEUE,
-  PEGGED_QUEUE,
-  OTC_QUEUE
-}
-
 export interface IBuybackCampaign {
   chainId: number;
   title?: string;

@@ -170,15 +170,6 @@ define("@scom/scom-buyback/global/utils/common.ts", ["require", "exports", "@ijs
 define("@scom/scom-buyback/global/utils/interfaces.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.QueueType = void 0;
-    var QueueType;
-    (function (QueueType) {
-        QueueType[QueueType["PRIORITY_QUEUE"] = 0] = "PRIORITY_QUEUE";
-        QueueType[QueueType["RANGE_QUEUE"] = 1] = "RANGE_QUEUE";
-        QueueType[QueueType["GROUP_QUEUE"] = 2] = "GROUP_QUEUE";
-        QueueType[QueueType["PEGGED_QUEUE"] = 3] = "PEGGED_QUEUE";
-        QueueType[QueueType["OTC_QUEUE"] = 4] = "OTC_QUEUE";
-    })(QueueType = exports.QueueType || (exports.QueueType = {}));
 });
 define("@scom/scom-buyback/global/utils/index.ts", ["require", "exports", "@scom/scom-buyback/global/utils/helper.ts", "@scom/scom-buyback/global/utils/common.ts", "@scom/scom-buyback/global/utils/interfaces.ts"], function (require, exports, helper_1, common_1, interfaces_1) {
     "use strict";
@@ -211,7 +202,7 @@ define("@scom/scom-buyback/assets.ts", ["require", "exports", "@ijstech/componen
 define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.Market = exports.CoreContractAddressesByChainId = void 0;
+    exports.CoreContractAddressesByChainId = void 0;
     ///<amd-module name='@scom/scom-buyback/store/data/index.ts'/> 
     exports.CoreContractAddressesByChainId = {
         1: {
@@ -223,24 +214,16 @@ define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], functio
         42: {
             "WETH9": "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
             "OSWAP_HybridRouter2": "0xf612B4879ADC5713A5c0781F0f431362a69030b5",
-            "OSWAP_OracleFactory": "0x02ac522Deb18156CFaE15c7c93da44bd6CC5c967",
-            "OSWAP_PeggedOracleFactory": '0x016c6d1Cee7a639D84479372EB1B4fBaDca92a5d',
         },
         56: {
             "WETH9": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
             "OSWAP_HybridRouter2": "0xFc7261491753C53F0aa168CDB290e47f64C713bB",
-            "OSWAP_OracleFactory": "0x8CB1fEE69f7F8f00efd5d47067eb75C19cd40017",
-            "OSWAP_RangeFactory": "0xE31e10f0f3f65a4aFe510C460Cda0f9392Fb0e99",
             "OSWAP_RestrictedFactory": "0x91d137464b93caC7E2c2d4444a9D8609E4473B70",
-            "OSWAP_PeggedOracleFactory": '0x6ebc906c7f657c17f021f4a3c696a4c625bfbaf0',
         },
         97: {
             "WETH9": "0xae13d989dac2f0debff460ac112a837c89baa7cd",
             "OSWAP_HybridRouter2": "0x58dD8dC6EbE7AE6bbDA3ba5DA10eC08f27D52D31",
-            "OSWAP_OracleFactory": "0x03843D530400cB153459d3d64f921940f88b21B2",
-            "OSWAP_RangeFactory": "0xbF8C49367377e1bc15faafF1A873fBc692d5411c",
             "OSWAP_RestrictedFactory": "0xa158FB71cA5EF59f707c6F8D0b9CC5765F97Fd60",
-            "OSWAP_PeggedOracleFactory": '0xC4539f2e431AD23ab62c5947a99750FEF0Ccf046',
         },
         137: {
             "WETH9": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
@@ -260,60 +243,27 @@ define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], functio
         },
         43114: {
             "WETH9": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-            "OSWAP_OracleFactory": "0x67c314DC938049150F4c162032bb9645c202Ba71",
-            "OSWAP_RangeFactory": "0xEfeAD058e3a16272FD61D978e54D6c7039ae828E",
             "OSWAP_RestrictedFactory": "0x739f0BBcdAd415127FE8d5d6ED053e9D817BdAdb",
             "OSWAP_HybridRouter2": "0xC3F6FE3da0A69621EE9c5bBFa5507f365ad9CFf8",
         },
         43113: {
             "WETH9": "0xd00ae08403B9bbb9124bB305C09058E32C39A48c",
             "OSWAP_HybridRouter2": "0x83445062a0685e47d8228881c594c0A8494E284a",
-            "OSWAP_OracleFactory": "0x9D9491e6dF38A68181fb4c24D5c6779DdEFdd6E8",
-            "OSWAP_RangeFactory": "0xEcD7f181f90aC33117ac4CfAe55514F1c62433db",
             "OSWAP_RestrictedFactory": "0x6C99c8E2c587706281a5B66bA7617DA7e2Ba6e48",
-            "OSWAP_PeggedOracleFactory": '0x728DbD968341eb7aD11bDabFE775A13aF901d6ac',
         },
         250: {
             "WETH9": "0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83",
         },
         4002: {
             "WETH9": "0xf1277d1Ed8AD466beddF92ef448A132661956621",
-            "OSWAP_OracleFactory": '0x28A6a9079fA8e041179cD13F4652af2B315b6fd8',
             "OSWAP_HybridRouter2": '0x1B0D217822719941a1ae3B38eB0A94663e9ad86E',
         },
         13370: {
             "WETH9": "0xCb5e100fdF7d24f25865fa85673D9bD6Bb4674ab",
             "OSWAP_HybridRouter2": "0x567c6Af5Ec3EC2821143179DD4bBAcea5f7A9de9",
-            "OSWAP_OracleFactory": "0x227C8E8C4D1baDC6665Cb31C01E0B3D65c5d04B4",
-            "OSWAP_RangeFactory": "0x1Db29E80e7eCc82Be98d1deE4Bf3800433212b7e",
             "OSWAP_RestrictedFactory": "0x6B9215FCa70E2972182B7BF427C4D7fCcf5C24e5",
         }
     };
-    var Market;
-    (function (Market) {
-        Market[Market["OPENSWAP"] = 0] = "OPENSWAP";
-        Market[Market["UNISWAP"] = 1] = "UNISWAP";
-        Market[Market["SUSHISWAP"] = 2] = "SUSHISWAP";
-        Market[Market["PANCAKESWAPV1"] = 3] = "PANCAKESWAPV1";
-        Market[Market["PANCAKESWAP"] = 4] = "PANCAKESWAP";
-        Market[Market["BAKERYSWAP"] = 5] = "BAKERYSWAP";
-        Market[Market["BURGERSWAP"] = 6] = "BURGERSWAP";
-        Market[Market["IFSWAPV1"] = 7] = "IFSWAPV1";
-        Market[Market["OPENSWAPV1"] = 8] = "OPENSWAPV1";
-        Market[Market["HYBRID"] = 9] = "HYBRID";
-        Market[Market["MIXED_QUEUE"] = 10] = "MIXED_QUEUE";
-        Market[Market["GROUP_QUEUE"] = 11] = "GROUP_QUEUE";
-        Market[Market["QUICKSWAP"] = 12] = "QUICKSWAP";
-        Market[Market["BISWAP"] = 13] = "BISWAP";
-        Market[Market["PANGOLIN"] = 14] = "PANGOLIN";
-        Market[Market["TRADERJOE"] = 15] = "TRADERJOE";
-        Market[Market["SPIRITSWAP"] = 16] = "SPIRITSWAP";
-        Market[Market["SPOOKYSWAP"] = 17] = "SPOOKYSWAP";
-        Market[Market["PEGGED_QUEUE"] = 18] = "PEGGED_QUEUE";
-        Market[Market["HAKUSWAP"] = 19] = "HAKUSWAP";
-        Market[Market["JETSWAP"] = 20] = "JETSWAP";
-        Market[Market["IFSWAPV3"] = 21] = "IFSWAPV3";
-    })(Market = exports.Market || (exports.Market = {}));
 });
 define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/scom-token-list", "@scom/scom-network-list", "@ijstech/components", "@scom/scom-buyback/store/data/index.ts", "@scom/scom-buyback/store/data/index.ts"], function (require, exports, eth_wallet_3, scom_token_list_1, scom_network_list_1, components_3, index_2, index_3) {
     "use strict";
@@ -456,7 +406,9 @@ define("@scom/scom-buyback/store/index.ts", ["require", "exports", "@scom/scom-b
 define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@scom/scom-buyback/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list"], function (require, exports, index_4, eth_wallet_4, index_5, oswap_openswap_contract_1, scom_token_list_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getGuaranteedBuyBackInfo = exports.getGroupQueueExecuteData = exports.getPair = void 0;
+    exports.getGuaranteedBuyBackInfo = exports.getGroupQueueExecuteData = void 0;
+    const tradeFeeObj = { fee: '1', base: '1000' };
+    ;
     const getAddressByKey = (state, key) => {
         let Address = state.getAddresses();
         return Address[key];
@@ -474,54 +426,22 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         return obj;
     };
     const getTokenObjectByAddress = (state, address) => {
+        var _a;
         let chainId = state.getChainId();
-        if (address.toLowerCase() === getAddressByKey(state, 'WETH9').toLowerCase()) {
+        if (address.toLowerCase() === ((_a = getAddressByKey(state, 'WETH9')) === null || _a === void 0 ? void 0 : _a.toLowerCase())) {
             return (0, index_5.getWETH)(chainId);
         }
         let tokenMap = scom_token_list_2.tokenStore.tokenMap;
         return tokenMap[address.toLowerCase()];
     };
-    const getFactoryAddress = (state, queueType) => {
-        switch (queueType) {
-            case index_4.QueueType.PRIORITY_QUEUE:
-                return getAddressByKey(state, "OSWAP_OracleFactory");
-            case index_4.QueueType.RANGE_QUEUE:
-                return getAddressByKey(state, "OSWAP_RangeFactory");
-            case index_4.QueueType.PEGGED_QUEUE:
-                return getAddressByKey(state, "OSWAP_PeggedOracleFactory");
-            case index_4.QueueType.GROUP_QUEUE:
-                return getAddressByKey(state, "OSWAP_RestrictedFactory");
-        }
-    };
-    const getTradeFee = (queueType) => {
-        switch (queueType) {
-            case index_4.QueueType.PRIORITY_QUEUE:
-            case index_4.QueueType.RANGE_QUEUE:
-            case index_4.QueueType.GROUP_QUEUE:
-                return { fee: "1", base: "1000" };
-            case index_4.QueueType.PEGGED_QUEUE:
-                return { fee: "1", base: "1000" };
-        }
-    };
-    const getPair = async (state, queueType, tokenA, tokenB) => {
+    const getPair = async (state, tokenA, tokenB) => {
         const wallet = state.getRpcWallet();
         let tokens = mapTokenObjectSet(state, { tokenA, tokenB });
         let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
-        let factoryAddress = getFactoryAddress(state, queueType);
-        switch (queueType) {
-            case index_4.QueueType.PEGGED_QUEUE:
-            case index_4.QueueType.PRIORITY_QUEUE:
-                let priorityQ = new oswap_openswap_contract_1.Contracts.OSWAP_OracleFactory(wallet, factoryAddress);
-                return await priorityQ.getPair(params);
-            case index_4.QueueType.RANGE_QUEUE:
-                let rangeQ = new oswap_openswap_contract_1.Contracts.OSWAP_RangeFactory(wallet, factoryAddress);
-                return await rangeQ.getPair(params);
-            case index_4.QueueType.GROUP_QUEUE:
-                let groupQ = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
-                return await groupQ.getPair(Object.assign(Object.assign({}, params), { param3: 0 }));
-        }
+        let factoryAddress = getAddressByKey(state, 'OSWAP_RestrictedFactory');
+        let groupQ = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
+        return await groupQ.getPair(Object.assign(Object.assign({}, params), { param3: 0 }));
     };
-    exports.getPair = getPair;
     const getGroupQueueExecuteData = (offerIndex) => {
         let indexArr = [offerIndex];
         let ratioArr = [(0, index_4.toWeiInv)('1')];
@@ -538,7 +458,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         info.tokenIn = ((_a = info.tokenIn) === null || _a === void 0 ? void 0 : _a.startsWith('0x')) ? info.tokenIn.toLowerCase() : info.tokenIn;
         info.tokenOut = ((_b = info.tokenOut) === null || _b === void 0 ? void 0 : _b.startsWith('0x')) ? info.tokenOut.toLowerCase() : info.tokenOut;
         if (!info.pairAddress) {
-            info.pairAddress = await getPair(state, index_4.QueueType.GROUP_QUEUE, getTokenObjectByAddress(state, info.tokenIn), getTokenObjectByAddress(state, info.tokenOut));
+            info.pairAddress = await getPair(state, getTokenObjectByAddress(state, info.tokenIn), getTokenObjectByAddress(state, info.tokenOut));
         }
         const queueInfo = await getProviderGroupQueueInfoByIndex(state, info.pairAddress, info.tokenIn, info.offerIndex);
         queueInfo.offerPrice = new eth_wallet_4.BigNumber(queueInfo.offerPrice).shiftedBy(getTokenObjectByAddress(state, info.tokenIn).decimals - getTokenObjectByAddress(state, info.tokenOut).decimals).toFixed();
@@ -580,7 +500,6 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         let amount = new eth_wallet_4.BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
         let userAllo = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
         let available = offer.allowAll ? amount : new eth_wallet_4.BigNumber(userAllo.allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed();
-        let tradeFeeObj = getTradeFee(index_4.QueueType.GROUP_QUEUE);
         let tradeFee = new eth_wallet_4.BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
         let tokenInAvailable = new eth_wallet_4.BigNumber(available).dividedBy(new eth_wallet_4.BigNumber(price)).dividedBy(new eth_wallet_4.BigNumber(tradeFee)).toFixed();
         return {
@@ -628,7 +547,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         return allo;
     }
 });
-define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/oswap-openswap-contract", "@scom/scom-commission-proxy-contract", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts"], function (require, exports, eth_wallet_5, oswap_openswap_contract_2, scom_commission_proxy_contract_1, index_6, index_7) {
+define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/oswap-openswap-contract", "@scom/scom-commission-proxy-contract", "@scom/scom-buyback/buyback-utils/index.ts"], function (require, exports, eth_wallet_5, oswap_openswap_contract_2, scom_commission_proxy_contract_1, index_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getHybridRouterAddress = exports.executeSwap = void 0;
@@ -637,73 +556,6 @@ define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstec
         return Address['OSWAP_HybridRouter2'];
     };
     exports.getHybridRouterAddress = getHybridRouterAddress;
-    const calculateAmountInByTradeFee = (tradeFeeMap, pairInfo, amountOut) => {
-        let tradeFeeObj = tradeFeeMap[pairInfo.market];
-        let feeMultiplier = new eth_wallet_5.BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee);
-        if (pairInfo.reserveB.lte(amountOut)) {
-            return null;
-        }
-        let amtIn = new eth_wallet_5.BigNumber(pairInfo.reserveA).times(amountOut).times(tradeFeeObj.base).idiv(new eth_wallet_5.BigNumber(pairInfo.reserveB.minus(amountOut)).times(feeMultiplier)).plus(1).toFixed();
-        return amtIn;
-    };
-    const getPathsByTokenIn = (tradeFeeMap, pairInfoList, routeObj, tokenIn) => {
-        let routeObjList = [];
-        let listItems = pairInfoList.filter(v => v.tokenOut.address == routeObj.route[routeObj.route.length - 1].address && routeObj.route.every((n) => n.address != v.tokenIn.address));
-        let getNewAmmRouteObj = (pairInfo, routeObj, amountOut) => {
-            let amtIn = calculateAmountInByTradeFee(tradeFeeMap, pairInfo, amountOut);
-            if (!amtIn)
-                return null;
-            let newRouteObj = {
-                pairs: [...routeObj.pairs, pairInfo.pair],
-                market: [...routeObj.market, pairInfo.market],
-                customDataList: [...routeObj.customDataList, {
-                        reserveA: pairInfo.reserveA,
-                        reserveB: pairInfo.reserveB
-                    }],
-                route: [...routeObj.route, pairInfo.tokenIn],
-                amounts: [...routeObj.amounts, amtIn]
-            };
-            return newRouteObj;
-        };
-        let getNewQueueRouteObj = (pairInfo, routeObj, amountOut) => {
-            let tradeFeeObj = tradeFeeMap[pairInfo.market];
-            let tradeFeeFactor = new eth_wallet_5.BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-            let amtIn = new eth_wallet_5.BigNumber(amountOut).shiftedBy(18 - Number(pairInfo.tokenOut.decimals)).div(pairInfo.priceSwap).shiftedBy(pairInfo.tokenIn.decimals).div(tradeFeeFactor).toFixed();
-            let sufficientLiquidity = new eth_wallet_5.BigNumber(pairInfo.totalLiquidity).gt(amountOut);
-            if (!sufficientLiquidity)
-                return null;
-            let newRouteObj = {
-                pairs: [...routeObj.pairs, pairInfo.pair],
-                market: [...routeObj.market, pairInfo.market],
-                customDataList: [...routeObj.customDataList, {
-                        queueType: pairInfo.queueType,
-                        price: pairInfo.price,
-                        priceSwap: pairInfo.priceSwap
-                    }],
-                route: [...routeObj.route, pairInfo.tokenIn],
-                amounts: [...routeObj.amounts, amtIn]
-            };
-            return newRouteObj;
-        };
-        for (let i = 0; i < listItems.length; i++) {
-            let listItem = listItems[i];
-            let lastAmtIn = routeObj.amounts[routeObj.amounts.length - 1];
-            let newRouteObj = listItem.market == index_6.Market.MIXED_QUEUE ? getNewQueueRouteObj(listItem, routeObj, lastAmtIn) : getNewAmmRouteObj(listItem, routeObj, lastAmtIn);
-            if (!newRouteObj)
-                continue;
-            if (listItem.tokenIn.address == tokenIn.address) {
-                routeObjList.push(newRouteObj);
-                break;
-            }
-            else {
-                if (newRouteObj.route.length >= 4)
-                    continue;
-                let childPaths = getPathsByTokenIn(tradeFeeMap, pairInfoList, Object.assign({}, newRouteObj), tokenIn);
-                routeObjList.push(...childPaths);
-            }
-        }
-        return routeObjList;
-    };
     const hybridTradeExactIn = async (state, wallet, path, pairs, amountIn, amountOutMin, toAddress, deadline, feeOnTransfer, data, commissions) => {
         if (path.length < 2) {
             return null;
@@ -858,7 +710,7 @@ define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstec
             const transactionDeadlineInMinutes = state.transactionDeadline;
             const transactionDeadline = Math.floor(Date.now() / 1000 + transactionDeadlineInMinutes * 60);
             if (swapData.provider === "RestrictedOracle") {
-                const data = (0, index_7.getGroupQueueExecuteData)(swapData.groupQueueOfferIndex);
+                const data = (0, index_6.getGroupQueueExecuteData)(swapData.groupQueueOfferIndex);
                 if (!data)
                     return {
                         receipt: null,
@@ -1172,7 +1024,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         }
     });
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, eth_wallet_6, index_8, index_9, index_10, index_11, assets_3, data_json_1, formSchema_json_1, scom_token_list_3, index_css_1) {
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, eth_wallet_6, index_7, index_8, index_9, index_10, assets_3, data_json_1, formSchema_json_1, scom_token_list_3, index_css_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_5.Styles.Theme.ThemeVars;
@@ -1511,7 +1363,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.contractAddress = this.state.getProxyAddress();
                 }
                 else {
-                    this.contractAddress = (0, index_11.getHybridRouterAddress)(this.state);
+                    this.contractAddress = (0, index_10.getHybridRouterAddress)(this.state);
                 }
                 if (((_a = this.state) === null || _a === void 0 ? void 0 : _a.approvalModel) && this.approvalModelAction) {
                     this.state.approvalModel.spenderAddress = this.contractAddress;
@@ -1552,7 +1404,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     if (!hideLoading && this.loadingElm) {
                         this.loadingElm.visible = true;
                     }
-                    if (!(0, index_9.isClientWalletConnected)() || !this._data || this._data.chainId !== chainId) {
+                    if (!(0, index_8.isClientWalletConnected)() || !this._data || this._data.chainId !== chainId) {
                         this.renderEmpty();
                         return;
                     }
@@ -1564,7 +1416,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             scom_token_list_3.tokenStore.updateAllTokenBalances(rpcWallet);
                         }
                         await this.initWallet();
-                        this.buybackInfo = await (0, index_10.getGuaranteedBuyBackInfo)(this.state, Object.assign({}, this._data));
+                        this.buybackInfo = await (0, index_9.getGuaranteedBuyBackInfo)(this.state, Object.assign({}, this._data));
                         this.updateCommissionInfo();
                         await this.renderBuybackCampaign();
                         await this.renderLeftPart();
@@ -1642,7 +1494,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     if (firstToken && secondToken) {
                         const amount = new eth_wallet_6.BigNumber(((_a = this.firstInput) === null || _a === void 0 ? void 0 : _a.value) || 0);
                         const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-                        this.lbCommissionFee.caption = `${(0, index_8.formatNumber)(commissionAmount, 6)} ${(firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol) || ''}`;
+                        this.lbCommissionFee.caption = `${(0, index_7.formatNumber)(commissionAmount, 6)} ${(firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol) || ''}`;
                         this.hStackCommission.visible = true;
                     }
                     else {
@@ -1656,7 +1508,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.firstInputChange = () => {
                 const firstToken = this.getTokenObject('toTokenAddress');
                 const secondToken = this.getTokenObject('fromTokenAddress');
-                (0, index_8.limitInputNumber)(this.firstInput, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
+                (0, index_7.limitInputNumber)(this.firstInput, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
                 if (!this.buybackInfo)
                     return;
                 const info = this.buybackInfo.queueInfo || {};
@@ -1668,8 +1520,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.secondInput.value = '';
                 }
                 else {
-                    this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-                    this.secondInput.value = (0, index_8.limitDecimals)(inputVal, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
+                    this.lbFee.caption = `${(0, index_7.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
+                    this.secondInput.value = (0, index_7.limitDecimals)(inputVal, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
@@ -1677,7 +1529,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.secondInputChange = () => {
                 const firstToken = this.getTokenObject('toTokenAddress');
                 const secondToken = this.getTokenObject('fromTokenAddress');
-                (0, index_8.limitInputNumber)(this.secondInput, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
+                (0, index_7.limitInputNumber)(this.secondInput, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
                 if (!this.buybackInfo)
                     return;
                 const info = this.buybackInfo.queueInfo || {};
@@ -1689,8 +1541,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.lbFee.caption = `0 ${firstSymbol}`;
                 }
                 else {
-                    this.firstInput.value = (0, index_8.limitDecimals)(inputVal, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
-                    this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
+                    this.firstInput.value = (0, index_7.limitDecimals)(inputVal, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
+                    this.lbFee.caption = `${(0, index_7.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
@@ -1707,10 +1559,10 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
                     totalAmount = totalAmount.dividedBy(totalFee);
                 }
-                this.firstInput.value = (0, index_8.limitDecimals)(totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
+                this.firstInput.value = (0, index_7.limitDecimals)(totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
                 const inputVal = new eth_wallet_6.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-                this.secondInput.value = (0, index_8.limitDecimals)(inputVal, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
-                this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${(firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol) || ''}`;
+                this.secondInput.value = (0, index_7.limitDecimals)(inputVal, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
+                this.lbFee.caption = `${(0, index_7.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${(firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol) || ''}`;
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
             };
@@ -1765,10 +1617,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const { pairAddress, offerIndex } = this.buybackInfo.queueInfo;
                 const amount = new eth_wallet_6.BigNumber(((_a = this.firstInput) === null || _a === void 0 ? void 0 : _a.value) || 0);
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-                this.showResultMessage('warning', `Swapping ${(0, index_8.formatNumber)(amount.plus(commissionAmount))} ${firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol} to ${(0, index_8.formatNumber)(this.secondInput.value)} ${secondToken === null || secondToken === void 0 ? void 0 : secondToken.symbol}`);
+                this.showResultMessage('warning', `Swapping ${(0, index_7.formatNumber)(amount.plus(commissionAmount))} ${firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol} to ${(0, index_7.formatNumber)(this.secondInput.value)} ${secondToken === null || secondToken === void 0 ? void 0 : secondToken.symbol}`);
                 const params = {
                     provider: "RestrictedOracle",
-                    queueType: index_8.QueueType.GROUP_QUEUE,
                     routeTokens: [firstToken, secondToken],
                     bestSmartRoute: [firstToken, secondToken],
                     pairs: [pairAddress],
@@ -1778,7 +1629,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     groupQueueOfferIndex: offerIndex,
                     commissions: this.commissions
                 };
-                const { error } = await (0, index_11.executeSwap)(this.state, params);
+                const { error } = await (0, index_10.executeSwap)(this.state, params);
                 if (error) {
                     this.showResultMessage('error', error);
                 }
@@ -1866,7 +1717,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.txStatusModal.showModal();
             };
             this.connectWallet = async () => {
-                if (!(0, index_9.isClientWalletConnected)()) {
+                if (!(0, index_8.isClientWalletConnected)()) {
                     if (this.mdWallet) {
                         await components_5.application.loadPackage('@scom/scom-wallet-modal', '*');
                         this.mdWallet.networks = this.networks;
@@ -1884,7 +1735,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 if (!this.noCampaignSection) {
                     this.noCampaignSection = await components_5.Panel.create({ width: '100%', height: '100%' });
                 }
-                const isClientConnected = (0, index_9.isClientWalletConnected)();
+                const isClientConnected = (0, index_8.isClientWalletConnected)();
                 this.noCampaignSection.clearInnerHTML();
                 this.noCampaignSection.appendChild(this.$render("i-vstack", { class: "no-buyback", height: "100%", background: { color: Theme.background.main }, verticalAlignment: "center" },
                     this.$render("i-vstack", { gap: 10, verticalAlignment: "center", horizontalAlignment: "center" },
@@ -1924,24 +1775,24 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.$render("i-vstack", { gap: 10, width: "100%" },
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Group Queue Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-label", { caption: `${(0, index_7.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Your Allocation" }),
-                                this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_8.formatNumber)(allocation || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_7.formatNumber)(allocation || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Your Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(scom_token_list_3.tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-label", { caption: `${(0, index_7.formatNumber)(scom_token_list_3.tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-panel", { width: "100%", height: 2, background: { color: Theme.input.background }, margin: { top: 8, bottom: 8 } }),
                             this.$render("i-hstack", { gap: 4, wrap: "wrap" },
                                 this.$render("i-label", { caption: "Swap Available" }),
                                 this.$render("i-vstack", { gap: 4, margin: { left: 'auto' }, horizontalAlignment: "end" },
-                                    this.$render("i-label", { caption: `${(0, index_8.formatNumber)(this.getFirstAvailableBalance())} ${firstSymbol}`, font: { color: Theme.colors.primary.main } }),
-                                    this.$render("i-label", { caption: `(${(0, index_8.formatNumber)(this.getSecondAvailableBalance())} ${secondSymbol})`, font: { color: Theme.colors.primary.main } }))),
+                                    this.$render("i-label", { caption: `${(0, index_7.formatNumber)(this.getFirstAvailableBalance())} ${firstSymbol}`, font: { color: Theme.colors.primary.main } }),
+                                    this.$render("i-label", { caption: `(${(0, index_7.formatNumber)(this.getSecondAvailableBalance())} ${secondSymbol})`, font: { color: Theme.colors.primary.main } }))),
                             this.$render("i-hstack", { id: "firstInputBox", gap: 8, width: "100%", height: 50, verticalAlignment: "center", background: { color: Theme.input.background }, border: { radius: 5, width: 2, style: 'solid', color: 'transparent' }, padding: { left: 7, right: 7 } },
                                 this.$render("i-input", { id: "firstInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.firstInputChange, onFocus: () => this.handleFocusInput(true, true), onBlur: () => this.handleFocusInput(true, false) }),
                                 this.$render("i-hstack", { gap: 4, width: 130, verticalAlignment: "center" },
                                     this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_6.BigNumber(this.getFirstAvailableBalance()).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_3.assets.tokenPath(firstTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_3.assets.tokenPath(firstTokenObj, chainId), fallbackUrl: index_8.fallBackUrl }),
                                     this.$render("i-label", { caption: firstSymbol, font: { color: Theme.input.fontColor, bold: true } }))),
                             this.$render("i-vstack", { width: "100%", margin: { top: 4, bottom: 4 }, horizontalAlignment: "center" },
                                 this.$render("i-icon", { name: "arrow-down", width: 20, height: 20, fill: Theme.text.primary })),
@@ -1949,7 +1800,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-input", { id: "secondInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.secondInputChange, onFocus: () => this.handleFocusInput(false, true), onBlur: () => this.handleFocusInput(false, false) }),
                                 this.$render("i-hstack", { gap: 4, margin: { right: 8 }, width: 130, verticalAlignment: "center" },
                                     this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_6.BigNumber(this.getSecondAvailableBalance()).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_3.assets.tokenPath(secondTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_3.assets.tokenPath(secondTokenObj, chainId), fallbackUrl: index_8.fallBackUrl }),
                                     this.$render("i-label", { caption: secondSymbol, font: { color: Theme.input.fontColor, bold: true } })))),
                         this.$render("i-hstack", { gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
                             this.$render("i-label", { caption: `Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_6.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`, font: { size: '0.75rem' } }),
@@ -1992,7 +1843,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const hStackEndTime = await components_5.HStack.create({ gap: 4, verticalAlignment: 'center' });
                     const lbEndTime = await components_5.Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
                     hStackEndTime.appendChild(lbEndTime);
-                    hStackEndTime.appendChild(this.$render("i-label", { caption: (0, index_8.formatDate)(endDate), font: { size: '0.875rem', bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } }));
+                    hStackEndTime.appendChild(this.$render("i-label", { caption: (0, index_7.formatDate)(endDate), font: { size: '0.875rem', bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } }));
                     // const optionTimer = { background: { color: Theme.colors.secondary.main }, font: { color: Theme.colors.secondary.contrastText } };
                     // const hStackTimer = await HStack.create({ gap: 4, verticalAlignment: 'center' });
                     // const lbTimer = await Label.create({ caption: 'Starts In', font: { size: '0.875rem', bold: true } });
@@ -2114,7 +1965,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
         async init() {
             this.isReadyCallbackQueued = true;
             super.init();
-            this.state = new index_9.State(data_json_1.default);
+            this.state = new index_8.State(data_json_1.default);
             const lazyLoad = this.getAttribute('lazyLoad', true, false);
             if (!lazyLoad) {
                 const defaultChainId = this.getAttribute('defaultChainId', true);

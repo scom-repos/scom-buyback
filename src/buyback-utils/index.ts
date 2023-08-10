@@ -1,5 +1,4 @@
 import {
-  QueueType,
   toWeiInv,
   numberToBytes32,
   IBuybackCampaign,
@@ -13,7 +12,9 @@ import {
 import { Contracts } from '@scom/oswap-openswap-contract';
 import { ITokenObject, tokenStore } from '@scom/scom-token-list';
 
-export interface AllocationMap { address: string, allocation: string }
+const tradeFeeObj = { fee: '1', base: '1000' };
+
+interface AllocationMap { address: string, allocation: string };
 
 const getAddressByKey = (state: State, key: string) => {
   let Address = state.getAddresses();
@@ -33,55 +34,20 @@ const mapTokenObjectSet = (state: State, obj: any) => {
 
 const getTokenObjectByAddress = (state: State, address: string) => {
   let chainId = state.getChainId();
-  if (address.toLowerCase() === getAddressByKey(state, 'WETH9').toLowerCase()) {
+  if (address.toLowerCase() === getAddressByKey(state, 'WETH9')?.toLowerCase()) {
     return getWETH(chainId);
   }
-
   let tokenMap = tokenStore.tokenMap;
   return tokenMap[address.toLowerCase()];
 }
 
-const getFactoryAddress = (state: State, queueType: QueueType) => {
-  switch (queueType) {
-    case QueueType.PRIORITY_QUEUE:
-      return getAddressByKey(state, "OSWAP_OracleFactory");
-    case QueueType.RANGE_QUEUE:
-      return getAddressByKey(state, "OSWAP_RangeFactory");
-    case QueueType.PEGGED_QUEUE:
-      return getAddressByKey(state, "OSWAP_PeggedOracleFactory");
-    case QueueType.GROUP_QUEUE:
-      return getAddressByKey(state, "OSWAP_RestrictedFactory");
-  }
-}
-
-const getTradeFee = (queueType: QueueType) => {
-  switch (queueType) {
-    case QueueType.PRIORITY_QUEUE:
-    case QueueType.RANGE_QUEUE:
-    case QueueType.GROUP_QUEUE:
-      return { fee: "1", base: "1000" };
-    case QueueType.PEGGED_QUEUE:
-      return { fee: "1", base: "1000" };
-  }
-}
-
-const getPair = async (state: State, queueType: QueueType, tokenA: any, tokenB: any) => {
+const getPair = async (state: State, tokenA: ITokenObject, tokenB: ITokenObject) => {
   const wallet = state.getRpcWallet();
   let tokens = mapTokenObjectSet(state, { tokenA, tokenB });
   let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
-  let factoryAddress = getFactoryAddress(state, queueType);
-  switch (queueType) {
-    case QueueType.PEGGED_QUEUE:
-    case QueueType.PRIORITY_QUEUE:
-      let priorityQ = new Contracts.OSWAP_OracleFactory(wallet, factoryAddress);
-      return await priorityQ.getPair(params);
-    case QueueType.RANGE_QUEUE:
-      let rangeQ = new Contracts.OSWAP_RangeFactory(wallet, factoryAddress);
-      return await rangeQ.getPair(params);
-    case QueueType.GROUP_QUEUE:
-      let groupQ = new Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
-      return await groupQ.getPair({ ...params, param3: 0 });
-  }
+  let factoryAddress = getAddressByKey(state, 'OSWAP_RestrictedFactory');
+  let groupQ = new Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
+  return await groupQ.getPair({ ...params, param3: 0 });
 }
 
 const getGroupQueueExecuteData = (offerIndex: number | BigNumber) => {
@@ -102,7 +68,7 @@ const getGuaranteedBuyBackInfo = async (state: State, buybackCampaign: IBuybackC
   info.tokenIn = info.tokenIn?.startsWith('0x') ? info.tokenIn.toLowerCase() : info.tokenIn;
   info.tokenOut = info.tokenOut?.startsWith('0x') ? info.tokenOut.toLowerCase() : info.tokenOut;
   if (!info.pairAddress) {
-    info.pairAddress = await getPair(state, QueueType.GROUP_QUEUE, getTokenObjectByAddress(state, info.tokenIn), getTokenObjectByAddress(state, info.tokenOut));
+    info.pairAddress = await getPair(state, getTokenObjectByAddress(state, info.tokenIn), getTokenObjectByAddress(state, info.tokenOut));
   }
   const queueInfo = await getProviderGroupQueueInfoByIndex(
     state,
@@ -174,7 +140,6 @@ const getProviderGroupQueueInfoByIndex = async (state: State, pairAddress: strin
   let amount = new BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   let userAllo: AllocationMap = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
   let available = offer.allowAll ? amount : new BigNumber(userAllo.allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed();
-  let tradeFeeObj = getTradeFee(QueueType.GROUP_QUEUE);
   let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
   let tokenInAvailable = new BigNumber(available).dividedBy(new BigNumber(price)).dividedBy(new BigNumber(tradeFee)).toFixed();
 
@@ -225,9 +190,8 @@ async function getTradersAllocation(pair: Contracts.OSWAP_RestrictedPair, direct
 }
 
 export {
-  getPair,
   getGroupQueueExecuteData,
   getGuaranteedBuyBackInfo,
   GuaranteedBuyBackInfo,
-  ProviderGroupQueueInfo,
+  ProviderGroupQueueInfo
 }
