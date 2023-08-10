@@ -1,91 +1,13 @@
 import { BigNumber, Utils, TransactionReceipt, Wallet, IWallet } from '@ijstech/eth-wallet';
 import { Contracts } from '@scom/oswap-openswap-contract';
 import { Contracts as ProxyContracts } from '@scom/scom-commission-proxy-contract';
-
-import {
-  QueueType,
-  ICommissionInfo,
-} from '../global/index';
-
-import {
-  Market,
-  State
-} from '../store/index';
-
+import { ICommissionInfo } from '../global/index';
+import { State } from '../store/index';
 import { getGroupQueueExecuteData } from '../buyback-utils/index';
-import { ITokenObject } from '@scom/scom-token-list';
 
 const getHybridRouterAddress = (state: State): string => {
   let Address = state.getAddresses();
   return Address['OSWAP_HybridRouter2'];
-}
-
-const calculateAmountInByTradeFee = (tradeFeeMap: any, pairInfo: any, amountOut: string) => {
-  let tradeFeeObj = tradeFeeMap[pairInfo.market];
-  let feeMultiplier = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee);
-  if (pairInfo.reserveB.lte(amountOut)) {
-    return null;
-  }
-  let amtIn = new BigNumber(pairInfo.reserveA).times(amountOut).times(tradeFeeObj.base).idiv(new BigNumber(pairInfo.reserveB.minus(amountOut)).times(feeMultiplier)).plus(1).toFixed();
-  return amtIn;
-}
-
-const getPathsByTokenIn = (tradeFeeMap: any, pairInfoList: any[], routeObj: any, tokenIn: ITokenObject) => {
-  let routeObjList: any[] = [];
-  let listItems = pairInfoList.filter(v => v.tokenOut.address == routeObj.route[routeObj.route.length - 1].address && routeObj.route.every((n: any) => n.address != v.tokenIn.address));
-
-  let getNewAmmRouteObj = (pairInfo: any, routeObj: any, amountOut: string) => {
-    let amtIn = calculateAmountInByTradeFee(tradeFeeMap, pairInfo, amountOut);
-    if (!amtIn) return null;
-    let newRouteObj = {
-      pairs: [...routeObj.pairs, pairInfo.pair],
-      market: [...routeObj.market, pairInfo.market],
-      customDataList: [...routeObj.customDataList, {
-        reserveA: pairInfo.reserveA,
-        reserveB: pairInfo.reserveB
-      }],
-      route: [...routeObj.route, pairInfo.tokenIn],
-      amounts: [...routeObj.amounts, amtIn]
-    }
-    return newRouteObj;
-  }
-
-  let getNewQueueRouteObj = (pairInfo: any, routeObj: any, amountOut: string) => {
-    let tradeFeeObj = tradeFeeMap[pairInfo.market];
-    let tradeFeeFactor = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
-    let amtIn = new BigNumber(amountOut).shiftedBy(18 - Number(pairInfo.tokenOut.decimals)).div(pairInfo.priceSwap).shiftedBy(pairInfo.tokenIn.decimals).div(tradeFeeFactor).toFixed()
-    let sufficientLiquidity = new BigNumber(pairInfo.totalLiquidity).gt(amountOut);
-    if (!sufficientLiquidity) return null
-    let newRouteObj = {
-      pairs: [...routeObj.pairs, pairInfo.pair],
-      market: [...routeObj.market, pairInfo.market],
-      customDataList: [...routeObj.customDataList, {
-        queueType: pairInfo.queueType,
-        price: pairInfo.price,
-        priceSwap: pairInfo.priceSwap
-      }],
-      route: [...routeObj.route, pairInfo.tokenIn],
-      amounts: [...routeObj.amounts, amtIn]
-    }
-    return newRouteObj;
-  }
-
-  for (let i = 0; i < listItems.length; i++) {
-    let listItem = listItems[i];
-    let lastAmtIn = routeObj.amounts[routeObj.amounts.length - 1];
-    let newRouteObj = listItem.market == Market.MIXED_QUEUE ? getNewQueueRouteObj(listItem, routeObj, lastAmtIn) : getNewAmmRouteObj(listItem, routeObj, lastAmtIn);
-    if (!newRouteObj) continue;
-    if (listItem.tokenIn.address == tokenIn.address) {
-      routeObjList.push(newRouteObj);
-      break;
-    }
-    else {
-      if (newRouteObj.route.length >= 4) continue;
-      let childPaths = getPathsByTokenIn(tradeFeeMap, pairInfoList, { ...newRouteObj }, tokenIn);
-      routeObjList.push(...childPaths);
-    }
-  }
-  return routeObjList;
 }
 
 const hybridTradeExactIn = async (state: State, wallet: IWallet, path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[]) => {
@@ -229,7 +151,6 @@ const hybridTradeExactIn = async (state: State, wallet: IWallet, path: any[], pa
 
 interface SwapData {
   provider: string;
-  queueType?: QueueType;
   routeTokens: any[];
   bestSmartRoute: any[];
   pairs: string[];
@@ -254,7 +175,7 @@ const executeSwap: (state: State, swapData: SwapData) => Promise<{
       Date.now() / 1000 + transactionDeadlineInMinutes * 60
     );
     if (swapData.provider === "RestrictedOracle") {
-      const data = getGroupQueueExecuteData(swapData.groupQueueOfferIndex)
+      const data = getGroupQueueExecuteData(swapData.groupQueueOfferIndex);
       if (!data) return {
         receipt: null,
         error: { message: "No data from Group Queue Trader" },
