@@ -774,10 +774,9 @@ define("@scom/scom-buyback/data.json.ts", ["require", "exports"], function (requ
         }
     };
 });
-define("@scom/scom-buyback/formSchema.json.ts", ["require", "exports"], function (require, exports) {
+define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-network-picker", "@scom/scom-token-input"], function (require, exports, scom_network_picker_1, scom_token_input_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    ///<amd-module name='@scom/scom-buyback/formSchema.json.ts'/> 
     const theme = {
         backgroundColor: {
             type: 'string',
@@ -828,7 +827,6 @@ define("@scom/scom-buyback/formSchema.json.ts", ["require", "exports"], function
                     },
                     chainId: {
                         type: 'number',
-                        enum: [1, 56, 137, 250, 97, 80001, 43113, 43114],
                         required: true
                     },
                     offerIndex: {
@@ -844,6 +842,89 @@ define("@scom/scom-buyback/formSchema.json.ts", ["require", "exports"], function
                         required: true
                     }
                 }
+            },
+            customControls(rpcWalletId) {
+                let networkPicker;
+                let firstTokenInput;
+                let secondTokenInput;
+                return {
+                    "#/properties/chainId": {
+                        render: () => {
+                            networkPicker = new scom_network_picker_1.default(undefined, {
+                                type: 'combobox',
+                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                                onCustomNetworkSelected: () => {
+                                    var _a;
+                                    const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                    firstTokenInput.targetChainId = chainId;
+                                    secondTokenInput.targetChainId = chainId;
+                                }
+                            });
+                            return networkPicker;
+                        },
+                        getData: (control) => {
+                            var _a;
+                            return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        },
+                        setData: (control, value) => {
+                            control.setNetworkByChainId(value);
+                            if (firstTokenInput)
+                                firstTokenInput.targetChainId = value;
+                            if (secondTokenInput)
+                                secondTokenInput.targetChainId = value;
+                        }
+                    },
+                    "#/properties/tokenIn": {
+                        render: () => {
+                            var _a;
+                            firstTokenInput = new scom_token_input_1.default(undefined, {
+                                type: 'combobox',
+                                isBalanceShown: false,
+                                isBtnMaxShown: false,
+                                isInputShown: false,
+                                maxWidth: 300
+                            });
+                            firstTokenInput.rpcWalletId = rpcWalletId;
+                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            if (chainId && firstTokenInput.targetChainId !== chainId) {
+                                firstTokenInput.targetChainId = chainId;
+                            }
+                            return firstTokenInput;
+                        },
+                        getData: (control) => {
+                            var _a, _b;
+                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                        },
+                        setData: (control, value) => {
+                            control.address = value;
+                        }
+                    },
+                    "#/properties/tokenOut": {
+                        render: () => {
+                            var _a;
+                            secondTokenInput = new scom_token_input_1.default(undefined, {
+                                type: 'combobox',
+                                isBalanceShown: false,
+                                isBtnMaxShown: false,
+                                isInputShown: false,
+                                maxWidth: 300
+                            });
+                            secondTokenInput.rpcWalletId = rpcWalletId;
+                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                            if (chainId && secondTokenInput.targetChainId !== chainId) {
+                                secondTokenInput.targetChainId = chainId;
+                            }
+                            return secondTokenInput;
+                        },
+                        getData: (control) => {
+                            var _a, _b;
+                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                        },
+                        setData: (control, value) => {
+                            control.address = value;
+                        }
+                    }
+                };
             }
         },
         theme: {
@@ -1024,7 +1105,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         }
     });
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, eth_wallet_6, index_7, index_8, index_9, index_10, assets_3, data_json_1, formSchema_json_1, scom_token_list_3, index_css_1) {
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, eth_wallet_6, index_7, index_8, index_9, index_10, assets_3, data_json_1, formSchema_1, scom_token_list_3, index_css_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_5.Styles.Theme.ThemeVars;
@@ -1046,6 +1127,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.rpcWalletEvents = [];
         }
         _getActions(category) {
+            var _a;
             const self = this;
             const actions = [
             // {
@@ -1132,7 +1214,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: formSchema_json_1.default.general.dataSchema
+                    userInputDataSchema: formSchema_1.default.general.dataSchema,
+                    customControls: formSchema_1.default.general.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
                 });
                 actions.push({
                     name: 'Theme Settings',
@@ -1165,7 +1248,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: formSchema_json_1.default.theme.dataSchema
+                    userInputDataSchema: formSchema_1.default.theme.dataSchema
                 });
             }
             return actions;

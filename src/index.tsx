@@ -7,7 +7,7 @@ import { executeSwap, getHybridRouterAddress } from './swap-utils/index';
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
-import formSchema from './formSchema.json';
+import formSchema from './formSchema';
 import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObject } from '@scom/scom-token-list';
 import { buybackComponent, buybackDappContainer } from './index.css';
 import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
@@ -188,7 +188,8 @@ export default class ScomBuyback extends Module {
 						redo: () => { }
 					}
 				},
-				userInputDataSchema: formSchema.general.dataSchema
+				userInputDataSchema: formSchema.general.dataSchema,
+				customControls: formSchema.general.customControls(this.rpcWallet?.instanceId)
 			});
 
 			actions.push({

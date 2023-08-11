@@ -1,6 +1,8 @@
 /// <reference path="@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-commission-proxy-contract/@ijstech/eth-wallet/index.d.ts" />
 /// <reference path="@scom/scom-dapp-container/@ijstech/eth-wallet/index.d.ts" />
+/// <reference path="@scom/scom-token-input/@ijstech/eth-wallet/index.d.ts" />
+/// <reference path="@scom/scom-token-input/@scom/scom-token-modal/@ijstech/eth-wallet/index.d.ts" />
 /// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
 declare module "@scom/scom-buyback/global/utils/helper.ts" {
     import { BigNumber } from '@ijstech/eth-wallet';
@@ -206,8 +208,10 @@ declare module "@scom/scom-buyback/data.json.ts" {
     };
     export default _default_1;
 }
-/// <amd-module name="@scom/scom-buyback/formSchema.json.ts" />
-declare module "@scom/scom-buyback/formSchema.json.ts" {
+/// <amd-module name="@scom/scom-buyback/formSchema.ts" />
+declare module "@scom/scom-buyback/formSchema.ts" {
+    import ScomNetworkPicker from '@scom/scom-network-picker';
+    import ScomTokenInput from '@scom/scom-token-input';
     const _default_2: {
         general: {
             dataSchema: {
@@ -222,7 +226,6 @@ declare module "@scom/scom-buyback/formSchema.json.ts" {
                     };
                     chainId: {
                         type: string;
-                        enum: number[];
                         required: boolean;
                     };
                     offerIndex: {
@@ -237,6 +240,23 @@ declare module "@scom/scom-buyback/formSchema.json.ts" {
                         type: string;
                         required: boolean;
                     };
+                };
+            };
+            customControls(rpcWalletId: string): {
+                "#/properties/chainId": {
+                    render: () => ScomNetworkPicker;
+                    getData: (control: ScomNetworkPicker) => number;
+                    setData: (control: ScomNetworkPicker, value: number) => void;
+                };
+                "#/properties/tokenIn": {
+                    render: () => ScomTokenInput;
+                    getData: (control: ScomTokenInput) => string;
+                    setData: (control: ScomTokenInput, value: string) => void;
+                };
+                "#/properties/tokenOut": {
+                    render: () => ScomTokenInput;
+                    getData: (control: ScomTokenInput) => string;
+                    setData: (control: ScomTokenInput, value: string) => void;
                 };
             };
         };
