@@ -11,6 +11,8 @@
         "@scom/oswap-openswap-contract",
         "@scom/scom-commission-proxy-contract",
         "@scom/scom-dapp-container",
+        "@scom/scom-network-picker",
+        "@scom/scom-token-input",
         "@scom/scom-commission-fee-setup",
         "@scom/scom-tx-status-modal"
     ]
