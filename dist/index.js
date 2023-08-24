@@ -944,7 +944,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
         }
     };
 });
-define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/components", "@scom/scom-buyback/assets.ts"], function (require, exports, components_4, assets_2) {
+define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.buybackComponent = exports.buybackDappContainer = void 0;
@@ -955,18 +955,6 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         darkBg: '#181E3E 0% 0% no-repeat padding-box',
         primaryDisabled: 'transparent linear-gradient(270deg,#351f52,#552a42) 0% 0% no-repeat padding-box !important'
     };
-    components_4.Styles.fontFace({
-        fontFamily: "Montserrat Regular",
-        src: `url("${assets_2.default.fullPath('fonts/montserrat/Montserrat-Regular.ttf')}") format("truetype")`,
-        fontWeight: 'nomal',
-        fontStyle: 'normal'
-    });
-    components_4.Styles.fontFace({
-        fontFamily: "Raleway Bold",
-        src: `url("${assets_2.default.fullPath('fonts/raleway/Raleway-Bold.ttf')}") format("truetype")`,
-        fontWeight: 'bold',
-        fontStyle: 'normal'
-    });
     exports.buybackDappContainer = components_4.Styles.style({
         $nest: {
             'dapp-container-body': {
@@ -991,9 +979,6 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
     });
     exports.buybackComponent = components_4.Styles.style({
         $nest: {
-            'i-label': {
-                fontFamily: 'Montserrat Regular',
-            },
             'span': {
                 letterSpacing: '0.15px',
             },
@@ -1008,7 +993,6 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
                 transition: 'background .3s ease',
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                fontFamily: 'Raleway Bold',
                 $nest: {
                     'i-icon.loading-icon': {
                         marginInline: '0.25rem',
@@ -1066,8 +1050,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
                         paddingInline: 4,
                         minWidth: 20,
                         height: 20,
-                        fontSize: 14,
-                        fontFamily: 'Montserrat Regular',
+                        fontSize: 14
                     },
                     '.timer-unit': {
                         display: 'flex',
@@ -1105,7 +1088,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         }
     });
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, eth_wallet_6, index_7, index_8, index_9, index_10, assets_3, data_json_1, formSchema_1, scom_token_list_3, index_css_1) {
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, eth_wallet_6, index_7, index_8, index_9, index_10, assets_2, data_json_1, formSchema_1, scom_token_list_3, index_css_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_5.Styles.Theme.ThemeVars;
@@ -1822,7 +1805,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.noCampaignSection.clearInnerHTML();
                 this.noCampaignSection.appendChild(this.$render("i-vstack", { class: "no-buyback", height: "100%", background: { color: Theme.background.main }, verticalAlignment: "center" },
                     this.$render("i-vstack", { gap: 10, verticalAlignment: "center", horizontalAlignment: "center" },
-                        this.$render("i-image", { url: assets_3.default.fullPath('img/TrollTrooper.svg') }),
+                        this.$render("i-image", { url: assets_2.default.fullPath('img/TrollTrooper.svg') }),
                         this.$render("i-label", { caption: isClientConnected ? 'No Buybacks' : 'Please connect with your wallet!' })),
                     !isClientConnected ? this.$render("i-button", { caption: "Connect Wallet", class: "btn-os", minHeight: 43, width: 300, maxWidth: "90%", margin: { top: 10, left: 'auto', right: 'auto' }, onClick: this.connectWallet }) : []));
                 this.noCampaignSection.visible = true;
@@ -2091,7 +2074,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.$render("i-panel", { id: "buybackLayout", class: "buyback-layout", margin: { left: 'auto', right: 'auto' } },
                         this.$render("i-vstack", { id: "loadingElm", class: "i-loading-overlay" },
                             this.$render("i-vstack", { class: "i-loading-spinner", horizontalAlignment: "center", verticalAlignment: "center" },
-                                this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_3.default.fullPath('img/loading.svg'), width: 36, height: 36 } }),
+                                this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_2.default.fullPath('img/loading.svg'), width: 36, height: 36 } }),
                                 this.$render("i-label", { caption: "Loading...", font: { color: '#FD4A4C', size: '1.5em' }, class: "i-loading-spinner_text" }))),
                         this.$render("i-vstack", { id: "emptyStack", visible: false, minHeight: 320, margin: { top: 10, bottom: 10 }, verticalAlignment: "center", horizontalAlignment: "center" }),
                         this.$render("i-vstack", { id: "infoStack", width: "100%", minWidth: 320, maxWidth: 500, height: "100%", margin: { left: 'auto', right: 'auto' }, horizontalAlignment: "center" },
