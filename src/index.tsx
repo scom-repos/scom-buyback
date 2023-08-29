@@ -156,10 +156,10 @@ export default class ScomBuyback extends Module {
 
 		if (category && category !== 'offers') {
 			actions.push({
-				name: 'Settings',
-				icon: 'cog',
+				name: 'Edit',
+				icon: 'edit',
 				command: (builder: any, userInputData: any) => {
-					let _oldData: IBuybackCampaign = {
+					let oldData: IBuybackCampaign = {
 						chainId: 0,
 						title: '',
 						logo: '',
@@ -169,53 +169,58 @@ export default class ScomBuyback extends Module {
 						wallets: [],
 						networks: []
 					};
-					return {
-						execute: async () => {
-							_oldData = { ...this._data };
-							this._data.chainId = userInputData.chainId;
-							this._data.title = userInputData.title;
-							this._data.logo = userInputData.logo;
-							this._data.offerIndex = userInputData.offerIndex;
-							this._data.tokenIn = userInputData.tokenIn;
-							this._data.tokenOut = userInputData.tokenOut;
-							await this.resetRpcWallet();
-							this.refreshData(builder);
-						},
-						undo: async () => {
-							this._data = { ..._oldData };
-							this.refreshData(builder);
-						},
-						redo: () => { }
-					}
-				},
-				userInputDataSchema: formSchema.general.dataSchema,
-				customControls: formSchema.general.customControls(this.rpcWallet?.instanceId)
-			});
-
-			actions.push({
-				name: 'Theme Settings',
-				icon: 'palette',
-				command: (builder: any, userInputData: any) => {
 					let oldTag = {};
 					return {
 						execute: async () => {
-							if (!userInputData) return;
+							oldData = JSON.parse(JSON.stringify(this._data));
+							const {
+								title,
+								logo,
+								offerIndex,
+								chainId,
+								tokenIn,
+								tokenOut,
+								...themeSettings
+							} = userInputData;
+
+							const generalSettings = {
+								title,
+								logo,
+								offerIndex,
+								chainId,
+								tokenIn,
+								tokenOut
+							};
+
+							this._data.chainId = generalSettings.chainId;
+							this._data.title = generalSettings.title;
+							this._data.logo = generalSettings.logo;
+							this._data.offerIndex = generalSettings.offerIndex;
+							this._data.tokenIn = generalSettings.tokenIn;
+							this._data.tokenOut = generalSettings.tokenOut;
+							await this.resetRpcWallet();
+							this.refreshData(builder);
+
 							oldTag = JSON.parse(JSON.stringify(this.tag));
-							if (builder) builder.setTag(userInputData);
-							else this.setTag(userInputData);
-							if (this.dappContainer) this.dappContainer.setTag(userInputData);
+							if (builder?.setTag) builder.setTag(themeSettings);
+							else this.setTag(themeSettings);
+							if (this.dappContainer) this.dappContainer.setTag(themeSettings);
 						},
-						undo: () => {
-							if (!userInputData) return;
+						undo: async () => {
+							this._data = JSON.parse(JSON.stringify(oldData));
+							this.refreshData(builder);
+
 							this.tag = JSON.parse(JSON.stringify(oldTag));
-							if (builder) builder.setTag(this.tag);
+							if (builder?.setTag) builder.setTag(this.tag);
 							else this.setTag(this.tag);
-							if (this.dappContainer) this.dappContainer.setTag(userInputData);
+							if (this.dappContainer) this.dappContainer.setTag(this.tag);
 						},
 						redo: () => { }
 					}
 				},
-				userInputDataSchema: formSchema.theme.dataSchema
+				userInputDataSchema: formSchema.dataSchema,
+				userInputUISchema: formSchema.uiSchema,
+				customControls: formSchema.customControls(this.rpcWallet?.instanceId)
 			});
 		}
 
@@ -433,10 +438,9 @@ export default class ScomBuyback extends Module {
 
 	private refreshData = (builder: any) => {
 		this.refreshDappContainer();
+		this.refreshWidget();
 		if (builder?.setData) {
 			builder.setData(this._data);
-		} else {
-			this.refreshWidget();
 		}
 	}
 

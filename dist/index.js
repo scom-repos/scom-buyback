@@ -18,6 +18,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijstech/eth-wallet", "@ijstech/components"], function (require, exports, eth_wallet_1, components_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -778,169 +789,218 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const theme = {
-        backgroundColor: {
-            type: 'string',
-            format: 'color'
-        },
-        fontColor: {
-            type: 'string',
-            format: 'color'
-        },
-        inputBackgroundColor: {
-            type: 'string',
-            format: 'color'
-        },
-        inputFontColor: {
-            type: 'string',
-            format: 'color'
-        },
-        // buttonBackgroundColor: {
-        // 	type: 'string',
-        // 	format: 'color'
-        // },
-        // buttonFontColor: {
-        // 	type: 'string',
-        // 	format: 'color'
-        // },
-        // secondaryColor: {
-        //     type: 'string',
-        //     title: 'Timer Background Color',
-        //     format: 'color'
-        // },
-        // secondaryFontColor: {
-        //     type: 'string',
-        //     title: 'Timer Font Color',
-        //     format: 'color'
-        // }
+        type: 'object',
+        properties: {
+            backgroundColor: {
+                type: 'string',
+                format: 'color'
+            },
+            fontColor: {
+                type: 'string',
+                format: 'color'
+            },
+            inputBackgroundColor: {
+                type: 'string',
+                format: 'color'
+            },
+            inputFontColor: {
+                type: 'string',
+                format: 'color'
+            },
+            // buttonBackgroundColor: {
+            // 	type: 'string',
+            // 	format: 'color'
+            // },
+            // buttonFontColor: {
+            // 	type: 'string',
+            // 	format: 'color'
+            // },
+            // secondaryColor: {
+            //     type: 'string',
+            //     title: 'Timer Background Color',
+            //     format: 'color'
+            // },
+            // secondaryFontColor: {
+            //     type: 'string',
+            //     title: 'Timer Font Color',
+            //     format: 'color'
+            // }
+        }
     };
     exports.default = {
-        general: {
-            dataSchema: {
-                type: 'object',
-                properties: {
-                    title: {
-                        type: 'string'
-                    },
-                    logo: {
-                        type: 'string',
-                        format: 'data-url'
-                    },
-                    chainId: {
-                        type: 'number',
-                        required: true
-                    },
-                    offerIndex: {
-                        type: 'number',
-                        required: true
-                    },
-                    tokenIn: {
-                        type: 'string',
-                        required: true
-                    },
-                    tokenOut: {
-                        type: 'string',
-                        required: true
-                    }
-                }
-            },
-            customControls(rpcWalletId) {
-                let networkPicker;
-                let firstTokenInput;
-                let secondTokenInput;
-                return {
-                    "#/properties/chainId": {
-                        render: () => {
-                            networkPicker = new scom_network_picker_1.default(undefined, {
-                                type: 'combobox',
-                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
-                                onCustomNetworkSelected: () => {
-                                    var _a;
-                                    const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                                    firstTokenInput.targetChainId = chainId;
-                                    secondTokenInput.targetChainId = chainId;
-                                }
-                            });
-                            return networkPicker;
-                        },
-                        getData: (control) => {
-                            var _a;
-                            return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                        },
-                        setData: (control, value) => {
-                            control.setNetworkByChainId(value);
-                            if (firstTokenInput)
-                                firstTokenInput.targetChainId = value;
-                            if (secondTokenInput)
-                                secondTokenInput.targetChainId = value;
-                        }
-                    },
-                    "#/properties/tokenIn": {
-                        render: () => {
-                            var _a;
-                            firstTokenInput = new scom_token_input_1.default(undefined, {
-                                type: 'combobox',
-                                isBalanceShown: false,
-                                isBtnMaxShown: false,
-                                isInputShown: false,
-                                maxWidth: 300
-                            });
-                            firstTokenInput.rpcWalletId = rpcWalletId;
-                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                            if (chainId && firstTokenInput.targetChainId !== chainId) {
-                                firstTokenInput.targetChainId = chainId;
-                            }
-                            return firstTokenInput;
-                        },
-                        getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
-                        },
-                        setData: (control, value) => {
-                            control.address = value;
-                        }
-                    },
-                    "#/properties/tokenOut": {
-                        render: () => {
-                            var _a;
-                            secondTokenInput = new scom_token_input_1.default(undefined, {
-                                type: 'combobox',
-                                isBalanceShown: false,
-                                isBtnMaxShown: false,
-                                isInputShown: false,
-                                maxWidth: 300
-                            });
-                            secondTokenInput.rpcWalletId = rpcWalletId;
-                            const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                            if (chainId && secondTokenInput.targetChainId !== chainId) {
-                                secondTokenInput.targetChainId = chainId;
-                            }
-                            return secondTokenInput;
-                        },
-                        getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
-                        },
-                        setData: (control, value) => {
-                            control.address = value;
-                        }
-                    }
-                };
+        dataSchema: {
+            type: 'object',
+            properties: {
+                title: {
+                    type: 'string'
+                },
+                logo: {
+                    type: 'string',
+                    format: 'data-url'
+                },
+                offerIndex: {
+                    type: 'number',
+                    required: true
+                },
+                chainId: {
+                    type: 'number',
+                    required: true
+                },
+                tokenIn: {
+                    type: 'string',
+                    required: true
+                },
+                tokenOut: {
+                    type: 'string',
+                    required: true
+                },
+                dark: theme,
+                light: theme
             }
         },
-        theme: {
-            dataSchema: {
-                type: 'object',
-                properties: {
-                    "dark": {
-                        type: 'object',
-                        properties: theme
+        uiSchema: {
+            type: 'Categorization',
+            elements: [
+                {
+                    type: 'Category',
+                    label: 'General',
+                    elements: [
+                        {
+                            type: 'VerticalLayout',
+                            elements: [
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/title'
+                                },
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/logo'
+                                },
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/offerIndex'
+                                },
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/chainId'
+                                },
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/tokenIn'
+                                },
+                                {
+                                    type: 'Control',
+                                    scope: '#/properties/tokenOut'
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    type: 'Category',
+                    label: 'Theme',
+                    elements: [
+                        {
+                            type: 'VerticalLayout',
+                            elements: [
+                                {
+                                    type: 'Control',
+                                    label: 'Dark',
+                                    scope: '#/properties/dark'
+                                },
+                                {
+                                    type: 'Control',
+                                    label: 'Light',
+                                    scope: '#/properties/light'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        customControls(rpcWalletId) {
+            let networkPicker;
+            let firstTokenInput;
+            let secondTokenInput;
+            return {
+                "#/properties/chainId": {
+                    render: () => {
+                        networkPicker = new scom_network_picker_1.default(undefined, {
+                            type: 'combobox',
+                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                            onCustomNetworkSelected: () => {
+                                var _a;
+                                const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                                firstTokenInput.targetChainId = chainId;
+                                secondTokenInput.targetChainId = chainId;
+                            }
+                        });
+                        return networkPicker;
                     },
-                    "light": {
-                        type: 'object',
-                        properties: theme
+                    getData: (control) => {
+                        var _a;
+                        return (_a = control.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                    },
+                    setData: (control, value) => {
+                        control.setNetworkByChainId(value);
+                        if (firstTokenInput)
+                            firstTokenInput.targetChainId = value;
+                        if (secondTokenInput)
+                            secondTokenInput.targetChainId = value;
+                    }
+                },
+                "#/properties/tokenIn": {
+                    render: () => {
+                        var _a;
+                        firstTokenInput = new scom_token_input_1.default(undefined, {
+                            type: 'combobox',
+                            isBalanceShown: false,
+                            isBtnMaxShown: false,
+                            isInputShown: false,
+                            maxWidth: 300
+                        });
+                        firstTokenInput.rpcWalletId = rpcWalletId;
+                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        if (chainId && firstTokenInput.targetChainId !== chainId) {
+                            firstTokenInput.targetChainId = chainId;
+                        }
+                        return firstTokenInput;
+                    },
+                    getData: (control) => {
+                        var _a, _b;
+                        return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                    },
+                    setData: (control, value) => {
+                        control.address = value;
+                    }
+                },
+                "#/properties/tokenOut": {
+                    render: () => {
+                        var _a;
+                        secondTokenInput = new scom_token_input_1.default(undefined, {
+                            type: 'combobox',
+                            isBalanceShown: false,
+                            isBtnMaxShown: false,
+                            isInputShown: false,
+                            maxWidth: 300
+                        });
+                        secondTokenInput.rpcWalletId = rpcWalletId;
+                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        if (chainId && secondTokenInput.targetChainId !== chainId) {
+                            secondTokenInput.targetChainId = chainId;
+                        }
+                        return secondTokenInput;
+                    },
+                    getData: (control) => {
+                        var _a, _b;
+                        return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                    },
+                    setData: (control, value) => {
+                        control.address = value;
                     }
                 }
-            }
+            };
         }
     };
 });
@@ -1165,10 +1225,10 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             ];
             if (category && category !== 'offers') {
                 actions.push({
-                    name: 'Settings',
-                    icon: 'cog',
+                    name: 'Edit',
+                    icon: 'edit',
                     command: (builder, userInputData) => {
-                        let _oldData = {
+                        let oldData = {
                             chainId: 0,
                             title: '',
                             logo: '',
@@ -1178,60 +1238,52 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             wallets: [],
                             networks: []
                         };
-                        return {
-                            execute: async () => {
-                                _oldData = Object.assign({}, this._data);
-                                this._data.chainId = userInputData.chainId;
-                                this._data.title = userInputData.title;
-                                this._data.logo = userInputData.logo;
-                                this._data.offerIndex = userInputData.offerIndex;
-                                this._data.tokenIn = userInputData.tokenIn;
-                                this._data.tokenOut = userInputData.tokenOut;
-                                await this.resetRpcWallet();
-                                this.refreshData(builder);
-                            },
-                            undo: async () => {
-                                this._data = Object.assign({}, _oldData);
-                                this.refreshData(builder);
-                            },
-                            redo: () => { }
-                        };
-                    },
-                    userInputDataSchema: formSchema_1.default.general.dataSchema,
-                    customControls: formSchema_1.default.general.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
-                });
-                actions.push({
-                    name: 'Theme Settings',
-                    icon: 'palette',
-                    command: (builder, userInputData) => {
                         let oldTag = {};
                         return {
                             execute: async () => {
-                                if (!userInputData)
-                                    return;
+                                oldData = JSON.parse(JSON.stringify(this._data));
+                                const { title, logo, offerIndex, chainId, tokenIn, tokenOut } = userInputData, themeSettings = __rest(userInputData, ["title", "logo", "offerIndex", "chainId", "tokenIn", "tokenOut"]);
+                                const generalSettings = {
+                                    title,
+                                    logo,
+                                    offerIndex,
+                                    chainId,
+                                    tokenIn,
+                                    tokenOut
+                                };
+                                this._data.chainId = generalSettings.chainId;
+                                this._data.title = generalSettings.title;
+                                this._data.logo = generalSettings.logo;
+                                this._data.offerIndex = generalSettings.offerIndex;
+                                this._data.tokenIn = generalSettings.tokenIn;
+                                this._data.tokenOut = generalSettings.tokenOut;
+                                await this.resetRpcWallet();
+                                this.refreshData(builder);
                                 oldTag = JSON.parse(JSON.stringify(this.tag));
-                                if (builder)
-                                    builder.setTag(userInputData);
+                                if (builder === null || builder === void 0 ? void 0 : builder.setTag)
+                                    builder.setTag(themeSettings);
                                 else
-                                    this.setTag(userInputData);
+                                    this.setTag(themeSettings);
                                 if (this.dappContainer)
-                                    this.dappContainer.setTag(userInputData);
+                                    this.dappContainer.setTag(themeSettings);
                             },
-                            undo: () => {
-                                if (!userInputData)
-                                    return;
+                            undo: async () => {
+                                this._data = JSON.parse(JSON.stringify(oldData));
+                                this.refreshData(builder);
                                 this.tag = JSON.parse(JSON.stringify(oldTag));
-                                if (builder)
+                                if (builder === null || builder === void 0 ? void 0 : builder.setTag)
                                     builder.setTag(this.tag);
                                 else
                                     this.setTag(this.tag);
                                 if (this.dappContainer)
-                                    this.dappContainer.setTag(userInputData);
+                                    this.dappContainer.setTag(this.tag);
                             },
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: formSchema_1.default.theme.dataSchema
+                    userInputDataSchema: formSchema_1.default.dataSchema,
+                    userInputUISchema: formSchema_1.default.uiSchema,
+                    customControls: formSchema_1.default.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
                 });
             }
             return actions;
@@ -1438,11 +1490,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             };
             this.refreshData = (builder) => {
                 this.refreshDappContainer();
+                this.refreshWidget();
                 if (builder === null || builder === void 0 ? void 0 : builder.setData) {
                     builder.setData(this._data);
-                }
-                else {
-                    this.refreshWidget();
                 }
             };
             this.refreshDappContainer = () => {

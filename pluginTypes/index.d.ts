@@ -213,100 +213,116 @@ declare module "@scom/scom-buyback/formSchema.ts" {
     import ScomNetworkPicker from '@scom/scom-network-picker';
     import ScomTokenInput from '@scom/scom-token-input';
     const _default_2: {
-        general: {
-            dataSchema: {
-                type: string;
-                properties: {
-                    title: {
-                        type: string;
-                    };
-                    logo: {
-                        type: string;
-                        format: string;
-                    };
-                    chainId: {
-                        type: string;
-                        required: boolean;
-                    };
-                    offerIndex: {
-                        type: string;
-                        required: boolean;
-                    };
-                    tokenIn: {
-                        type: string;
-                        required: boolean;
-                    };
-                    tokenOut: {
-                        type: string;
-                        required: boolean;
+        dataSchema: {
+            type: string;
+            properties: {
+                title: {
+                    type: string;
+                };
+                logo: {
+                    type: string;
+                    format: string;
+                };
+                offerIndex: {
+                    type: string;
+                    required: boolean;
+                };
+                chainId: {
+                    type: string;
+                    required: boolean;
+                };
+                tokenIn: {
+                    type: string;
+                    required: boolean;
+                };
+                tokenOut: {
+                    type: string;
+                    required: boolean;
+                };
+                dark: {
+                    type: string;
+                    properties: {
+                        backgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        fontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputBackgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputFontColor: {
+                            type: string;
+                            format: string;
+                        };
                     };
                 };
-            };
-            customControls(rpcWalletId: string): {
-                "#/properties/chainId": {
-                    render: () => ScomNetworkPicker;
-                    getData: (control: ScomNetworkPicker) => number;
-                    setData: (control: ScomNetworkPicker, value: number) => void;
-                };
-                "#/properties/tokenIn": {
-                    render: () => ScomTokenInput;
-                    getData: (control: ScomTokenInput) => string;
-                    setData: (control: ScomTokenInput, value: string) => void;
-                };
-                "#/properties/tokenOut": {
-                    render: () => ScomTokenInput;
-                    getData: (control: ScomTokenInput) => string;
-                    setData: (control: ScomTokenInput, value: string) => void;
+                light: {
+                    type: string;
+                    properties: {
+                        backgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        fontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputBackgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                    };
                 };
             };
         };
-        theme: {
-            dataSchema: {
+        uiSchema: {
+            type: string;
+            elements: ({
                 type: string;
-                properties: {
-                    dark: {
+                label: string;
+                elements: {
+                    type: string;
+                    elements: {
                         type: string;
-                        properties: {
-                            backgroundColor: {
-                                type: string;
-                                format: string;
-                            };
-                            fontColor: {
-                                type: string;
-                                format: string;
-                            };
-                            inputBackgroundColor: {
-                                type: string;
-                                format: string;
-                            };
-                            inputFontColor: {
-                                type: string;
-                                format: string;
-                            };
-                        };
-                    };
-                    light: {
+                        scope: string;
+                    }[];
+                }[];
+            } | {
+                type: string;
+                label: string;
+                elements: {
+                    type: string;
+                    elements: {
                         type: string;
-                        properties: {
-                            backgroundColor: {
-                                type: string;
-                                format: string;
-                            };
-                            fontColor: {
-                                type: string;
-                                format: string;
-                            };
-                            inputBackgroundColor: {
-                                type: string;
-                                format: string;
-                            };
-                            inputFontColor: {
-                                type: string;
-                                format: string;
-                            };
-                        };
-                    };
-                };
+                        label: string;
+                        scope: string;
+                    }[];
+                }[];
+            })[];
+        };
+        customControls(rpcWalletId: string): {
+            "#/properties/chainId": {
+                render: () => ScomNetworkPicker;
+                getData: (control: ScomNetworkPicker) => number;
+                setData: (control: ScomNetworkPicker, value: number) => void;
+            };
+            "#/properties/tokenIn": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/tokenOut": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
             };
         };
     };
