@@ -500,16 +500,16 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
             tokenIn = getTokenObjectByAddress(state, token1Address);
             tokenOut = getTokenObjectByAddress(state, token0Address);
         }
-        let totalAllocation = new eth_wallet_4.BigNumber('0');
-        let [offer, addresses] = await Promise.all([
-            oracleContract.offers({ param1: direction, param2: offerIndex }),
-            getTradersAllocation(oracleContract, direction, offerIndex, Number(tokenIn.decimals), (address, allocation) => {
-                totalAllocation = totalAllocation.plus(allocation);
-            })
-        ]);
+        let offer = await oracleContract.offers({ param1: direction, param2: offerIndex });
+        let isApprovedTrader = await oracleContract.isApprovedTrader({ param1: direction, param2: offerIndex, param3: wallet.address });
+        let allocation = await oracleContract.traderAllocation({
+            param1: direction,
+            param2: offerIndex,
+            param3: wallet.address
+        });
         let price = (0, index_4.toWeiInv)(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
         let amount = new eth_wallet_4.BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
-        let userAllo = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
+        let userAllo = { address: wallet.address, allocation: new eth_wallet_4.BigNumber(allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed() };
         let available = offer.allowAll ? amount : new eth_wallet_4.BigNumber(userAllo.allocation).toFixed();
         let tradeFee = new eth_wallet_4.BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
         let tokenInAvailable = new eth_wallet_4.BigNumber(available).dividedBy(new eth_wallet_4.BigNumber(price)).dividedBy(new eth_wallet_4.BigNumber(tradeFee)).toFixed();
@@ -525,38 +525,13 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
             allowAll: offer.allowAll,
             direct: true,
             offerIndex,
-            addresses,
-            allocation: totalAllocation.toFixed(),
+            isApprovedTrader,
             willGet: offer.amount.times(new eth_wallet_4.BigNumber(price)).shiftedBy(-Number(tokenIn.decimals)).toFixed(),
             tradeFee,
             tokenInAvailable,
             available
         };
     };
-    async function getTradersAllocation(pair, direction, offerIndex, allocationTokenDecimals, callbackPerRecord) {
-        let traderLength = (await pair.getApprovedTraderLength({ direction, offerIndex })).toNumber();
-        let tasks = [];
-        let allo = [];
-        for (let i = 0; i < traderLength; i += 100) { //get trader allocation
-            tasks.push((async () => {
-                try {
-                    let approvedTrader = await pair.getApprovedTrader({ direction, offerIndex, start: i, length: 100 });
-                    allo.push(...approvedTrader.trader.map((address, i) => {
-                        let allocation = new eth_wallet_4.BigNumber(approvedTrader.allocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
-                        if (callbackPerRecord)
-                            callbackPerRecord(address, allocation);
-                        return { address, allocation };
-                    }));
-                }
-                catch (error) {
-                    console.log("getTradersAllocation", error);
-                    return;
-                }
-            })());
-        }
-        await Promise.all(tasks);
-        return allo;
-    }
 });
 define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/oswap-openswap-contract", "@scom/scom-commission-proxy-contract", "@scom/scom-buyback/buyback-utils/index.ts"], function (require, exports, eth_wallet_5, oswap_openswap_contract_2, scom_commission_proxy_contract_1, index_6) {
     "use strict";
@@ -1879,7 +1854,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const chainId = this.chainId;
                     const isRpcConnected = this.state.isRpcWalletConnected();
                     const { queueInfo } = this.buybackInfo;
-                    const { amount, allowAll, allocation, tradeFee, available } = queueInfo || {};
+                    const { amount, allowAll, tradeFee, available } = queueInfo || {};
                     const firstTokenObj = scom_token_list_3.tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
                     const secondTokenObj = scom_token_list_3.tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
                     const firstSymbol = (_a = firstTokenObj === null || firstTokenObj === void 0 ? void 0 : firstTokenObj.symbol) !== null && _a !== void 0 ? _a : '';
@@ -2030,16 +2005,14 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             const info = this.buybackInfo.queueInfo;
             if (!info)
                 return true;
-            const { startDate, endDate, allowAll, addresses } = info;
+            const { startDate, endDate, allowAll, isApprovedTrader } = info;
             const isUpcoming = (0, components_5.moment)().isBefore((0, components_5.moment)(startDate));
             const isEnded = (0, components_5.moment)().isAfter((0, components_5.moment)(endDate));
             if (isUpcoming || isEnded) {
                 return true;
             }
             if (!allowAll) {
-                const address = eth_wallet_6.Wallet.getClientInstance().address;
-                const isWhitelisted = addresses.some((item) => item.address === address);
-                return !isWhitelisted;
+                return !isApprovedTrader;
             }
             return false;
         }

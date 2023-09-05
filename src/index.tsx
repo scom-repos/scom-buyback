@@ -510,16 +510,14 @@ export default class ScomBuyback extends Module {
 		if (!this.buybackInfo) return true;
 		const info = this.buybackInfo.queueInfo;
 		if (!info) return true;
-		const { startDate, endDate, allowAll, addresses } = info;
+		const { startDate, endDate, allowAll, isApprovedTrader } = info;
 		const isUpcoming = moment().isBefore(moment(startDate));
 		const isEnded = moment().isAfter(moment(endDate));
 		if (isUpcoming || isEnded) {
 			return true;
 		}
 		if (!allowAll) {
-			const address = Wallet.getClientInstance().address;
-			const isWhitelisted = addresses.some((item: any) => item.address === address);
-			return !isWhitelisted;
+			return !isApprovedTrader;
 		}
 		return false;
 	}
@@ -892,7 +890,7 @@ export default class ScomBuyback extends Module {
 			const chainId = this.chainId;
 			const isRpcConnected = this.state.isRpcWalletConnected();
 			const { queueInfo } = this.buybackInfo;
-			const { amount, allowAll, allocation, tradeFee, available } = queueInfo || {};
+			const { amount, allowAll, tradeFee, available } = queueInfo || {};
 			const firstTokenObj = tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
 			const secondTokenObj = tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
 			const firstSymbol = firstTokenObj?.symbol ?? '';

@@ -141,11 +141,7 @@ declare module "@scom/scom-buyback/buyback-utils/index.ts" {
         allowAll: boolean;
         direct: boolean;
         offerIndex: number;
-        addresses: {
-            address: string;
-            allocation: string;
-        }[];
-        allocation: string;
+        isApprovedTrader: boolean;
         willGet: string;
         tradeFee: string;
         tokenInAvailable: string;

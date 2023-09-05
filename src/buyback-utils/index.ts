@@ -98,8 +98,7 @@ interface ProviderGroupQueueInfo {
   allowAll: boolean,
   direct: boolean,
   offerIndex: number,
-  addresses: { address: string, allocation: string }[],
-  allocation: string,
+  isApprovedTrader: boolean,
   willGet: string,
   tradeFee: string,
   tokenInAvailable: string,
@@ -128,17 +127,17 @@ const getProviderGroupQueueInfoByIndex = async (state: State, pairAddress: strin
     tokenIn = getTokenObjectByAddress(state, token1Address);
     tokenOut = getTokenObjectByAddress(state, token0Address);
   }
-  let totalAllocation = new BigNumber('0');
-  let [offer, addresses] = await Promise.all([
-    oracleContract.offers({ param1: direction, param2: offerIndex }),
-    getTradersAllocation(oracleContract, direction, offerIndex, Number(tokenIn.decimals), (address: string, allocation: string) => {
-      totalAllocation = totalAllocation.plus(allocation)
-    })
-  ]);
+  let offer = await oracleContract.offers({ param1: direction, param2: offerIndex });
+  let isApprovedTrader = await oracleContract.isApprovedTrader({ param1: direction, param2: offerIndex, param3: wallet.address });
+  let allocation = await oracleContract.traderAllocation({ 
+    param1: direction,
+    param2: offerIndex,
+    param3: wallet.address
+  });
 
   let price = toWeiInv(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
   let amount = new BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
-  let userAllo: AllocationMap = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
+  let userAllo: AllocationMap = { address: wallet.address, allocation: new BigNumber(allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed() };
   let available = offer.allowAll ? amount : new BigNumber(userAllo.allocation).toFixed();
   let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
   let tokenInAvailable = new BigNumber(available).dividedBy(new BigNumber(price)).dividedBy(new BigNumber(tradeFee)).toFixed();
@@ -155,38 +154,12 @@ const getProviderGroupQueueInfoByIndex = async (state: State, pairAddress: strin
     allowAll: offer.allowAll,
     direct: true,
     offerIndex,
-    addresses,
-    allocation: totalAllocation.toFixed(),
+    isApprovedTrader,
     willGet: offer.amount.times(new BigNumber(price)).shiftedBy(-Number(tokenIn.decimals)).toFixed(),
     tradeFee,
     tokenInAvailable,
     available
   }
-}
-
-async function getTradersAllocation(pair: Contracts.OSWAP_RestrictedPair, direction: boolean, offerIndex: number | BigNumber, allocationTokenDecimals: number, callbackPerRecord?: (address: string, allocation: string) => void) {
-  let traderLength = (await pair.getApprovedTraderLength({ direction, offerIndex })).toNumber();
-  let tasks: Promise<void>[] = [];
-  let allo: AllocationMap[] = [];
-
-  for (let i = 0; i < traderLength; i += 100) {//get trader allocation
-    tasks.push(
-      (async () => {
-        try {
-          let approvedTrader = await pair.getApprovedTrader({ direction, offerIndex, start: i, length: 100 });
-          allo.push(...approvedTrader.trader.map((address, i) => {
-            let allocation = new BigNumber(approvedTrader.allocation[i]).shiftedBy(-allocationTokenDecimals).toFixed();
-            if (callbackPerRecord) callbackPerRecord(address, allocation);
-            return { address, allocation };
-          }));
-        } catch (error) {
-          console.log("getTradersAllocation", error);
-          return;
-        }
-      })());
-  }
-  await Promise.all(tasks);
-  return allo;
 }
 
 export {
