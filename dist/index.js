@@ -510,7 +510,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         let price = (0, index_4.toWeiInv)(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
         let amount = new eth_wallet_4.BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
         let userAllo = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
-        let available = offer.allowAll ? amount : new eth_wallet_4.BigNumber(userAllo.allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed();
+        let available = offer.allowAll ? amount : new eth_wallet_4.BigNumber(userAllo.allocation).toFixed();
         let tradeFee = new eth_wallet_4.BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
         let tokenInAvailable = new eth_wallet_4.BigNumber(available).dividedBy(new eth_wallet_4.BigNumber(price)).dividedBy(new eth_wallet_4.BigNumber(tradeFee)).toFixed();
         return {
@@ -1879,7 +1879,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const chainId = this.chainId;
                     const isRpcConnected = this.state.isRpcWalletConnected();
                     const { queueInfo } = this.buybackInfo;
-                    const { amount, allowAll, allocation, tradeFee } = queueInfo || {};
+                    const { amount, allowAll, allocation, tradeFee, available } = queueInfo || {};
                     const firstTokenObj = scom_token_list_3.tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
                     const secondTokenObj = scom_token_list_3.tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
                     const firstSymbol = (_a = firstTokenObj === null || firstTokenObj === void 0 ? void 0 : firstTokenObj.symbol) !== null && _a !== void 0 ? _a : '';
@@ -1894,7 +1894,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-label", { caption: `${(0, index_7.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Your Allocation" }),
-                                this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_7.formatNumber)(allocation || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_7.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Your Balance" }),
                                 this.$render("i-label", { caption: `${(0, index_7.formatNumber)(scom_token_list_3.tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),

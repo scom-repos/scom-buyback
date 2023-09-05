@@ -3,7 +3,7 @@ import {
   numberToBytes32,
   IBuybackCampaign,
 } from '../global/index';
-import { BigNumber } from '@ijstech/eth-wallet';
+import { BigNumber, Utils } from '@ijstech/eth-wallet';
 import {
   getChainNativeToken,
   getWETH,
@@ -139,7 +139,7 @@ const getProviderGroupQueueInfoByIndex = async (state: State, pairAddress: strin
   let price = toWeiInv(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
   let amount = new BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
   let userAllo: AllocationMap = addresses.find(v => v.address === wallet.address) || { address: wallet.address, allocation: "0" };
-  let available = offer.allowAll ? amount : new BigNumber(userAllo.allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed();
+  let available = offer.allowAll ? amount : new BigNumber(userAllo.allocation).toFixed();
   let tradeFee = new BigNumber(tradeFeeObj.base).minus(tradeFeeObj.fee).div(tradeFeeObj.base).toFixed();
   let tokenInAvailable = new BigNumber(available).dividedBy(new BigNumber(price)).dividedBy(new BigNumber(tradeFee)).toFixed();
 

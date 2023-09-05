@@ -892,7 +892,7 @@ export default class ScomBuyback extends Module {
 			const chainId = this.chainId;
 			const isRpcConnected = this.state.isRpcWalletConnected();
 			const { queueInfo } = this.buybackInfo;
-			const { amount, allowAll, allocation, tradeFee } = queueInfo || {};
+			const { amount, allowAll, allocation, tradeFee, available } = queueInfo || {};
 			const firstTokenObj = tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
 			const secondTokenObj = tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
 			const firstSymbol = firstTokenObj?.symbol ?? '';
@@ -910,7 +910,7 @@ export default class ScomBuyback extends Module {
 						</i-hstack>
 						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
 							<i-label caption="Your Allocation" />
-							<i-label caption={allowAll ? 'Unlimited' : `${formatNumber(allocation || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+							<i-label caption={allowAll ? 'Unlimited' : `${formatNumber(available || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
 						</i-hstack>
 						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
 							<i-label caption="Your Balance" />
