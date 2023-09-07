@@ -201,9 +201,30 @@ const executeSwap: (state: State, swapData: SwapData) => Promise<{
   return { receipt, error: null };
 };
 
+const getProxySelectors = async (state: State, chainId: number): Promise<string[]> => {
+  const wallet = state.getRpcWallet();
+  await wallet.init();
+  if (wallet.chainId != chainId) await wallet.switchNetwork(chainId);
+  const hybridRouterAddress = getHybridRouterAddress(state);
+  const hybridRouter = new Contracts.OSWAP_HybridRouter2(wallet, hybridRouterAddress);
+  const permittedProxyFunctions: (keyof Contracts.OSWAP_HybridRouter2)[] = [
+    "swapExactETHForTokensSupportingFeeOnTransferTokens",
+    "swapExactETHForTokens",
+    "swapExactTokensForETHSupportingFeeOnTransferTokens",
+    "swapExactTokensForETH",
+    "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+    "swapExactTokensForTokens"
+  ];
+  const selectors = permittedProxyFunctions
+    .map(e => e + "(" + hybridRouter._abi.filter(f => f.name == e)[0].inputs.map(f => f.type).join(',') + ")")
+    .map(e => wallet.soliditySha3(e).substring(0, 10))
+    .map(e => hybridRouter.address.toLowerCase() + e.replace("0x", ""));
+  return selectors;
+}
 
 export {
   SwapData,
   executeSwap,
-  getHybridRouterAddress
+  getHybridRouterAddress,
+  getProxySelectors
 }

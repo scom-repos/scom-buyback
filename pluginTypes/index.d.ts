@@ -170,7 +170,8 @@ declare module "@scom/scom-buyback/swap-utils/index.ts" {
         receipt: TransactionReceipt | null;
         error: Record<string, string> | null;
     }>;
-    export { SwapData, executeSwap, getHybridRouterAddress };
+    const getProxySelectors: (state: State, chainId: number) => Promise<string[]>;
+    export { SwapData, executeSwap, getHybridRouterAddress, getProxySelectors };
 }
 /// <amd-module name="@scom/scom-buyback/data.json.ts" />
 declare module "@scom/scom-buyback/data.json.ts" {
@@ -387,7 +388,20 @@ declare module "@scom/scom-buyback" {
         onHide(): void;
         removeRpcWalletEvents(): void;
         private _getActions;
+        private getProjectOwnerActions;
         getConfigurators(): ({
+            name: string;
+            target: string;
+            getProxySelectors: (chainId: number) => Promise<string[]>;
+            getActions: () => any[];
+            getData: any;
+            setData: (data: any) => Promise<void>;
+            getTag: any;
+            setTag: any;
+            elementName?: undefined;
+            getLinkParams?: undefined;
+            bindOnChanged?: undefined;
+        } | {
             name: string;
             target: string;
             getActions: (category?: string) => any;
@@ -395,6 +409,7 @@ declare module "@scom/scom-buyback" {
             setData: (data: any) => Promise<void>;
             getTag: any;
             setTag: any;
+            getProxySelectors?: undefined;
             elementName?: undefined;
             getLinkParams?: undefined;
             bindOnChanged?: undefined;
@@ -424,6 +439,7 @@ declare module "@scom/scom-buyback" {
             setData: (properties: IBuybackCampaign, linkParams?: Record<string, any>) => Promise<void>;
             getTag: any;
             setTag: any;
+            getProxySelectors?: undefined;
             getActions?: undefined;
         })[];
         private getData;

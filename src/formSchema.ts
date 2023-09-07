@@ -19,25 +19,7 @@ const theme = {
         inputFontColor: {
             type: 'string',
             format: 'color'
-        },
-        // buttonBackgroundColor: {
-        // 	type: 'string',
-        // 	format: 'color'
-        // },
-        // buttonFontColor: {
-        // 	type: 'string',
-        // 	format: 'color'
-        // },
-        // secondaryColor: {
-        //     type: 'string',
-        //     title: 'Timer Background Color',
-        //     format: 'color'
-        // },
-        // secondaryFontColor: {
-        //     type: 'string',
-        //     title: 'Timer Font Color',
-        //     format: 'color'
-        // }
+        }
     }
 }
 
