@@ -3,7 +3,7 @@ import { BigNumber, Constants, IERC20ApprovalAction, IEventBusRegistry, Wallet }
 import { formatNumber, formatDate, limitInputNumber, limitDecimals, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
 import { State, fallBackUrl, isClientWalletConnected } from './store/index';
 import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
-import { executeSwap, getHybridRouterAddress } from './swap-utils/index';
+import { executeSwap, getHybridRouterAddress, getProxySelectors } from './swap-utils/index';
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
@@ -227,9 +227,38 @@ export default class ScomBuyback extends Module {
 		return actions;
 	}
 
+	private getProjectOwnerActions() {
+		const actions: any[] = [
+			{
+				name: 'Settings',
+				userInputDataSchema: formSchema.dataSchema,
+				userInputUISchema: formSchema.uiSchema,
+				customControls: formSchema.customControls(this.rpcWallet?.instanceId)
+			}
+		];
+		return actions;
+	}
+
 	getConfigurators() {
 		let self = this;
 		return [
+			{
+			  name: 'Project Owner Configurator',
+			  target: 'Project Owners',
+			  getProxySelectors: async (chainId: number) => {
+				const selectors = await getProxySelectors(this.state, chainId);
+				return selectors;
+			  },
+			  getActions: () => {
+				return this.getProjectOwnerActions();
+			  },
+			  getData: this.getData.bind(this),
+			  setData: async (data: any) => {
+				await this.setData(data);
+			  },
+			  getTag: this.getTag.bind(this),
+			  setTag: this.setTag.bind(this)
+			},
 			{
 				name: 'Builder Configurator',
 				target: 'Builders',

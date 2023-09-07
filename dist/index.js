@@ -536,7 +536,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
 define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/oswap-openswap-contract", "@scom/scom-commission-proxy-contract", "@scom/scom-buyback/buyback-utils/index.ts"], function (require, exports, eth_wallet_5, oswap_openswap_contract_2, scom_commission_proxy_contract_1, index_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getHybridRouterAddress = exports.executeSwap = void 0;
+    exports.getProxySelectors = exports.getHybridRouterAddress = exports.executeSwap = void 0;
     const getHybridRouterAddress = (state) => {
         let Address = state.getAddresses();
         return Address['OSWAP_HybridRouter2'];
@@ -712,6 +712,28 @@ define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstec
         return { receipt, error: null };
     };
     exports.executeSwap = executeSwap;
+    const getProxySelectors = async (state, chainId) => {
+        const wallet = state.getRpcWallet();
+        await wallet.init();
+        if (wallet.chainId != chainId)
+            await wallet.switchNetwork(chainId);
+        const hybridRouterAddress = getHybridRouterAddress(state);
+        const hybridRouter = new oswap_openswap_contract_2.Contracts.OSWAP_HybridRouter2(wallet, hybridRouterAddress);
+        const permittedProxyFunctions = [
+            "swapExactETHForTokensSupportingFeeOnTransferTokens",
+            "swapExactETHForTokens",
+            "swapExactTokensForETHSupportingFeeOnTransferTokens",
+            "swapExactTokensForETH",
+            "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+            "swapExactTokensForTokens"
+        ];
+        const selectors = permittedProxyFunctions
+            .map(e => e + "(" + hybridRouter._abi.filter(f => f.name == e)[0].inputs.map(f => f.type).join(',') + ")")
+            .map(e => wallet.soliditySha3(e).substring(0, 10))
+            .map(e => hybridRouter.address.toLowerCase() + e.replace("0x", ""));
+        return selectors;
+    };
+    exports.getProxySelectors = getProxySelectors;
 });
 define("@scom/scom-buyback/data.json.ts", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -781,25 +803,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
             inputFontColor: {
                 type: 'string',
                 format: 'color'
-            },
-            // buttonBackgroundColor: {
-            // 	type: 'string',
-            // 	format: 'color'
-            // },
-            // buttonFontColor: {
-            // 	type: 'string',
-            // 	format: 'color'
-            // },
-            // secondaryColor: {
-            //     type: 'string',
-            //     title: 'Timer Background Color',
-            //     format: 'color'
-            // },
-            // secondaryFontColor: {
-            //     type: 'string',
-            //     title: 'Timer Font Color',
-            //     format: 'color'
-            // }
+            }
         }
     };
     exports.default = {
@@ -1263,9 +1267,38 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             }
             return actions;
         }
+        getProjectOwnerActions() {
+            var _a;
+            const actions = [
+                {
+                    name: 'Settings',
+                    userInputDataSchema: formSchema_1.default.dataSchema,
+                    userInputUISchema: formSchema_1.default.uiSchema,
+                    customControls: formSchema_1.default.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
+                }
+            ];
+            return actions;
+        }
         getConfigurators() {
             let self = this;
             return [
+                {
+                    name: 'Project Owner Configurator',
+                    target: 'Project Owners',
+                    getProxySelectors: async (chainId) => {
+                        const selectors = await (0, index_10.getProxySelectors)(this.state, chainId);
+                        return selectors;
+                    },
+                    getActions: () => {
+                        return this.getProjectOwnerActions();
+                    },
+                    getData: this.getData.bind(this),
+                    setData: async (data) => {
+                        await this.setData(data);
+                    },
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                },
                 {
                     name: 'Builder Configurator',
                     target: 'Builders',
