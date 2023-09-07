@@ -911,8 +911,8 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
                             onCustomNetworkSelected: () => {
                                 var _a;
                                 const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                                firstTokenInput.targetChainId = chainId;
-                                secondTokenInput.targetChainId = chainId;
+                                firstTokenInput.chainId = chainId;
+                                secondTokenInput.chainId = chainId;
                             }
                         });
                         return networkPicker;
@@ -924,9 +924,9 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
                     setData: (control, value) => {
                         control.setNetworkByChainId(value);
                         if (firstTokenInput)
-                            firstTokenInput.targetChainId = value;
+                            firstTokenInput.chainId = value;
                         if (secondTokenInput)
-                            secondTokenInput.targetChainId = value;
+                            secondTokenInput.chainId = value;
                     }
                 },
                 "#/properties/tokenIn": {
@@ -941,8 +941,8 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
                         });
                         firstTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                        if (chainId && firstTokenInput.targetChainId !== chainId) {
-                            firstTokenInput.targetChainId = chainId;
+                        if (chainId && firstTokenInput.chainId !== chainId) {
+                            firstTokenInput.chainId = chainId;
                         }
                         return firstTokenInput;
                     },
@@ -966,8 +966,8 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@scom/scom-ne
                         });
                         secondTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
-                        if (chainId && secondTokenInput.targetChainId !== chainId) {
-                            secondTokenInput.targetChainId = chainId;
+                        if (chainId && secondTokenInput.chainId !== chainId) {
+                            secondTokenInput.chainId = chainId;
                         }
                         return secondTokenInput;
                     },

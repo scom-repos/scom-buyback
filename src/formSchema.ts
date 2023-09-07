@@ -127,8 +127,8 @@ export default {
                         networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
                         onCustomNetworkSelected: () => {
                             const chainId = networkPicker.selectedNetwork?.chainId;
-                            firstTokenInput.targetChainId = chainId;
-                            secondTokenInput.targetChainId = chainId;
+                            firstTokenInput.chainId = chainId;
+                            secondTokenInput.chainId = chainId;
                         }
                     });
                     return networkPicker;
@@ -138,8 +138,8 @@ export default {
                 },
                 setData: (control: ScomNetworkPicker, value: number) => {
                     control.setNetworkByChainId(value);
-                    if (firstTokenInput) firstTokenInput.targetChainId = value;
-                    if (secondTokenInput) secondTokenInput.targetChainId = value;
+                    if (firstTokenInput) firstTokenInput.chainId = value;
+                    if (secondTokenInput) secondTokenInput.chainId = value;
                 }
             },
             "#/properties/tokenIn": {
@@ -153,8 +153,8 @@ export default {
                     });
                     firstTokenInput.rpcWalletId = rpcWalletId;
                     const chainId = networkPicker?.selectedNetwork?.chainId;
-                    if (chainId && firstTokenInput.targetChainId !== chainId) {
-                        firstTokenInput.targetChainId = chainId;
+                    if (chainId && firstTokenInput.chainId !== chainId) {
+                        firstTokenInput.chainId = chainId;
                     }
                     return firstTokenInput;
                 },
@@ -176,8 +176,8 @@ export default {
                     });
                     secondTokenInput.rpcWalletId = rpcWalletId;
                     const chainId = networkPicker?.selectedNetwork?.chainId;
-                    if (chainId && secondTokenInput.targetChainId !== chainId) {
-                        secondTokenInput.targetChainId = chainId;
+                    if (chainId && secondTokenInput.chainId !== chainId) {
+                        secondTokenInput.chainId = chainId;
                     }
                     return secondTokenInput;
                 },
