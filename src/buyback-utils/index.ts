@@ -162,9 +162,28 @@ const getProviderGroupQueueInfoByIndex = async (state: State, pairAddress: strin
   }
 }
 
+const getOffers = async (state: State, chainId: number, tokenA: ITokenObject, tokenB: ITokenObject) => {
+  let index: number[] = [];
+  try {
+    const wallet = state.getRpcWallet();
+    await wallet.init();
+    if (wallet.chainId != chainId) await wallet.switchNetwork(chainId);
+    let factoryAddress = state.getAddresses(chainId)['OSWAP_RestrictedFactory'];
+    let groupQ = new Contracts.OSWAP_RestrictedFactory(wallet, factoryAddress);
+    let tokens = mapTokenObjectSet(state, { tokenA, tokenB });
+    let params = { param1: tokens.tokenA.address, param2: tokens.tokenB.address };
+    const pairAddress = await groupQ.getPair({ ...params, param3: 0 });
+    const oracleContract = new Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
+    const offers = await oracleContract.getOffers({ direction: false, start: 0, length: 100 });
+    index = offers.index.map(idx => idx.toNumber());
+  } catch(err) {}
+  return index;
+}
+
 export {
   getGroupQueueExecuteData,
   getGuaranteedBuyBackInfo,
   GuaranteedBuyBackInfo,
-  ProviderGroupQueueInfo
+  ProviderGroupQueueInfo,
+  getOffers
 }

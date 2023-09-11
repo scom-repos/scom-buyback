@@ -7,7 +7,7 @@ import { executeSwap, getHybridRouterAddress, getProxySelectors } from './swap-u
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
-import formSchema from './formSchema';
+import { getBuilderSchema, getProjectOwnerSchema } from './formSchema';
 import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObject } from '@scom/scom-token-list';
 import { buybackComponent, buybackDappContainer } from './index.css';
 import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
@@ -101,58 +101,9 @@ export default class ScomBuyback extends Module {
 	}
 
 	private _getActions(category?: string) {
+		const formSchema = getBuilderSchema();
 		const self = this;
-		const actions: any = [
-			// {
-			// 	name: 'Commissions',
-			// 	icon: 'dollar-sign',
-			// 	command: (builder: any, userInputData: any) => {
-			// 		let _oldData: IBuybackCampaign = {
-			// 			chainId: 0,
-			// 			projectName: '',
-			// 			offerIndex: 0,
-			// 			tokenIn: '',
-			// 			tokenOut: '',
-			// 			wallets: [],
-			// 			networks: []
-			// 		}
-			// 		return {
-			// 			execute: async () => {
-			// 				_oldData = { ...this._data };
-			// 				if (userInputData.commissions) this._data.commissions = userInputData.commissions;
-			// 				this.refreshWidget();
-			// 				if (builder?.setData) builder.setData(this._data);
-			// 			},
-			// 			undo: () => {
-			// 				this._data = { ..._oldData };
-			// 				this.refreshWidget();
-			// 				if (builder?.setData) builder.setData(this._data);
-			// 			},
-			// 			redo: () => { }
-			// 		}
-			// 	},
-			// 	customUI: {
-			// 		render: (data?: any, onConfirm?: (result: boolean, data: any) => void) => {
-			// 			const vstack = new VStack();
-			// 			const config = new ScomCommissionFeeSetup(null, {
-			//         commissions: self._data.commissions,
-			//         fee: getEmbedderCommissionFee(),
-			//         networks: self._data.networks
-			//       });
-			//       const button = new Button(null, {
-			//         caption: 'Confirm',
-			//       });
-			//       vstack.append(config);
-			//       vstack.append(button);
-			//       button.onClick = async () => {
-			//         const commissions = config.commissions;
-			//         if (onConfirm) onConfirm(true, {commissions});
-			//       }
-			//       return vstack;
-			// 		}
-			// 	}
-			// },
-		];
+		const actions: any[] = [];
 
 		if (category && category !== 'offers') {
 			actions.push({
@@ -228,6 +179,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	private getProjectOwnerActions() {
+		const formSchema = getProjectOwnerSchema(this.state);
 		const actions: any[] = [
 			{
 				name: 'Settings',
