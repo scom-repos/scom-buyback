@@ -354,11 +354,9 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 };
                 tokenIn: {
                     type: string;
-                    required: boolean;
                 };
                 tokenOut: {
                     type: string;
-                    required: boolean;
                 };
                 dark: {
                     type: string;
@@ -429,7 +427,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 }[];
             })[];
         };
-        customControls(rpcWalletId: string): {
+        customControls(rpcWalletId: string, getData: Function): {
             "#/properties/chainId": {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;
@@ -448,7 +446,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
             "#/properties/offerIndex": {
                 render: () => ComboBox;
                 getData: (control: ComboBox) => number;
-                setData: (control: ComboBox, value: number) => void;
+                setData: (control: ComboBox, value: number) => Promise<void>;
             };
         };
     };
