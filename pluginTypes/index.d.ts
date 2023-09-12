@@ -124,6 +124,7 @@ declare module "@scom/scom-buyback/buyback-utils/index.ts" {
     import { IBuybackCampaign } from "@scom/scom-buyback/global/index.ts";
     import { BigNumber } from '@ijstech/eth-wallet';
     import { State } from "@scom/scom-buyback/store/index.ts";
+    import { ITokenObject } from '@scom/scom-token-list';
     const getGroupQueueExecuteData: (offerIndex: number | BigNumber) => string;
     interface GuaranteedBuyBackInfo extends IBuybackCampaign {
         queueInfo: ProviderGroupQueueInfo;
@@ -147,7 +148,8 @@ declare module "@scom/scom-buyback/buyback-utils/index.ts" {
         tokenInAvailable: string;
         available: string;
     }
-    export { getGroupQueueExecuteData, getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo };
+    const getOffers: (state: State, chainId: number, tokenA: ITokenObject, tokenB: ITokenObject) => Promise<number[]>;
+    export { getGroupQueueExecuteData, getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo, getOffers };
 }
 /// <amd-module name="@scom/scom-buyback/swap-utils/index.ts" />
 declare module "@scom/scom-buyback/swap-utils/index.ts" {
@@ -205,11 +207,19 @@ declare module "@scom/scom-buyback/data.json.ts" {
     };
     export default _default_1;
 }
+/// <amd-module name="@scom/scom-buyback/index.css.ts" />
+declare module "@scom/scom-buyback/index.css.ts" {
+    export const buybackDappContainer: string;
+    export const buybackComponent: string;
+    export const comboBoxStyle: string;
+}
 /// <amd-module name="@scom/scom-buyback/formSchema.ts" />
 declare module "@scom/scom-buyback/formSchema.ts" {
+    import { ComboBox } from '@ijstech/components';
     import ScomNetworkPicker from '@scom/scom-network-picker';
     import ScomTokenInput from '@scom/scom-token-input';
-    const _default_2: {
+    import { State } from "@scom/scom-buyback/store/index.ts";
+    export function getBuilderSchema(): {
         dataSchema: {
             type: string;
             properties: {
@@ -323,12 +333,125 @@ declare module "@scom/scom-buyback/formSchema.ts" {
             };
         };
     };
-    export default _default_2;
-}
-/// <amd-module name="@scom/scom-buyback/index.css.ts" />
-declare module "@scom/scom-buyback/index.css.ts" {
-    export const buybackDappContainer: string;
-    export const buybackComponent: string;
+    export function getProjectOwnerSchema(state: State): {
+        dataSchema: {
+            type: string;
+            properties: {
+                title: {
+                    type: string;
+                };
+                logo: {
+                    type: string;
+                    format: string;
+                };
+                chainId: {
+                    type: string;
+                    required: boolean;
+                };
+                offerIndex: {
+                    type: string;
+                    required: boolean;
+                };
+                tokenIn: {
+                    type: string;
+                    required: boolean;
+                };
+                tokenOut: {
+                    type: string;
+                    required: boolean;
+                };
+                dark: {
+                    type: string;
+                    properties: {
+                        backgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        fontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputBackgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                    };
+                };
+                light: {
+                    type: string;
+                    properties: {
+                        backgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        fontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputBackgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        inputFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                    };
+                };
+            };
+        };
+        uiSchema: {
+            type: string;
+            elements: ({
+                type: string;
+                label: string;
+                elements: {
+                    type: string;
+                    elements: {
+                        type: string;
+                        scope: string;
+                    }[];
+                }[];
+            } | {
+                type: string;
+                label: string;
+                elements: {
+                    type: string;
+                    elements: {
+                        type: string;
+                        label: string;
+                        scope: string;
+                    }[];
+                }[];
+            })[];
+        };
+        customControls(rpcWalletId: string): {
+            "#/properties/chainId": {
+                render: () => ScomNetworkPicker;
+                getData: (control: ScomNetworkPicker) => number;
+                setData: (control: ScomNetworkPicker, value: number) => void;
+            };
+            "#/properties/tokenIn": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/tokenOut": {
+                render: () => ScomTokenInput;
+                getData: (control: ScomTokenInput) => string;
+                setData: (control: ScomTokenInput, value: string) => void;
+            };
+            "#/properties/offerIndex": {
+                render: () => ComboBox;
+                getData: (control: ComboBox) => number;
+                setData: (control: ComboBox, value: number) => void;
+            };
+        };
+    };
 }
 /// <amd-module name="@scom/scom-buyback" />
 declare module "@scom/scom-buyback" {
@@ -404,7 +527,7 @@ declare module "@scom/scom-buyback" {
         } | {
             name: string;
             target: string;
-            getActions: (category?: string) => any;
+            getActions: (category?: string) => any[];
             getData: any;
             setData: (data: any) => Promise<void>;
             getTag: any;
