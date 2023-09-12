@@ -358,74 +358,14 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 tokenOut: {
                     type: string;
                 };
-                dark: {
-                    type: string;
-                    properties: {
-                        backgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        fontColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputBackgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputFontColor: {
-                            type: string;
-                            format: string;
-                        };
-                    };
-                };
-                light: {
-                    type: string;
-                    properties: {
-                        backgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        fontColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputBackgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputFontColor: {
-                            type: string;
-                            format: string;
-                        };
-                    };
-                };
             };
         };
         uiSchema: {
             type: string;
-            elements: ({
+            elements: {
                 type: string;
-                label: string;
-                elements: {
-                    type: string;
-                    elements: {
-                        type: string;
-                        scope: string;
-                    }[];
-                }[];
-            } | {
-                type: string;
-                label: string;
-                elements: {
-                    type: string;
-                    elements: {
-                        type: string;
-                        label: string;
-                        scope: string;
-                    }[];
-                }[];
-            })[];
+                scope: string;
+            }[];
         };
         customControls(rpcWalletId: string, getData: Function): {
             "#/properties/chainId": {
