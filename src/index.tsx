@@ -185,7 +185,7 @@ export default class ScomBuyback extends Module {
 				name: 'Settings',
 				userInputDataSchema: formSchema.dataSchema,
 				userInputUISchema: formSchema.uiSchema,
-				customControls: formSchema.customControls(this.rpcWallet?.instanceId)
+				customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.getData.bind(this))
 			}
 		];
 		return actions;

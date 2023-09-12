@@ -1,7 +1,9 @@
 import { ComboBox, IComboItem } from '@ijstech/components';
 import ScomNetworkPicker from '@scom/scom-network-picker';
 import ScomTokenInput from '@scom/scom-token-input';
+import { tokenStore } from "@scom/scom-token-list";
 import { getOffers } from './buyback-utils/index';
+import { IBuybackCampaign } from './global/index';
 import { comboBoxStyle } from './index.css';
 import { State } from './store/index';
 
@@ -222,11 +224,9 @@ export function getProjectOwnerSchema(state: State) {
                 },
                 tokenIn: {
                     type: 'string',
-                    required: true
                 },
                 tokenOut: {
                     type: 'string',
-                    required: true
                 },
                 dark: theme,
                 light: theme
@@ -293,7 +293,7 @@ export function getProjectOwnerSchema(state: State) {
                 }
             ]
         },
-        customControls(rpcWalletId: string) {
+        customControls(rpcWalletId: string, getData: Function) {
             let networkPicker: ScomNetworkPicker;
             let firstTokenInput: ScomTokenInput;
             let secondTokenInput: ScomTokenInput;
@@ -306,6 +306,16 @@ export function getProjectOwnerSchema(state: State) {
                     comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
                 }
             }
+            const setTokenData = (control: ScomTokenInput, value: string) => {
+                if (!value) {
+                    const chainId = networkPicker?.selectedNetwork?.chainId;
+                    const tokens = tokenStore.getTokenList(chainId);
+                    let token = tokens.find(token => !token.address);
+                    control.token = token;
+                } else {
+                    control.address = value;
+                }
+            };
             return {
                 "#/properties/chainId": {
                     render: () => {
@@ -352,11 +362,9 @@ export function getProjectOwnerSchema(state: State) {
                         return firstTokenInput;
                     },
                     getData: (control: ScomTokenInput) => {
-                        return control.token?.address || control.token?.symbol;
+                        return control.token?.address || "";
                     },
-                    setData: (control: ScomTokenInput, value: string) => {
-                        control.address = value;
-                    }
+                    setData: setTokenData
                 },
                 "#/properties/tokenOut": {
                     render: () => {
@@ -375,11 +383,9 @@ export function getProjectOwnerSchema(state: State) {
                         return secondTokenInput;
                     },
                     getData: (control: ScomTokenInput) => {
-                        return control.token?.address || control.token?.symbol;
+                        return control.token?.address || "";
                     },
-                    setData: (control: ScomTokenInput, value: string) => {
-                        control.address = value;
-                    }
+                    setData: setTokenData
                 },
                 "#/properties/offerIndex": {
                     render: () => {
@@ -396,7 +402,15 @@ export function getProjectOwnerSchema(state: State) {
                     getData: (control: ComboBox) => {
                         return Number((control.selectedItem as IComboItem)?.value);
                     },
-                    setData: (control: ComboBox, value: number) => {
+                    setData: async (control: ComboBox, value: number) => {
+                        const data: IBuybackCampaign = getData();
+                        if (data.chainId && data.tokenIn != null && data.tokenOut != null) {
+                            const tokens = tokenStore.getTokenList(data.chainId);
+                            let tokenIn = tokens.find(token => (token.address ?? "") == data.tokenIn);
+                            let tokenOut = tokens.find(token => (token.address ?? "") == data.tokenOut);
+                            const indexes = await getOffers(state, data.chainId, tokenIn, tokenOut);
+                            comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
+                        }
                         control.selectedItem = offerIndexes.find(offer => offer.value === value.toString()) || null;
                     },
                 }

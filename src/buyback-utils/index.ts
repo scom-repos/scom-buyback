@@ -34,7 +34,7 @@ const mapTokenObjectSet = (state: State, obj: any) => {
 
 const getTokenObjectByAddress = (state: State, address: string) => {
   let chainId = state.getChainId();
-  if (address.toLowerCase() === getAddressByKey(state, 'WETH9')?.toLowerCase()) {
+  if (!address || address.toLowerCase() === getAddressByKey(state, 'WETH9')?.toLowerCase()) {
     return getWETH(chainId);
   }
   let tokenMap = tokenStore.tokenMap;

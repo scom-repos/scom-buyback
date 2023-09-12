@@ -439,7 +439,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     const getTokenObjectByAddress = (state, address) => {
         var _a;
         let chainId = state.getChainId();
-        if (address.toLowerCase() === ((_a = getAddressByKey(state, 'WETH9')) === null || _a === void 0 ? void 0 : _a.toLowerCase())) {
+        if (!address || address.toLowerCase() === ((_a = getAddressByKey(state, 'WETH9')) === null || _a === void 0 ? void 0 : _a.toLowerCase())) {
             return (0, index_5.getWETH)(chainId);
         }
         let tokenMap = scom_token_list_2.tokenStore.tokenMap;
@@ -971,7 +971,7 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
         }
     });
 });
-define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/components", "@scom/scom-network-picker", "@scom/scom-token-input", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, scom_network_picker_1, scom_token_input_1, index_7, index_css_1) {
+define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/components", "@scom/scom-network-picker", "@scom/scom-token-input", "@scom/scom-token-list", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, scom_network_picker_1, scom_token_input_1, scom_token_list_3, index_7, index_css_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getProjectOwnerSchema = exports.getBuilderSchema = void 0;
@@ -1197,11 +1197,9 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     },
                     tokenIn: {
                         type: 'string',
-                        required: true
                     },
                     tokenOut: {
                         type: 'string',
-                        required: true
                     },
                     dark: theme,
                     light: theme
@@ -1268,7 +1266,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     }
                 ]
             },
-            customControls(rpcWalletId) {
+            customControls(rpcWalletId, getData) {
                 let networkPicker;
                 let firstTokenInput;
                 let secondTokenInput;
@@ -1280,6 +1278,18 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     if (chainId && firstTokenInput.token && secondTokenInput.token) {
                         const indexes = await (0, index_7.getOffers)(state, chainId, firstTokenInput.token, secondTokenInput.token);
                         comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
+                    }
+                };
+                const setTokenData = (control, value) => {
+                    var _a;
+                    if (!value) {
+                        const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+                        const tokens = scom_token_list_3.tokenStore.getTokenList(chainId);
+                        let token = tokens.find(token => !token.address);
+                        control.token = token;
+                    }
+                    else {
+                        control.address = value;
                     }
                 };
                 return {
@@ -1333,12 +1343,10 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                             return firstTokenInput;
                         },
                         getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                            var _a;
+                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || "";
                         },
-                        setData: (control, value) => {
-                            control.address = value;
-                        }
+                        setData: setTokenData
                     },
                     "#/properties/tokenOut": {
                         render: () => {
@@ -1358,12 +1366,10 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                             return secondTokenInput;
                         },
                         getData: (control) => {
-                            var _a, _b;
-                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || ((_b = control.token) === null || _b === void 0 ? void 0 : _b.symbol);
+                            var _a;
+                            return ((_a = control.token) === null || _a === void 0 ? void 0 : _a.address) || "";
                         },
-                        setData: (control, value) => {
-                            control.address = value;
-                        }
+                        setData: setTokenData
                     },
                     "#/properties/offerIndex": {
                         render: () => {
@@ -1381,7 +1387,15 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                             var _a;
                             return Number((_a = control.selectedItem) === null || _a === void 0 ? void 0 : _a.value);
                         },
-                        setData: (control, value) => {
+                        setData: async (control, value) => {
+                            const data = getData();
+                            if (data.chainId && data.tokenIn != null && data.tokenOut != null) {
+                                const tokens = scom_token_list_3.tokenStore.getTokenList(data.chainId);
+                                let tokenIn = tokens.find(token => { var _a; return ((_a = token.address) !== null && _a !== void 0 ? _a : "") == data.tokenIn; });
+                                let tokenOut = tokens.find(token => { var _a; return ((_a = token.address) !== null && _a !== void 0 ? _a : "") == data.tokenOut; });
+                                const indexes = await (0, index_7.getOffers)(state, data.chainId, tokenIn, tokenOut);
+                                comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
+                            }
                             control.selectedItem = offerIndexes.find(offer => offer.value === value.toString()) || null;
                         },
                     }
@@ -1391,7 +1405,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
     }
     exports.getProjectOwnerSchema = getProjectOwnerSchema;
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_6, eth_wallet_6, index_8, index_9, index_10, index_11, assets_2, data_json_1, formSchema_1, scom_token_list_3, index_css_2) {
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_6, eth_wallet_6, index_8, index_9, index_10, index_11, assets_2, data_json_1, formSchema_1, scom_token_list_4, index_css_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_6.Styles.Theme.ThemeVars;
@@ -1490,7 +1504,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     name: 'Settings',
                     userInputDataSchema: formSchema.dataSchema,
                     userInputUISchema: formSchema.uiSchema,
-                    customControls: formSchema.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
+                    customControls: formSchema.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.getData.bind(this))
                 }
             ];
             return actions;
@@ -1751,9 +1765,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     try {
                         this.infoStack.visible = true;
                         this.emptyStack.visible = false;
-                        scom_token_list_3.tokenStore.updateTokenMapData(chainId);
+                        scom_token_list_4.tokenStore.updateTokenMapData(chainId);
                         if (rpcWallet.address) {
-                            scom_token_list_3.tokenStore.updateAllTokenBalances(rpcWallet);
+                            scom_token_list_4.tokenStore.updateAllTokenBalances(rpcWallet);
                         }
                         await this.initWallet();
                         this.buybackInfo = await (0, index_10.getGuaranteedBuyBackInfo)(this.state, Object.assign({}, this._data));
@@ -1761,7 +1775,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         await this.renderBuybackCampaign();
                         await this.renderLeftPart();
                         const firstToken = this.getTokenObject('toTokenAddress');
-                        if (firstToken && firstToken.symbol !== ((_a = scom_token_list_3.ChainNativeTokenByChainId[chainId]) === null || _a === void 0 ? void 0 : _a.symbol) && this.state.isRpcWalletConnected()) {
+                        if (firstToken && firstToken.symbol !== ((_a = scom_token_list_4.ChainNativeTokenByChainId[chainId]) === null || _a === void 0 ? void 0 : _a.symbol) && this.state.isRpcWalletConnected()) {
                             await this.initApprovalModelAction();
                         }
                     }
@@ -1783,7 +1797,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
             };
             this.getFirstAvailableBalance = () => {
-                const tokenBalances = scom_token_list_3.tokenStore.tokenBalances;
+                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances;
                 if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
                     return '0';
                 }
@@ -1803,7 +1817,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 return new eth_wallet_6.BigNumber(this.getFirstAvailableBalance()).dividedBy(offerPrice).times(tradeFee).toFixed();
             };
             this.getTokenObject = (key) => {
-                const tokenMap = scom_token_list_3.tokenStore.tokenMap;
+                const tokenMap = scom_token_list_4.tokenStore.tokenMap;
                 const tokenAddress = this.getValueByKey(key);
                 if (tokenAddress && tokenMap) {
                     let token = tokenMap[tokenAddress.toLowerCase()];
@@ -1892,7 +1906,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const firstAvailable = this.getFirstAvailableBalance();
                 const firstToken = this.getTokenObject('toTokenAddress');
                 const secondToken = this.getTokenObject('fromTokenAddress');
-                const tokenBalances = scom_token_list_3.tokenStore.tokenBalances || {};
+                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances || {};
                 let totalAmount = new eth_wallet_6.BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')] || 0);
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, totalAmount);
                 if (commissionAmount.gt(0)) {
@@ -1922,7 +1936,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const firstAvailable = this.getFirstAvailableBalance();
                 const secondAvailable = this.getSecondAvailableBalance();
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-                const tokenBalances = scom_token_list_3.tokenStore.tokenBalances;
+                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances;
                 const balance = new eth_wallet_6.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
                 // const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
                 // const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
@@ -2104,8 +2118,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const isRpcConnected = this.state.isRpcWalletConnected();
                     const { queueInfo } = this.buybackInfo;
                     const { amount, allowAll, tradeFee, available } = queueInfo || {};
-                    const firstTokenObj = scom_token_list_3.tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
-                    const secondTokenObj = scom_token_list_3.tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
+                    const firstTokenObj = scom_token_list_4.tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
+                    const secondTokenObj = scom_token_list_4.tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
                     const firstSymbol = (_a = firstTokenObj === null || firstTokenObj === void 0 ? void 0 : firstTokenObj.symbol) !== null && _a !== void 0 ? _a : '';
                     const secondSymbol = (_b = secondTokenObj === null || secondTokenObj === void 0 ? void 0 : secondTokenObj.symbol) !== null && _b !== void 0 ? _b : '';
                     const commissionFee = this.state.embedderCommissionFee;
@@ -2121,7 +2135,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_8.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Your Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(scom_token_list_3.tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(scom_token_list_4.tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-panel", { width: "100%", height: 2, background: { color: Theme.input.background }, margin: { top: 8, bottom: 8 } }),
                             this.$render("i-hstack", { gap: 4, wrap: "wrap" },
                                 this.$render("i-label", { caption: "Swap Available" }),
@@ -2132,7 +2146,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-input", { id: "firstInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.firstInputChange, onFocus: () => this.handleFocusInput(true, true), onBlur: () => this.handleFocusInput(true, false) }),
                                 this.$render("i-hstack", { gap: 4, width: 130, verticalAlignment: "center" },
                                     this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_6.BigNumber(this.getFirstAvailableBalance()).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_3.assets.tokenPath(firstTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_4.assets.tokenPath(firstTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
                                     this.$render("i-label", { caption: firstSymbol, font: { color: Theme.input.fontColor, bold: true } }))),
                             this.$render("i-vstack", { width: "100%", margin: { top: 4, bottom: 4 }, horizontalAlignment: "center" },
                                 this.$render("i-icon", { name: "arrow-down", width: 20, height: 20, fill: Theme.text.primary })),
@@ -2140,7 +2154,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-input", { id: "secondInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.secondInputChange, onFocus: () => this.handleFocusInput(false, true), onBlur: () => this.handleFocusInput(false, false) }),
                                 this.$render("i-hstack", { gap: 4, margin: { right: 8 }, width: 130, verticalAlignment: "center" },
                                     this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_6.BigNumber(this.getSecondAvailableBalance()).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_3.assets.tokenPath(secondTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_4.assets.tokenPath(secondTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
                                     this.$render("i-label", { caption: secondSymbol, font: { color: Theme.input.fontColor, bold: true } })))),
                         this.$render("i-hstack", { gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
                             this.$render("i-label", { caption: `Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_6.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`, font: { size: '0.75rem' } }),
@@ -2169,7 +2183,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const info = queueInfo || {};
                     const { startDate, endDate } = info;
                     const secondToken = (tokenIn === null || tokenIn === void 0 ? void 0 : tokenIn.startsWith('0x')) ? tokenIn.toLowerCase() : tokenIn;
-                    const secondTokenObj = scom_token_list_3.tokenStore.tokenMap[secondToken];
+                    const secondTokenObj = scom_token_list_4.tokenStore.tokenMap[secondToken];
                     const secondSymbol = (_a = secondTokenObj === null || secondTokenObj === void 0 ? void 0 : secondTokenObj.symbol) !== null && _a !== void 0 ? _a : '';
                     const { title, logo } = this._data;
                     const hasBranch = !!title || !!logo;
@@ -2282,7 +2296,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const firstMaxVal = new eth_wallet_6.BigNumber(this.getFirstAvailableBalance());
                 const secondMaxVal = new eth_wallet_6.BigNumber(this.getSecondAvailableBalance());
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-                const tokenBalances = scom_token_list_3.tokenStore.tokenBalances;
+                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances;
                 const balance = new eth_wallet_6.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
                 // const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
                 // const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
