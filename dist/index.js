@@ -1200,70 +1200,36 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     },
                     tokenOut: {
                         type: 'string',
-                    },
-                    dark: theme,
-                    light: theme
+                    }
                 }
             },
             uiSchema: {
-                type: 'Categorization',
+                type: 'VerticalLayout',
                 elements: [
                     {
-                        type: 'Category',
-                        label: 'General',
-                        elements: [
-                            {
-                                type: 'VerticalLayout',
-                                elements: [
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/title'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/logo'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/chainId'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/tokenIn'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/tokenOut'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/offerIndex'
-                                    },
-                                ]
-                            }
-                        ]
+                        type: 'Control',
+                        scope: '#/properties/title'
                     },
                     {
-                        type: 'Category',
-                        label: 'Theme',
-                        elements: [
-                            {
-                                type: 'VerticalLayout',
-                                elements: [
-                                    {
-                                        type: 'Control',
-                                        label: 'Dark',
-                                        scope: '#/properties/dark'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        label: 'Light',
-                                        scope: '#/properties/light'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
+                        type: 'Control',
+                        scope: '#/properties/logo'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/chainId'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/tokenIn'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/tokenOut'
+                    },
+                    {
+                        type: 'Control',
+                        scope: '#/properties/offerIndex'
+                    },
                 ]
             },
             customControls(rpcWalletId, getData) {
