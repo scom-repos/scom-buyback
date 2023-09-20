@@ -1,6 +1,6 @@
 import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, application, customModule, Input, moment, HStack, customElements } from '@ijstech/components';
 import { BigNumber, Constants, IERC20ApprovalAction, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
-import { formatNumber, formatDate, limitInputNumber, limitDecimals, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
+import { formatNumber, formatDate, limitInputNumber, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
 import { State, fallBackUrl, isClientWalletConnected } from './store/index';
 import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
 import { executeSwap, getHybridRouterAddress, getProxySelectors } from './swap-utils/index';
@@ -15,6 +15,7 @@ import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 
 const Theme = Styles.Theme.ThemeVars;
+const ROUNDING_NUMBER = 1;
 
 interface ScomBuybackElement extends ControlElement {
 	lazyLoad?: boolean;
@@ -580,7 +581,7 @@ export default class ScomBuyback extends Module {
 			this.secondInput.value = '';
 		} else {
 			this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-			this.secondInput.value = limitDecimals(inputVal, secondToken?.decimals || 18);
+			this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toString(); 
 		}
 		this.updateCommissionInfo();
 		this.updateBtnSwap();
@@ -599,7 +600,7 @@ export default class ScomBuyback extends Module {
 			this.firstInput.value = '';
 			this.lbFee.caption = `0 ${firstSymbol}`;
 		} else {
-			this.firstInput.value = limitDecimals(inputVal, firstToken?.decimals || 18);
+			this.firstInput.value = inputVal.dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toString();
 			this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
 		}
 		this.updateCommissionInfo();
@@ -619,9 +620,10 @@ export default class ScomBuyback extends Module {
 			const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
 			totalAmount = totalAmount.dividedBy(totalFee);
 		}
-		this.firstInput.value = limitDecimals(totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount, firstToken?.decimals || 18);
+		const firstInputValue = totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
+		this.firstInput.value = new BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toString();
 		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-		this.secondInput.value = limitDecimals(inputVal, secondToken?.decimals || 18);
+		this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toString();
 		this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstToken?.symbol || ''}`;
 		this.updateCommissionInfo();
 		this.updateBtnSwap();

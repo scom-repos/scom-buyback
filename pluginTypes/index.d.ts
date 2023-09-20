@@ -8,11 +8,9 @@ declare module "@scom/scom-buyback/global/utils/helper.ts" {
     import { BigNumber } from '@ijstech/eth-wallet';
     export const DefaultDateFormat = "DD/MM/YYYY hh:mm:ss";
     export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
-    export const formatNumber: (value: any, decimals?: number) => string;
-    export const formatNumberWithSeparators: (value: number, precision?: number) => string;
+    export const formatNumber: (value: number | string | BigNumber, decimalFigures?: number) => string;
     export const isInvalidInput: (val: any) => boolean;
     export const limitInputNumber: (input: any, decimals?: number) => void;
-    export const limitDecimals: (value: any, decimals: number) => any;
     export const toWeiInv: (n: string, unit?: number) => BigNumber;
     export const padLeft: (string: string, chars: number, sign?: string) => string;
     export const numberToBytes32: (value: any, prefix?: string) => any;

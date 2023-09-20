@@ -32,7 +32,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijstech/eth-wallet", "@ijstech/components"], function (require, exports, eth_wallet_1, components_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.numberToBytes32 = exports.padLeft = exports.toWeiInv = exports.limitDecimals = exports.limitInputNumber = exports.isInvalidInput = exports.formatNumberWithSeparators = exports.formatNumber = exports.formatDate = exports.DefaultDateFormat = void 0;
+    exports.numberToBytes32 = exports.padLeft = exports.toWeiInv = exports.limitInputNumber = exports.isInvalidInput = exports.formatNumber = exports.formatDate = exports.DefaultDateFormat = void 0;
     exports.DefaultDateFormat = 'DD/MM/YYYY hh:mm:ss';
     const formatDate = (date, customType, showTimezone) => {
         const formatType = customType || exports.DefaultDateFormat;
@@ -43,42 +43,14 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
         return formatted;
     };
     exports.formatDate = formatDate;
-    const formatNumber = (value, decimals) => {
-        let val = value;
+    const formatNumber = (value, decimalFigures) => {
+        if (typeof value === 'object') {
+            value = value.toString();
+        }
         const minValue = '0.0000001';
-        if (typeof value === 'string') {
-            val = new eth_wallet_1.BigNumber(value).toNumber();
-        }
-        else if (typeof value === 'object') {
-            val = value.toNumber();
-        }
-        if (val != 0 && new eth_wallet_1.BigNumber(val).lt(minValue)) {
-            return `<${minValue}`;
-        }
-        return (0, exports.formatNumberWithSeparators)(val, decimals || 4);
+        return components_1.FormatUtils.formatNumber(value, { decimalFigures: decimalFigures || 4, minValue });
     };
     exports.formatNumber = formatNumber;
-    const formatNumberWithSeparators = (value, precision) => {
-        if (!value)
-            value = 0;
-        if (precision) {
-            let outputStr = '';
-            if (value >= 1) {
-                const unit = Math.pow(10, precision);
-                const rounded = Math.floor(value * unit) / unit;
-                outputStr = rounded.toLocaleString('en-US', { maximumFractionDigits: precision });
-            }
-            else {
-                outputStr = value.toLocaleString('en-US', { maximumSignificantDigits: precision });
-            }
-            if (outputStr.length > 18) {
-                outputStr = outputStr.substring(0, 18) + '...';
-            }
-            return outputStr;
-        }
-        return value.toLocaleString('en-US');
-    };
-    exports.formatNumberWithSeparators = formatNumberWithSeparators;
     const isInvalidInput = (val) => {
         const value = new eth_wallet_1.BigNumber(val);
         if (value.lt(0))
@@ -93,33 +65,10 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
             return;
         }
         if (!new eth_wallet_1.BigNumber(amount).isNaN()) {
-            input.value = (0, exports.limitDecimals)(amount, decimals || 18);
+            input.value = new eth_wallet_1.BigNumber(amount).dp(decimals || 18, 1).toString();
         }
     };
     exports.limitInputNumber = limitInputNumber;
-    const limitDecimals = (value, decimals) => {
-        let val = value;
-        if (typeof value !== 'string') {
-            val = val.toString();
-        }
-        let chart;
-        if (val.includes('.')) {
-            chart = '.';
-        }
-        else if (val.includes(',')) {
-            chart = ',';
-        }
-        else {
-            return val;
-        }
-        const parts = val.split(chart);
-        let decimalsPart = parts[1];
-        if (decimalsPart && decimalsPart.length > decimals) {
-            parts[1] = decimalsPart.substr(0, decimals);
-        }
-        return parts.join(chart);
-    };
-    exports.limitDecimals = limitDecimals;
     const toWeiInv = (n, unit) => {
         if (new eth_wallet_1.BigNumber(n).eq(0))
             return new eth_wallet_1.BigNumber('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
@@ -1375,6 +1324,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_6.Styles.Theme.ThemeVars;
+    const ROUNDING_NUMBER = 1;
     let ScomBuyback = class ScomBuyback extends components_6.Module {
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -1841,7 +1791,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
                 else {
                     this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-                    this.secondInput.value = (0, index_8.limitDecimals)(inputVal, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
+                    this.secondInput.value = inputVal.dp((secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18, ROUNDING_NUMBER).toString();
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
@@ -1861,7 +1811,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.lbFee.caption = `0 ${firstSymbol}`;
                 }
                 else {
-                    this.firstInput.value = (0, index_8.limitDecimals)(inputVal, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
+                    this.firstInput.value = inputVal.dp((firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18, ROUNDING_NUMBER).toString();
                     this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
                 }
                 this.updateCommissionInfo();
@@ -1879,9 +1829,10 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
                     totalAmount = totalAmount.dividedBy(totalFee);
                 }
-                this.firstInput.value = (0, index_8.limitDecimals)(totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount, (firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18);
+                const firstInputValue = totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
+                this.firstInput.value = new eth_wallet_6.BigNumber(firstInputValue).dp((firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18, ROUNDING_NUMBER).toString();
                 const inputVal = new eth_wallet_6.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-                this.secondInput.value = (0, index_8.limitDecimals)(inputVal, (secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18);
+                this.secondInput.value = inputVal.dp((secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18, ROUNDING_NUMBER).toString();
                 this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${(firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol) || ''}`;
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
