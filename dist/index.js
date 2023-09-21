@@ -64,8 +64,8 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
             input.value = '0';
             return;
         }
-        if (!new eth_wallet_1.BigNumber(amount).isNaN()) {
-            input.value = new eth_wallet_1.BigNumber(amount).dp(decimals || 18, 1).toString();
+        if (!new eth_wallet_1.BigNumber(amount).isNaN() && /\d+\.\d+/g.test(amount || '')) {
+            input.value = new eth_wallet_1.BigNumber(amount).dp(decimals || 18, eth_wallet_1.BigNumber.ROUND_DOWN).toString();
         }
     };
     exports.limitInputNumber = limitInputNumber;
