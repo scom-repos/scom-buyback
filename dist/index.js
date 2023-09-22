@@ -45,7 +45,7 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
     exports.formatDate = formatDate;
     const formatNumber = (value, decimalFigures) => {
         if (typeof value === 'object') {
-            value = value.toString();
+            value = value.toFixed();
         }
         const minValue = '0.0000001';
         return components_1.FormatUtils.formatNumber(value, { decimalFigures: decimalFigures || 4, minValue });
@@ -64,8 +64,9 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
             input.value = '0';
             return;
         }
-        if (!new eth_wallet_1.BigNumber(amount).isNaN() && /\d+\.\d+/g.test(amount || '')) {
-            input.value = new eth_wallet_1.BigNumber(amount).dp(decimals || 18, eth_wallet_1.BigNumber.ROUND_DOWN).toString();
+        const bigValue = new eth_wallet_1.BigNumber(amount);
+        if (!bigValue.isNaN() && !bigValue.isZero() && /\d+\.\d+/g.test(amount || '')) {
+            input.value = bigValue.dp(decimals || 18, eth_wallet_1.BigNumber.ROUND_DOWN).toFixed();
         }
     };
     exports.limitInputNumber = limitInputNumber;
@@ -1791,7 +1792,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
                 else {
                     this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-                    this.secondInput.value = inputVal.dp((secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18, ROUNDING_NUMBER).toString();
+                    this.secondInput.value = inputVal.dp((secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18, ROUNDING_NUMBER).toFixed();
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
@@ -1811,7 +1812,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.lbFee.caption = `0 ${firstSymbol}`;
                 }
                 else {
-                    this.firstInput.value = inputVal.dp((firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18, ROUNDING_NUMBER).toString();
+                    this.firstInput.value = inputVal.dp((firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18, ROUNDING_NUMBER).toFixed();
                     this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
                 }
                 this.updateCommissionInfo();
@@ -1830,9 +1831,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     totalAmount = totalAmount.dividedBy(totalFee);
                 }
                 const firstInputValue = totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
-                this.firstInput.value = new eth_wallet_6.BigNumber(firstInputValue).dp((firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18, ROUNDING_NUMBER).toString();
+                this.firstInput.value = new eth_wallet_6.BigNumber(firstInputValue).dp((firstToken === null || firstToken === void 0 ? void 0 : firstToken.decimals) || 18, ROUNDING_NUMBER).toFixed();
                 const inputVal = new eth_wallet_6.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-                this.secondInput.value = inputVal.dp((secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18, ROUNDING_NUMBER).toString();
+                this.secondInput.value = inputVal.dp((secondToken === null || secondToken === void 0 ? void 0 : secondToken.decimals) || 18, ROUNDING_NUMBER).toFixed();
                 this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${(firstToken === null || firstToken === void 0 ? void 0 : firstToken.symbol) || ''}`;
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
