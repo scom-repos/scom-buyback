@@ -581,7 +581,7 @@ export default class ScomBuyback extends Module {
 			this.secondInput.value = '';
 		} else {
 			this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-			this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toString(); 
+			this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
 		}
 		this.updateCommissionInfo();
 		this.updateBtnSwap();
@@ -600,7 +600,7 @@ export default class ScomBuyback extends Module {
 			this.firstInput.value = '';
 			this.lbFee.caption = `0 ${firstSymbol}`;
 		} else {
-			this.firstInput.value = inputVal.dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toString();
+			this.firstInput.value = inputVal.dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
 			this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
 		}
 		this.updateCommissionInfo();
@@ -621,9 +621,9 @@ export default class ScomBuyback extends Module {
 			totalAmount = totalAmount.dividedBy(totalFee);
 		}
 		const firstInputValue = totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
-		this.firstInput.value = new BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toString();
+		this.firstInput.value = new BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
 		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-		this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toString();
+		this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
 		this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstToken?.symbol || ''}`;
 		this.updateCommissionInfo();
 		this.updateBtnSwap();
