@@ -56,5 +56,15 @@ export const CoreContractAddressesByChainId: { [chainId: number]: { [contract: s
     "WETH9": "0xCb5e100fdF7d24f25865fa85673D9bD6Bb4674ab",
     "OSWAP_HybridRouter2": "0x567c6Af5Ec3EC2821143179DD4bBAcea5f7A9de9",
     "OSWAP_RestrictedFactory": "0x6B9215FCa70E2972182B7BF427C4D7fCcf5C24e5",
+  },
+  42161: { // Arbitrum Mainnet
+    "WETH9": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    "OSWAP_HybridRouter2": "0x728DbD968341eb7aD11bDabFE775A13aF901d6ac",
+    "OSWAP_RestrictedFactory": "0x408aAf94BD851eb991dA146dFc7C290aA42BA70f",
+  },
+  421613:{ //Arbitrum Goerli Testnet
+    "WETH9": "0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f",
+    "OSWAP_HybridRouter2": "0x75CaA86Eff46D81469923D5fccE9B350E0a03575",
+    "OSWAP_RestrictedFactory": "0x6f641f4F5948954F7cd675f3D874Ac60b193bA0d",
   }
 }

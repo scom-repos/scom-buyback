@@ -313,7 +313,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 }[];
             })[];
         };
-        customControls(rpcWalletId: string): {
+        customControls(): {
             "#/properties/chainId": {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;
@@ -365,7 +365,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 scope: string;
             }[];
         };
-        customControls(rpcWalletId: string, getData: Function): {
+        customControls(getData: Function): {
             "#/properties/chainId": {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;

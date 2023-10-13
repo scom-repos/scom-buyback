@@ -123,7 +123,7 @@ export function getBuilderSchema() {
                 }
             ]
         },
-        customControls(rpcWalletId: string) {
+        customControls() {
             let networkPicker: ScomNetworkPicker;
             let firstTokenInput: ScomTokenInput;
             let secondTokenInput: ScomTokenInput;
@@ -159,7 +159,6 @@ export function getBuilderSchema() {
                             isInputShown: false,
                             maxWidth: 300
                         });
-                        firstTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && firstTokenInput.chainId !== chainId) {
                             firstTokenInput.chainId = chainId;
@@ -182,7 +181,6 @@ export function getBuilderSchema() {
                             isInputShown: false,
                             maxWidth: 300
                         });
-                        secondTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && secondTokenInput.chainId !== chainId) {
                             secondTokenInput.chainId = chainId;
@@ -259,7 +257,7 @@ export function getProjectOwnerSchema(state: State) {
                 },
             ]
         },
-        customControls(rpcWalletId: string, getData: Function) {
+        customControls(getData: Function) {
             let networkPicker: ScomNetworkPicker;
             let firstTokenInput: ScomTokenInput;
             let secondTokenInput: ScomTokenInput;
@@ -287,7 +285,7 @@ export function getProjectOwnerSchema(state: State) {
                     render: () => {
                         networkPicker = new ScomNetworkPicker(undefined, {
                             type: 'combobox',
-                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v } }),
+                            networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v } }),
                             onCustomNetworkSelected: () => {
                                 const chainId = networkPicker.selectedNetwork?.chainId;
                                 if (firstTokenInput.chainId != chainId) {
@@ -319,7 +317,6 @@ export function getProjectOwnerSchema(state: State) {
                             isBtnMaxShown: false,
                             isInputShown: false
                         });
-                        firstTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && firstTokenInput.chainId !== chainId) {
                             firstTokenInput.chainId = chainId;
@@ -340,7 +337,6 @@ export function getProjectOwnerSchema(state: State) {
                             isBtnMaxShown: false,
                             isInputShown: false
                         });
-                        secondTokenInput.rpcWalletId = rpcWalletId;
                         const chainId = networkPicker?.selectedNetwork?.chainId;
                         if (chainId && secondTokenInput.chainId !== chainId) {
                             secondTokenInput.chainId = chainId;

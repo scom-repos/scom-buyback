@@ -37,7 +37,7 @@ const getTokenObjectByAddress = (state: State, address: string) => {
   if (!address || address.toLowerCase() === getAddressByKey(state, 'WETH9')?.toLowerCase()) {
     return getWETH(chainId);
   }
-  let tokenMap = tokenStore.tokenMap;
+  let tokenMap = tokenStore.getTokenMapByChainId(chainId);
   return tokenMap[address.toLowerCase()];
 }
 
