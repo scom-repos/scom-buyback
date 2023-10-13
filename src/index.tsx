@@ -172,7 +172,7 @@ export default class ScomBuyback extends Module {
 				},
 				userInputDataSchema: formSchema.dataSchema,
 				userInputUISchema: formSchema.uiSchema,
-				customControls: formSchema.customControls(this.rpcWallet?.instanceId)
+				customControls: formSchema.customControls()
 			});
 		}
 
@@ -186,7 +186,7 @@ export default class ScomBuyback extends Module {
 				name: 'Settings',
 				userInputDataSchema: formSchema.dataSchema,
 				userInputUISchema: formSchema.uiSchema,
-				customControls: formSchema.customControls(this.rpcWallet?.instanceId, this.getData.bind(this))
+				customControls: formSchema.customControls(this.getData.bind(this))
 			}
 		];
 		return actions;
@@ -459,7 +459,7 @@ export default class ScomBuyback extends Module {
 				this.emptyStack.visible = false;
 				tokenStore.updateTokenMapData(chainId);
 				if (rpcWallet.address) {
-					tokenStore.updateAllTokenBalances(rpcWallet);
+					tokenStore.updateTokenBalancesByChainId(chainId);
 				}
 				await this.initWallet();
 				this.buybackInfo = await getGuaranteedBuyBackInfo(this.state, { ...this._data });
@@ -505,7 +505,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	private getFirstAvailableBalance = () => {
-		const tokenBalances = tokenStore.tokenBalances;
+		const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId);
 		if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
 			return '0';
 		}
@@ -527,7 +527,8 @@ export default class ScomBuyback extends Module {
 	}
 
 	private getTokenObject = (key: string) => {
-		const tokenMap = tokenStore.tokenMap;
+		const chainId = this.chainId;
+		const tokenMap = tokenStore.getTokenMapByChainId(chainId);
 		const tokenAddress = this.getValueByKey(key);
 		if (tokenAddress && tokenMap) {
 			let token = tokenMap[tokenAddress.toLowerCase()];
@@ -613,7 +614,7 @@ export default class ScomBuyback extends Module {
 		const firstToken = this.getTokenObject('toTokenAddress');
 		const secondToken = this.getTokenObject('fromTokenAddress');
 
-		const tokenBalances = tokenStore.tokenBalances || {};
+		const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId) || {};
 		let totalAmount = new BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')] || 0);
 		const commissionAmount = this.state.getCommissionAmount(this.commissions, totalAmount);
 		if (commissionAmount.gt(0)) {
@@ -645,7 +646,7 @@ export default class ScomBuyback extends Module {
 		const secondAvailable = this.getSecondAvailableBalance();
 
 		const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-		const tokenBalances = tokenStore.tokenBalances;
+		const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId);
 		const balance = new BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
 		// const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
 		// const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
@@ -719,7 +720,7 @@ export default class ScomBuyback extends Module {
 			const secondMaxVal = new BigNumber(this.getSecondAvailableBalance());
 
 			const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-			const tokenBalances = tokenStore.tokenBalances;
+			const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId);
 			const balance = new BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
 			// const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
 			// const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
@@ -874,11 +875,14 @@ export default class ScomBuyback extends Module {
 			const isRpcConnected = this.state.isRpcWalletConnected();
 			const { queueInfo } = this.buybackInfo;
 			const { amount, allowAll, tradeFee, available } = queueInfo || {};
-			const firstTokenObj = tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
-			const secondTokenObj = tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
+			const tokenMap = tokenStore.getTokenMapByChainId(chainId);
+			const firstTokenObj = tokenMap[this.getValueByKey('toTokenAddress')];
+			const secondTokenObj = tokenMap[this.getValueByKey('fromTokenAddress')];
 			const firstSymbol = firstTokenObj?.symbol ?? '';
 			const secondSymbol = secondTokenObj?.symbol ?? '';
 
+			const tokenBalances = tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
+			const balance = tokenBalances[firstTokenObj.address.toLowerCase() || firstTokenObj.symbol];
 			const commissionFee = this.state.embedderCommissionFee;
 			const hasCommission = !!this.state.getCurrentCommissions(this.commissions).length;
 			this.bottomStack.clearInnerHTML();
@@ -895,7 +899,7 @@ export default class ScomBuyback extends Module {
 						</i-hstack>
 						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
 							<i-label caption="Your Balance" />
-							<i-label caption={`${formatNumber(tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
+							<i-label caption={`${formatNumber(balance || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
 						</i-hstack>
 						<i-panel width="100%" height={2} background={{ color: Theme.input.background }} margin={{ top: 8, bottom: 8 }} />
 						<i-hstack gap={4} wrap="wrap">
@@ -1023,7 +1027,8 @@ export default class ScomBuyback extends Module {
 			const info = queueInfo || {} as ProviderGroupQueueInfo;
 			const { startDate, endDate } = info;
 			const secondToken = tokenIn?.startsWith('0x') ? tokenIn.toLowerCase() : tokenIn;
-			const secondTokenObj = tokenStore.tokenMap[secondToken];
+			const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
+			const secondTokenObj = tokenMap[secondToken];
 			const secondSymbol = secondTokenObj?.symbol ?? '';
 			const { title, logo } = this._data;
 			const hasBranch = !!title || !!logo;

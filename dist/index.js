@@ -223,6 +223,16 @@ define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], functio
             "WETH9": "0xCb5e100fdF7d24f25865fa85673D9bD6Bb4674ab",
             "OSWAP_HybridRouter2": "0x567c6Af5Ec3EC2821143179DD4bBAcea5f7A9de9",
             "OSWAP_RestrictedFactory": "0x6B9215FCa70E2972182B7BF427C4D7fCcf5C24e5",
+        },
+        42161: {
+            "WETH9": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+            "OSWAP_HybridRouter2": "0x728DbD968341eb7aD11bDabFE775A13aF901d6ac",
+            "OSWAP_RestrictedFactory": "0x408aAf94BD851eb991dA146dFc7C290aA42BA70f",
+        },
+        421613: {
+            "WETH9": "0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f",
+            "OSWAP_HybridRouter2": "0x75CaA86Eff46D81469923D5fccE9B350E0a03575",
+            "OSWAP_RestrictedFactory": "0x6f641f4F5948954F7cd675f3D874Ac60b193bA0d",
         }
     };
 });
@@ -392,7 +402,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
         if (!address || address.toLowerCase() === ((_a = getAddressByKey(state, 'WETH9')) === null || _a === void 0 ? void 0 : _a.toLowerCase())) {
             return (0, index_5.getWETH)(chainId);
         }
-        let tokenMap = scom_token_list_2.tokenStore.tokenMap;
+        let tokenMap = scom_token_list_2.tokenStore.getTokenMapByChainId(chainId);
         return tokenMap[address.toLowerCase()];
     };
     const getPair = async (state, tokenA, tokenB) => {
@@ -1039,7 +1049,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     }
                 ]
             },
-            customControls(rpcWalletId) {
+            customControls() {
                 let networkPicker;
                 let firstTokenInput;
                 let secondTokenInput;
@@ -1080,7 +1090,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                                 isInputShown: false,
                                 maxWidth: 300
                             });
-                            firstTokenInput.rpcWalletId = rpcWalletId;
                             const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                             if (chainId && firstTokenInput.chainId !== chainId) {
                                 firstTokenInput.chainId = chainId;
@@ -1105,7 +1114,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                                 isInputShown: false,
                                 maxWidth: 300
                             });
-                            secondTokenInput.rpcWalletId = rpcWalletId;
                             const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                             if (chainId && secondTokenInput.chainId !== chainId) {
                                 secondTokenInput.chainId = chainId;
@@ -1182,7 +1190,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     },
                 ]
             },
-            customControls(rpcWalletId, getData) {
+            customControls(getData) {
                 let networkPicker;
                 let firstTokenInput;
                 let secondTokenInput;
@@ -1213,7 +1221,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                         render: () => {
                             networkPicker = new scom_network_picker_1.default(undefined, {
                                 type: 'combobox',
-                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
+                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
                                 onCustomNetworkSelected: () => {
                                     var _a;
                                     const chainId = (_a = networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
@@ -1250,7 +1258,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                                 isBtnMaxShown: false,
                                 isInputShown: false
                             });
-                            firstTokenInput.rpcWalletId = rpcWalletId;
                             const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                             if (chainId && firstTokenInput.chainId !== chainId) {
                                 firstTokenInput.chainId = chainId;
@@ -1273,7 +1280,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                                 isBtnMaxShown: false,
                                 isInputShown: false
                             });
-                            secondTokenInput.rpcWalletId = rpcWalletId;
                             const chainId = (_a = networkPicker === null || networkPicker === void 0 ? void 0 : networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
                             if (chainId && secondTokenInput.chainId !== chainId) {
                                 secondTokenInput.chainId = chainId;
@@ -1344,7 +1350,6 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.rpcWalletEvents = [];
         }
         _getActions(category) {
-            var _a;
             const formSchema = (0, formSchema_1.getBuilderSchema)();
             const self = this;
             const actions = [];
@@ -1408,20 +1413,19 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     },
                     userInputDataSchema: formSchema.dataSchema,
                     userInputUISchema: formSchema.uiSchema,
-                    customControls: formSchema.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId)
+                    customControls: formSchema.customControls()
                 });
             }
             return actions;
         }
         getProjectOwnerActions() {
-            var _a;
             const formSchema = (0, formSchema_1.getProjectOwnerSchema)(this.state);
             const actions = [
                 {
                     name: 'Settings',
                     userInputDataSchema: formSchema.dataSchema,
                     userInputUISchema: formSchema.uiSchema,
-                    customControls: formSchema.customControls((_a = this.rpcWallet) === null || _a === void 0 ? void 0 : _a.instanceId, this.getData.bind(this))
+                    customControls: formSchema.customControls(this.getData.bind(this))
                 }
             ];
             return actions;
@@ -1684,7 +1688,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.emptyStack.visible = false;
                         scom_token_list_4.tokenStore.updateTokenMapData(chainId);
                         if (rpcWallet.address) {
-                            scom_token_list_4.tokenStore.updateAllTokenBalances(rpcWallet);
+                            scom_token_list_4.tokenStore.updateTokenBalancesByChainId(chainId);
                         }
                         await this.initWallet();
                         this.buybackInfo = await (0, index_10.getGuaranteedBuyBackInfo)(this.state, Object.assign({}, this._data));
@@ -1714,7 +1718,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
             };
             this.getFirstAvailableBalance = () => {
-                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances;
+                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId);
                 if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
                     return '0';
                 }
@@ -1734,7 +1738,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 return new eth_wallet_6.BigNumber(this.getFirstAvailableBalance()).dividedBy(offerPrice).times(tradeFee).toFixed();
             };
             this.getTokenObject = (key) => {
-                const tokenMap = scom_token_list_4.tokenStore.tokenMap;
+                const chainId = this.chainId;
+                const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(chainId);
                 const tokenAddress = this.getValueByKey(key);
                 if (tokenAddress && tokenMap) {
                     let token = tokenMap[tokenAddress.toLowerCase()];
@@ -1823,7 +1828,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const firstAvailable = this.getFirstAvailableBalance();
                 const firstToken = this.getTokenObject('toTokenAddress');
                 const secondToken = this.getTokenObject('fromTokenAddress');
-                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances || {};
+                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId) || {};
                 let totalAmount = new eth_wallet_6.BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')] || 0);
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, totalAmount);
                 if (commissionAmount.gt(0)) {
@@ -1854,7 +1859,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const firstAvailable = this.getFirstAvailableBalance();
                 const secondAvailable = this.getSecondAvailableBalance();
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances;
+                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId);
                 const balance = new eth_wallet_6.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
                 // const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
                 // const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
@@ -2036,10 +2041,13 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const isRpcConnected = this.state.isRpcWalletConnected();
                     const { queueInfo } = this.buybackInfo;
                     const { amount, allowAll, tradeFee, available } = queueInfo || {};
-                    const firstTokenObj = scom_token_list_4.tokenStore.tokenMap[this.getValueByKey('toTokenAddress')];
-                    const secondTokenObj = scom_token_list_4.tokenStore.tokenMap[this.getValueByKey('fromTokenAddress')];
+                    const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(chainId);
+                    const firstTokenObj = tokenMap[this.getValueByKey('toTokenAddress')];
+                    const secondTokenObj = tokenMap[this.getValueByKey('fromTokenAddress')];
                     const firstSymbol = (_a = firstTokenObj === null || firstTokenObj === void 0 ? void 0 : firstTokenObj.symbol) !== null && _a !== void 0 ? _a : '';
                     const secondSymbol = (_b = secondTokenObj === null || secondTokenObj === void 0 ? void 0 : secondTokenObj.symbol) !== null && _b !== void 0 ? _b : '';
+                    const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
+                    const balance = tokenBalances[firstTokenObj.address.toLowerCase() || firstTokenObj.symbol];
                     const commissionFee = this.state.embedderCommissionFee;
                     const hasCommission = !!this.state.getCurrentCommissions(this.commissions).length;
                     this.bottomStack.clearInnerHTML();
@@ -2053,7 +2061,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_8.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                 this.$render("i-label", { caption: "Your Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(scom_token_list_4.tokenStore.getTokenBalance(firstTokenObj) || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(balance || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
                             this.$render("i-panel", { width: "100%", height: 2, background: { color: Theme.input.background }, margin: { top: 8, bottom: 8 } }),
                             this.$render("i-hstack", { gap: 4, wrap: "wrap" },
                                 this.$render("i-label", { caption: "Swap Available" }),
@@ -2101,7 +2109,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const info = queueInfo || {};
                     const { startDate, endDate } = info;
                     const secondToken = (tokenIn === null || tokenIn === void 0 ? void 0 : tokenIn.startsWith('0x')) ? tokenIn.toLowerCase() : tokenIn;
-                    const secondTokenObj = scom_token_list_4.tokenStore.tokenMap[secondToken];
+                    const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
+                    const secondTokenObj = tokenMap[secondToken];
                     const secondSymbol = (_a = secondTokenObj === null || secondTokenObj === void 0 ? void 0 : secondTokenObj.symbol) !== null && _a !== void 0 ? _a : '';
                     const { title, logo } = this._data;
                     const hasBranch = !!title || !!logo;
@@ -2214,7 +2223,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const firstMaxVal = new eth_wallet_6.BigNumber(this.getFirstAvailableBalance());
                 const secondMaxVal = new eth_wallet_6.BigNumber(this.getSecondAvailableBalance());
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-                const tokenBalances = scom_token_list_4.tokenStore.tokenBalances;
+                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId);
                 const balance = new eth_wallet_6.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
                 // const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
                 // const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
