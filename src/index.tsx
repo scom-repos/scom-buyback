@@ -77,6 +77,7 @@ export default class ScomBuyback extends Module {
 	private mdWallet: ScomWalletModal;
 	private approvalModelAction: IERC20ApprovalAction;
 	private isApproveButtonShown: boolean;
+	private isSubmitting: boolean;
 
 	private dappContainer: ScomDappContainer;
 	private contractAddress: string;
@@ -103,10 +104,9 @@ export default class ScomBuyback extends Module {
 
 	private _getActions(category?: string) {
 		const formSchema = getBuilderSchema();
-		const self = this;
 		const actions: any[] = [];
 
-		if (category && category !== 'offers') {
+		if (category !== 'offers') {
 			actions.push({
 				name: 'Edit',
 				icon: 'edit',
@@ -196,21 +196,21 @@ export default class ScomBuyback extends Module {
 		let self = this;
 		return [
 			{
-			  name: 'Project Owner Configurator',
-			  target: 'Project Owners',
-			  getProxySelectors: async (chainId: number) => {
-				const selectors = await getProxySelectors(this.state, chainId);
-				return selectors;
-			  },
-			  getActions: () => {
-				return this.getProjectOwnerActions();
-			  },
-			  getData: this.getData.bind(this),
-			  setData: async (data: any) => {
-				await this.setData(data);
-			  },
-			  getTag: this.getTag.bind(this),
-			  setTag: this.setTag.bind(this)
+				name: 'Project Owner Configurator',
+				target: 'Project Owners',
+				getProxySelectors: async (chainId: number) => {
+					const selectors = await getProxySelectors(this.state, chainId);
+					return selectors;
+				},
+				getActions: () => {
+					return this.getProjectOwnerActions();
+				},
+				getData: this.getData.bind(this),
+				setData: async (data: any) => {
+					await this.setData(data);
+				},
+				getTag: this.getTag.bind(this),
+				setTag: this.setTag.bind(this)
 			},
 			{
 				name: 'Builder Configurator',
@@ -273,6 +273,19 @@ export default class ScomBuyback extends Module {
 					}
 					await this.setData(resultingData);
 				},
+				getTag: this.getTag.bind(this),
+				setTag: this.setTag.bind(this)
+			},
+			{
+				name: 'Editor',
+				target: 'Editor',
+				getActions: (category?: string) => {
+					const actions = this._getActions(category);
+					const editAction = actions.find(action => action.name === 'Edit');
+					return editAction ? [editAction] : [];
+				},
+				getData: this.getData.bind(this),
+				setData: this.setData.bind(this),
 				getTag: this.getTag.bind(this),
 				setTag: this.setTag.bind(this)
 			}
@@ -431,7 +444,7 @@ export default class ScomBuyback extends Module {
 		const containerData = {
 			defaultChainId: this._data.chainId || this.defaultChainId,
 			wallets: this.wallets,
-			networks: this.networks,
+			networks: this.networks.length ? this.networks : [{ chainId: this._data.chainId || this.chainId }],
 			showHeader: this.showHeader,
 			rpcWalletId: rpcWallet.instanceId
 		}
@@ -469,6 +482,8 @@ export default class ScomBuyback extends Module {
 				const firstToken = this.getTokenObject('toTokenAddress');
 				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[chainId]?.symbol && this.state.isRpcWalletConnected()) {
 					await this.initApprovalModelAction();
+				} else if ((this.isExpired || this.isUpcoming) && this.btnSwap) {
+					this.updateBtnSwap();
 				}
 			} catch {
 				this.renderEmpty();
@@ -488,14 +503,28 @@ export default class ScomBuyback extends Module {
 		}
 	}
 
+	private get isExpired() {
+		if (!this.buybackInfo) return null;
+		const info = this.buybackInfo.queueInfo;
+		if (!info?.endDate) return null;
+		return moment().isAfter(moment(info.endDate));
+	}
+
+	private get isUpcoming() {
+		if (!this.buybackInfo) return null;
+		const info = this.buybackInfo.queueInfo;
+		if (!info?.startDate) return null;
+		return moment().isBefore(moment(info.startDate));
+	}
+
 	private get isSwapDisabled() {
 		if (!this.buybackInfo) return true;
 		const info = this.buybackInfo.queueInfo;
 		if (!info) return true;
 		const { startDate, endDate, allowAll, isApprovedTrader } = info;
 		const isUpcoming = moment().isBefore(moment(startDate));
-		const isEnded = moment().isAfter(moment(endDate));
-		if (isUpcoming || isEnded) {
+		const isExpired = moment().isAfter(moment(endDate));
+		if (isUpcoming || isExpired) {
 			return true;
 		}
 		if (!allowAll) {
@@ -633,11 +662,13 @@ export default class ScomBuyback extends Module {
 	private updateBtnSwap = () => {
 		if (!this.state.isRpcWalletConnected()) {
 			this.btnSwap.enabled = true;
+			this.btnSwap.caption = this.submitButtonText;
 			return;
 		}
 		if (!this.buybackInfo) return;
 		if (this.isSwapDisabled) {
 			this.btnSwap.enabled = false;
+			this.btnSwap.caption = this.submitButtonText;
 			return;
 		}
 		const firstVal = new BigNumber(this.firstInput.value);
@@ -694,6 +725,7 @@ export default class ScomBuyback extends Module {
 		}
 		const { error } = await executeSwap(this.state, params);
 		if (error) {
+			this.isSubmitting = false;
 			this.showResultMessage('error', error as any);
 		}
 	}
@@ -707,8 +739,14 @@ export default class ScomBuyback extends Module {
 		if (!this.state.isRpcWalletConnected()) {
 			return 'Switch Network';
 		}
+		if (this.isUpcoming) {
+			return 'Upcoming';
+		}
+		if (this.isExpired) {
+			return 'Expired';
+		}
 		if (this.isApproveButtonShown) {
-			return this.btnSwap?.rightIcon.visible ? 'Approving' : 'Approve';
+			return this.isSubmitting ? 'Approving' : 'Approve';
 		}
 		const firstVal = new BigNumber(this.firstInput.value);
 		const secondVal = new BigNumber(this.secondInput.value);
@@ -730,7 +768,7 @@ export default class ScomBuyback extends Module {
 				return 'Insufficient amount available';
 			}
 		}
-		if (this.btnSwap?.rightIcon.visible) {
+		if (this.isSubmitting) {
 			return 'Swapping';
 		}
 		return 'Swap';
@@ -738,26 +776,32 @@ export default class ScomBuyback extends Module {
 
 	private initApprovalModelAction = async () => {
 		if (!this.state.isRpcWalletConnected()) return;
+		if ((this.isExpired || this.isUpcoming) && this.btnSwap) {
+			this.updateBtnSwap();
+			return;
+		}
 		this.approvalModelAction = await this.state.setApprovalModelAction({
 			sender: this,
 			payAction: this.onSubmit,
 			onToBeApproved: async (token: ITokenObject) => {
-				this.isApproveButtonShown = true
+				this.isApproveButtonShown = true;
 				this.btnSwap.enabled = true;
 				this.btnSwap.caption = this.state.isRpcWalletConnected() ? 'Approve' : 'Switch Network';
 			},
 			onToBePaid: async (token: ITokenObject) => {
 				this.updateBtnSwap();
 				this.btnSwap.caption = this.submitButtonText;
-				this.isApproveButtonShown = false
+				this.isApproveButtonShown = false;
 			},
 			onApproving: async (token: ITokenObject, receipt?: string, data?: any) => {
 				this.showResultMessage('success', receipt || '');
+				this.isSubmitting = true;
 				this.btnSwap.rightIcon.visible = true;
 				this.btnSwap.caption = 'Approving';
 				this.updateInput(false);
 			},
 			onApproved: async (token: ITokenObject, data?: any) => {
+				this.isSubmitting = false;
 				this.isApproveButtonShown = false;
 				this.btnSwap.rightIcon.visible = false;
 				this.btnSwap.caption = this.submitButtonText;
@@ -767,17 +811,20 @@ export default class ScomBuyback extends Module {
 			onApprovingError: async (token: ITokenObject, err: Error) => {
 				this.showResultMessage('error', err);
 				this.updateInput(true);
+				this.isSubmitting = false;
 				this.btnSwap.caption = 'Approve';
 				this.btnSwap.rightIcon.visible = false;
 			},
 			onPaying: async (receipt?: string, data?: any) => {
 				this.showResultMessage('success', receipt || '');
+				this.isSubmitting = true;
 				this.btnSwap.rightIcon.visible = true;
 				this.btnSwap.caption = this.submitButtonText;
 				this.updateInput(false);
 			},
 			onPaid: async (data?: any) => {
 				await this.initializeWidgetConfig(true);
+				this.isSubmitting = false;
 				this.firstInput.value = '';
 				this.secondInput.value = '';
 				this.btnSwap.rightIcon.visible = false;
@@ -785,6 +832,7 @@ export default class ScomBuyback extends Module {
 			},
 			onPayingError: async (err: Error) => {
 				this.showResultMessage('error', err);
+				this.isSubmitting = false;
 				this.btnSwap.rightIcon.visible = false;
 				this.btnSwap.enabled = true;
 				this.btnSwap.caption = this.submitButtonText;
@@ -1006,8 +1054,6 @@ export default class ScomBuyback extends Module {
 								border={{ radius: 12 }}
 								rightIcon={{ spin: true, visible: false, fill: '#fff' }}
 								padding={{ top: 4, bottom: 4, left: 16, right: 16 }}
-								// font={{ size: '0.875rem', color: Theme.colors.primary.contrastText }}
-								// rightIcon={{ visible: false, fill: Theme.colors.primary.contrastText }}
 								class="btn-os"
 								onClick={this.onSwap.bind(this)}
 							/>
@@ -1123,11 +1169,10 @@ export default class ScomBuyback extends Module {
 	}
 
 	private isEmptyData(value: IBuybackCampaign) {
-		return !value || !value.tokenIn || !value.tokenOut || !value.networks || value.networks.length === 0;
+		return !value || !value.chainId || !value.offerIndex;
 	}
 
 	async init() {
-		this.isReadyCallbackQueued = true;
 		super.init();
 		this.state = new State(configData);
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);
@@ -1162,8 +1207,6 @@ export default class ScomBuyback extends Module {
 				await this.renderEmpty();
 			}
 		}
-		this.isReadyCallbackQueued = false;
-		this.executeReadyCallback();
 	}
 
 	render() {
