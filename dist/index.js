@@ -2213,7 +2213,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             return !value || !value.tokenIn || !value.tokenOut || !value.networks || value.networks.length === 0;
         }
         async init() {
-            this.isReadyCallbackQueued = true;
+            //this.isReadyCallbackQueued = true;
             super.init();
             this.state = new index_9.State(data_json_1.default);
             const lazyLoad = this.getAttribute('lazyLoad', true, false);
@@ -2249,7 +2249,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     await this.renderEmpty();
                 }
             }
-            this.isReadyCallbackQueued = false;
+            //this.isReadyCallbackQueued = false;
             this.executeReadyCallback();
         }
         render() {

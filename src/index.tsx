@@ -1127,7 +1127,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	async init() {
-		this.isReadyCallbackQueued = true;
+		//this.isReadyCallbackQueued = true;
 		super.init();
 		this.state = new State(configData);
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);
@@ -1162,7 +1162,7 @@ export default class ScomBuyback extends Module {
 				await this.renderEmpty();
 			}
 		}
-		this.isReadyCallbackQueued = false;
+		//this.isReadyCallbackQueued = false;
 		this.executeReadyCallback();
 	}
 
