@@ -4,11 +4,12 @@
 /// <amd-module name="@scom/scom-buyback/global/utils/helper.ts" />
 declare module "@scom/scom-buyback/global/utils/helper.ts" {
     import { BigNumber } from '@ijstech/eth-wallet';
+    import { Input } from '@ijstech/components';
     export const DefaultDateFormat = "DD/MM/YYYY hh:mm:ss";
     export const formatDate: (date: any, customType?: string, showTimezone?: boolean) => string;
     export const formatNumber: (value: number | string | BigNumber, decimalFigures?: number) => string;
     export const isInvalidInput: (val: any) => boolean;
-    export const limitInputNumber: (input: any, decimals?: number) => void;
+    export const limitInputNumber: (input: Input, decimals?: number) => void;
     export const toWeiInv: (n: string, unit?: number) => BigNumber;
     export const padLeft: (string: string, chars: number, sign?: string) => string;
     export const numberToBytes32: (value: any, prefix?: string) => any;
@@ -211,7 +212,6 @@ declare module "@scom/scom-buyback/index.css.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/formSchema.ts" />
 declare module "@scom/scom-buyback/formSchema.ts" {
-    import { ComboBox } from '@ijstech/components';
     import ScomNetworkPicker from '@scom/scom-network-picker';
     import ScomTokenInput from '@scom/scom-token-input';
     import { State } from "@scom/scom-buyback/store/index.ts";
@@ -224,7 +224,6 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 };
                 logo: {
                     type: string;
-                    format: string;
                 };
                 offerIndex: {
                     type: string;
@@ -295,7 +294,14 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                     type: string;
                     elements: {
                         type: string;
-                        scope: string;
+                        label: string;
+                        elements: {
+                            type: string;
+                            elements: {
+                                type: string;
+                                scope: string;
+                            }[];
+                        }[];
                     }[];
                 }[];
             } | {
@@ -305,27 +311,26 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                     type: string;
                     elements: {
                         type: string;
-                        label: string;
                         scope: string;
                     }[];
                 }[];
             })[];
         };
         customControls(): {
-            "#/properties/chainId": {
+            '#/properties/chainId': {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;
                 setData: (control: ScomNetworkPicker, value: number) => void;
             };
-            "#/properties/tokenIn": {
+            '#/properties/tokenIn': {
                 render: () => ScomTokenInput;
                 getData: (control: ScomTokenInput) => string;
-                setData: (control: ScomTokenInput, value: string) => void;
+                setData: (control: ScomTokenInput, value: string, rowData: any) => void;
             };
-            "#/properties/tokenOut": {
+            '#/properties/tokenOut': {
                 render: () => ScomTokenInput;
                 getData: (control: ScomTokenInput) => string;
-                setData: (control: ScomTokenInput, value: string) => void;
+                setData: (control: ScomTokenInput, value: string, rowData: any) => void;
             };
         };
     };
@@ -338,7 +343,6 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 };
                 logo: {
                     type: string;
-                    format: string;
                 };
                 chainId: {
                     type: string;
@@ -364,25 +368,20 @@ declare module "@scom/scom-buyback/formSchema.ts" {
             }[];
         };
         customControls(getData: Function): {
-            "#/properties/chainId": {
+            '#/properties/chainId': {
                 render: () => ScomNetworkPicker;
                 getData: (control: ScomNetworkPicker) => number;
                 setData: (control: ScomNetworkPicker, value: number) => void;
             };
-            "#/properties/tokenIn": {
+            '#/properties/tokenIn': {
                 render: () => ScomTokenInput;
                 getData: (control: ScomTokenInput) => string;
-                setData: (control: ScomTokenInput, value: string) => void;
+                setData: (control: ScomTokenInput, value: string, rowData: any) => void;
             };
-            "#/properties/tokenOut": {
+            '#/properties/tokenOut': {
                 render: () => ScomTokenInput;
                 getData: (control: ScomTokenInput) => string;
-                setData: (control: ScomTokenInput, value: string) => void;
-            };
-            "#/properties/offerIndex": {
-                render: () => ComboBox;
-                getData: (control: ComboBox) => number;
-                setData: (control: ComboBox, value: number) => Promise<void>;
+                setData: (control: ScomTokenInput, value: string, rowData: any) => void;
             };
         };
     };
@@ -438,6 +437,7 @@ declare module "@scom/scom-buyback" {
         private mdWallet;
         private approvalModelAction;
         private isApproveButtonShown;
+        private isSubmitting;
         private dappContainer;
         private contractAddress;
         private rpcWalletEvents;
@@ -455,18 +455,6 @@ declare module "@scom/scom-buyback" {
             setData: (data: any) => Promise<void>;
             getTag: any;
             setTag: any;
-            elementName?: undefined;
-            getLinkParams?: undefined;
-            bindOnChanged?: undefined;
-        } | {
-            name: string;
-            target: string;
-            getActions: (category?: string) => any[];
-            getData: any;
-            setData: (data: any) => Promise<void>;
-            getTag: any;
-            setTag: any;
-            getProxySelectors?: undefined;
             elementName?: undefined;
             getLinkParams?: undefined;
             bindOnChanged?: undefined;
@@ -498,6 +486,18 @@ declare module "@scom/scom-buyback" {
             setTag: any;
             getProxySelectors?: undefined;
             getActions?: undefined;
+        } | {
+            name: string;
+            target: string;
+            getActions: (category?: string) => any[];
+            getData: any;
+            setData: any;
+            getTag: any;
+            setTag: any;
+            getProxySelectors?: undefined;
+            elementName?: undefined;
+            getLinkParams?: undefined;
+            bindOnChanged?: undefined;
         })[];
         private getData;
         private resetRpcWallet;
@@ -526,6 +526,8 @@ declare module "@scom/scom-buyback" {
         private refreshWidget;
         private initializeWidgetConfig;
         private initWallet;
+        private get isExpired();
+        private get isUpcoming();
         private get isSwapDisabled();
         private getFirstAvailableBalance;
         private getSecondAvailableBalance;

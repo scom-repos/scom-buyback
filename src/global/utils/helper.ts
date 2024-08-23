@@ -1,5 +1,5 @@
 import { BigNumber } from '@ijstech/eth-wallet';
-import { FormatUtils, moment } from '@ijstech/components';
+import { FormatUtils, Input, moment } from '@ijstech/components';
 
 export const DefaultDateFormat = 'DD/MM/YYYY hh:mm:ss';
 
@@ -26,7 +26,7 @@ export const isInvalidInput = (val: any) => {
   return (val || '').toString().substring(0, 2) === '00' || val === '-';
 };
 
-export const limitInputNumber = (input: any, decimals?: number) => {
+export const limitInputNumber = (input: Input, decimals?: number) => {
   const amount = input.value;
   if (isInvalidInput(amount)) {
     input.value = '0';
