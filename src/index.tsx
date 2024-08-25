@@ -78,6 +78,8 @@ export default class ScomBuyback extends Module {
 	private approvalModelAction: IERC20ApprovalAction;
 	private isApproveButtonShown: boolean;
 	private isSubmitting: boolean;
+	private detailWrapper: HStack;
+	private btnDetail: Button;
 
 	private dappContainer: ScomDappContainer;
 	private contractAddress: string;
@@ -903,6 +905,13 @@ export default class ScomBuyback extends Module {
 		this.noCampaignSection.visible = true;
 	}
 
+	private onToggleDetail() {
+		const isExpanding = this.detailWrapper.visible;
+		this.detailWrapper.visible = !isExpanding;
+		this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
+		this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
+	}
+
 	private renderEmpty = async () => {
 		this.infoStack.visible = false;
 		this.emptyStack.visible = true;
@@ -937,19 +946,32 @@ export default class ScomBuyback extends Module {
 			this.bottomStack.appendChild(
 				<i-panel padding={{ bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }} height="auto">
 					<i-vstack gap={10} width="100%">
-						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
-							<i-label caption="Group Queue Balance" />
-							<i-label caption={`${formatNumber(amount || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+						<i-hstack id="detailWrapper" horizontalAlignment="space-between" gap={10} visible={false} wrap="wrap">
+							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
+								<i-label caption="Group Queue Balance" />
+								<i-label caption={`${formatNumber(amount || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+							</i-hstack>
+							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
+								<i-label caption="Your Allocation" />
+								<i-label caption={allowAll ? 'Unlimited' : `${formatNumber(available || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+							</i-hstack>
+							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
+								<i-label caption="Your Balance" />
+								<i-label caption={`${formatNumber(balance || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
+							</i-hstack>
 						</i-hstack>
-						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
-							<i-label caption="Your Allocation" />
-							<i-label caption={allowAll ? 'Unlimited' : `${formatNumber(available || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
-						</i-hstack>
-						<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
-							<i-label caption="Your Balance" />
-							<i-label caption={`${formatNumber(balance || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
-						</i-hstack>
-						<i-panel width="100%" height={2} background={{ color: Theme.input.background }} margin={{ top: 8, bottom: 8 }} />
+						<i-button
+							id="btnDetail"
+							caption="More Information"
+							rightIcon={{ width: 10, height: 16, margin: { left: 5 }, fill: Theme.text.primary, name: 'caret-down' }}
+							background={{ color: 'transparent' }}
+							border={{ width: 1, style: 'solid', color: Theme.text.primary, radius: 8 }}
+							width={300}
+							maxWidth="100%"
+							height={36}
+							margin={{ top: 4, bottom: 16, left: 'auto', right: 'auto' }}
+							onClick={this.onToggleDetail}
+						/>
 						<i-hstack gap={4} wrap="wrap">
 							<i-label caption="Swap Available" />
 							<i-vstack gap={4} margin={{ left: 'auto' }} horizontalAlignment="end">

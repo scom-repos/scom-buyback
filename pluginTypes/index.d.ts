@@ -438,6 +438,8 @@ declare module "@scom/scom-buyback" {
         private approvalModelAction;
         private isApproveButtonShown;
         private isSubmitting;
+        private detailWrapper;
+        private btnDetail;
         private dappContainer;
         private contractAddress;
         private rpcWalletEvents;
@@ -547,6 +549,7 @@ declare module "@scom/scom-buyback" {
         private showResultMessage;
         private connectWallet;
         private initEmptyUI;
+        private onToggleDetail;
         private renderEmpty;
         private renderBuybackCampaign;
         private renderLeftPart;

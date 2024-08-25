@@ -2062,16 +2062,17 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.bottomStack.clearInnerHTML();
                     this.bottomStack.appendChild(this.$render("i-panel", { padding: { bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }, height: "auto" },
                         this.$render("i-vstack", { gap: 10, width: "100%" },
-                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Group Queue Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
-                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Your Allocation" }),
-                                this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_8.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
-                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Your Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(balance || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
-                            this.$render("i-panel", { width: "100%", height: 2, background: { color: Theme.input.background }, margin: { top: 8, bottom: 8 } }),
+                            this.$render("i-hstack", { id: "detailWrapper", horizontalAlignment: "space-between", gap: 10, visible: false, wrap: "wrap" },
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
+                                    this.$render("i-label", { caption: "Group Queue Balance" }),
+                                    this.$render("i-label", { caption: `${(0, index_8.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
+                                    this.$render("i-label", { caption: "Your Allocation" }),
+                                    this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_8.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
+                                    this.$render("i-label", { caption: "Your Balance" }),
+                                    this.$render("i-label", { caption: `${(0, index_8.formatNumber)(balance || 0)} ${firstSymbol}`, margin: { left: 'auto' } }))),
+                            this.$render("i-button", { id: "btnDetail", caption: "More Information", rightIcon: { width: 10, height: 16, margin: { left: 5 }, fill: Theme.text.primary, name: 'caret-down' }, background: { color: 'transparent' }, border: { width: 1, style: 'solid', color: Theme.text.primary, radius: 8 }, width: 300, maxWidth: "100%", height: 36, margin: { top: 4, bottom: 16, left: 'auto', right: 'auto' }, onClick: this.onToggleDetail }),
                             this.$render("i-hstack", { gap: 4, wrap: "wrap" },
                                 this.$render("i-label", { caption: "Swap Available" }),
                                 this.$render("i-vstack", { gap: 4, margin: { left: 'auto' }, horizontalAlignment: "end" },
@@ -2264,6 +2265,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             return 'Swap';
         }
         ;
+        onToggleDetail() {
+            const isExpanding = this.detailWrapper.visible;
+            this.detailWrapper.visible = !isExpanding;
+            this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
+            this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
+        }
         isEmptyData(value) {
             return !value || !value.chainId || !value.offerIndex;
         }
