@@ -37,7 +37,7 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
             value = value.toFixed();
         }
         const minValue = '0.0000001';
-        return components_1.FormatUtils.formatNumber(value, { decimalFigures: decimalFigures || 4, minValue });
+        return components_1.FormatUtils.formatNumber(value, { decimalFigures: decimalFigures || 4, minValue, hasTrailingZero: false });
     };
     exports.formatNumber = formatNumber;
     const isInvalidInput = (val) => {
@@ -2117,13 +2117,18 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.renderLeftPart = async () => {
                 if (this.buybackInfo) {
                     this.topStack.clearInnerHTML();
-                    const { tokenIn, queueInfo } = this.buybackInfo;
+                    const { tokenIn, tokenOut, queueInfo } = this.buybackInfo;
                     const info = queueInfo || {};
                     const { startDate, endDate } = info;
+                    const firstToken = tokenOut?.startsWith('0x') ? tokenOut.toLowerCase() : tokenOut;
                     const secondToken = tokenIn?.startsWith('0x') ? tokenIn.toLowerCase() : tokenIn;
                     const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
+                    const firstTokenObj = tokenMap[firstToken];
+                    const firstSymbol = firstTokenObj?.symbol ?? '';
                     const secondTokenObj = tokenMap[secondToken];
                     const secondSymbol = secondTokenObj?.symbol ?? '';
+                    const rate = `1 ${firstSymbol} : ${(0, index_8.formatNumber)(1 / this.getValueByKey('offerPrice'))} ${secondSymbol}`;
+                    const reverseRate = `1 ${secondSymbol} : ${this.getValueByKey('offerPrice')} ${firstSymbol}`;
                     const { title, logo } = this._data;
                     const hasBranch = !!title || !!logo;
                     let imgLogo;
@@ -2189,14 +2194,25 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     // interval = setInterval(() => {
                     // 	setTimer();
                     // }, 1000);
+                    const lbRate = new components_6.Label(undefined, {
+                        caption: rate,
+                        font: { bold: true, color: Theme.colors.primary.main },
+                    });
+                    let isToggled = false;
+                    const onToggleRate = () => {
+                        isToggled = !isToggled;
+                        lbRate.caption = isToggled ? reverseRate : rate;
+                    };
                     this.topStack.clearInnerHTML();
                     this.topStack.appendChild(this.$render("i-vstack", { gap: 10, width: "100%", padding: { bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' } },
                         hasBranch ? this.$render("i-vstack", { gap: "0.25rem", margin: { bottom: '0.25rem' }, horizontalAlignment: "center" },
                             this.$render("i-label", { visible: !!title, caption: title, margin: { top: '0.5em', bottom: '1em' }, font: { weight: 600 } }),
                             this.$render("i-image", { visible: !!imgLogo, url: imgLogo, height: 100 })) : [],
-                        this.$render("i-hstack", { gap: "0.25rem", verticalAlignment: "center" },
+                        this.$render("i-hstack", { gap: "0.25rem", verticalAlignment: "center", horizontalAlignment: "space-between", wrap: "wrap" },
                             this.$render("i-label", { caption: "Buyback Price", font: { bold: true } }),
-                            this.$render("i-label", { caption: `${1 / this.getValueByKey('offerPrice')} ${secondSymbol}`, font: { bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } })),
+                            this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
+                                lbRate,
+                                this.$render("i-icon", { name: "exchange-alt", width: 14, height: 14, fill: Theme.text.primary, opacity: 0.9, cursor: "pointer", onClick: onToggleRate }))),
                         hStackEndTime));
                 }
             };
