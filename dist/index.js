@@ -149,11 +149,11 @@ define("@scom/scom-buyback/assets.ts", ["require", "exports", "@ijstech/componen
         fullPath
     };
 });
+///<amd-module name='@scom/scom-buyback/store/data/index.ts'/> 
 define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CoreContractAddressesByChainId = void 0;
-    ///<amd-module name='@scom/scom-buyback/store/data/index.ts'/> 
     exports.CoreContractAddressesByChainId = {
         1: {
             "WETH9": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -1030,12 +1030,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
             dataSchema: {
                 type: 'object',
                 properties: {
-                    title: {
-                        type: 'string'
-                    },
-                    logo: {
-                        type: 'string',
-                    },
                     offerIndex: {
                         type: 'number',
                         required: true
@@ -1052,8 +1046,8 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                         type: 'string',
                         required: true
                     },
-                    dark: theme,
-                    light: theme
+                    //dark: theme,
+                    //light: theme
                 }
             },
             uiSchema: {
@@ -1066,14 +1060,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                             {
                                 type: 'VerticalLayout',
                                 elements: [
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/title'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/logo'
-                                    },
                                     {
                                         type: 'Control',
                                         scope: '#/properties/offerIndex'
@@ -1094,7 +1080,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                             }
                         ]
                     },
-                    themeUISchema
+                    //themeUISchema
                 ]
             },
             customControls() {
@@ -1108,12 +1094,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
             dataSchema: {
                 type: 'object',
                 properties: {
-                    title: {
-                        type: 'string'
-                    },
-                    logo: {
-                        type: 'string',
-                    },
                     chainId: {
                         type: 'number',
                         required: true
@@ -1133,14 +1113,6 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
             uiSchema: {
                 type: 'VerticalLayout',
                 elements: [
-                    {
-                        type: 'Control',
-                        scope: '#/properties/title'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/logo'
-                    },
                     {
                         type: 'Control',
                         scope: '#/properties/chainId'

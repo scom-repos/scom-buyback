@@ -111,12 +111,6 @@ export function getBuilderSchema() {
         dataSchema: {
             type: 'object',
             properties: {
-                title: {
-                    type: 'string'
-                },
-                logo: {
-                    type: 'string',
-                },
                 offerIndex: {
                     type: 'number',
                     required: true
@@ -133,8 +127,8 @@ export function getBuilderSchema() {
                     type: 'string',
                     required: true
                 },
-                dark: theme,
-                light: theme
+                //dark: theme,
+                //light: theme
             }
         },
         uiSchema: {
@@ -147,14 +141,6 @@ export function getBuilderSchema() {
                         {
                             type: 'VerticalLayout',
                             elements: [
-                                {
-                                    type: 'Control',
-                                    scope: '#/properties/title'
-                                },
-                                {
-                                    type: 'Control',
-                                    scope: '#/properties/logo'
-                                },
                                 {
                                     type: 'Control',
                                     scope: '#/properties/offerIndex'
@@ -175,7 +161,7 @@ export function getBuilderSchema() {
                         }
                     ]
                 },
-                themeUISchema
+                //themeUISchema
             ]
         },
         customControls() {
@@ -189,12 +175,6 @@ export function getProjectOwnerSchema(state: State) {
         dataSchema: {
             type: 'object',
             properties: {
-                title: {
-                    type: 'string'
-                },
-                logo: {
-                    type: 'string',
-                },
                 chainId: {
                     type: 'number',
                     required: true
@@ -214,14 +194,6 @@ export function getProjectOwnerSchema(state: State) {
         uiSchema: {
             type: 'VerticalLayout',
             elements: [
-                {
-                    type: 'Control',
-                    scope: '#/properties/title'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/logo'
-                },
                 {
                     type: 'Control',
                     scope: '#/properties/chainId'

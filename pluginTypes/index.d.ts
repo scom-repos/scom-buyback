@@ -219,12 +219,6 @@ declare module "@scom/scom-buyback/formSchema.ts" {
         dataSchema: {
             type: string;
             properties: {
-                title: {
-                    type: string;
-                };
-                logo: {
-                    type: string;
-                };
                 offerIndex: {
                     type: string;
                     required: boolean;
@@ -241,70 +235,11 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                     type: string;
                     required: boolean;
                 };
-                dark: {
-                    type: string;
-                    properties: {
-                        backgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        fontColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputBackgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputFontColor: {
-                            type: string;
-                            format: string;
-                        };
-                    };
-                };
-                light: {
-                    type: string;
-                    properties: {
-                        backgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        fontColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputBackgroundColor: {
-                            type: string;
-                            format: string;
-                        };
-                        inputFontColor: {
-                            type: string;
-                            format: string;
-                        };
-                    };
-                };
             };
         };
         uiSchema: {
             type: string;
-            elements: ({
-                type: string;
-                label: string;
-                elements: {
-                    type: string;
-                    elements: {
-                        type: string;
-                        label: string;
-                        elements: {
-                            type: string;
-                            elements: {
-                                type: string;
-                                scope: string;
-                            }[];
-                        }[];
-                    }[];
-                }[];
-            } | {
+            elements: {
                 type: string;
                 label: string;
                 elements: {
@@ -314,7 +249,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                         scope: string;
                     }[];
                 }[];
-            })[];
+            }[];
         };
         customControls(): {
             '#/properties/chainId': {
@@ -338,12 +273,6 @@ declare module "@scom/scom-buyback/formSchema.ts" {
         dataSchema: {
             type: string;
             properties: {
-                title: {
-                    type: string;
-                };
-                logo: {
-                    type: string;
-                };
                 chainId: {
                     type: string;
                     required: boolean;
