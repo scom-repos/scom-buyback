@@ -1,11 +1,16 @@
-import { ComboBox, IComboItem } from '@ijstech/components';
+import { ComboBox, IComboItem, Input } from '@ijstech/components';
 import ScomNetworkPicker from '@scom/scom-network-picker';
-import ScomTokenInput from '@scom/scom-token-input';
-import { ChainNativeTokenByChainId, tokenStore } from "@scom/scom-token-list";
+import ScomTokenInput, { CUSTOM_TOKEN } from '@scom/scom-token-input';
+import { ChainNativeTokenByChainId, ITokenObject, tokenStore } from "@scom/scom-token-list";
 import { getOffers } from './buyback-utils/index';
 import { IBuybackCampaign } from './global/index';
-import { comboBoxStyle } from './index.css';
-import { State } from './store/index';
+import { comboBoxStyle, formInputStyle } from './index.css';
+import { State, SupportedERC20Tokens } from './store/index';
+import { nullAddress } from '@ijstech/eth-contract';
+
+const getSupportedTokens = (chainId: number) => {
+    return SupportedERC20Tokens[chainId] || [];
+}
 
 
 const theme = {
@@ -106,151 +111,159 @@ const themeUISchema = {
     ]
 }
 
-export function getBuilderSchema() {
-    return {
-        dataSchema: {
-            type: 'object',
-            properties: {
-                offerIndex: {
-                    type: 'number',
-                    required: true
-                },
-                chainId: {
-                    type: 'number',
-                    required: true
-                },
-                tokenIn: {
-                    type: 'string',
-                    required: true
-                },
-                tokenOut: {
-                    type: 'string',
-                    required: true
-                },
-                //dark: theme,
-                //light: theme
+export function getSchema(state?: State, isOwner?: boolean) {
+    const elements = [
+        {
+            type: 'Control',
+            scope: '#/properties/chainId'
+        },
+        {
+            type: 'Control',
+            scope: '#/properties/tokenIn'
+        },
+        {
+            type: 'Control',
+            scope: '#/properties/customTokenIn',
+            rule: {
+                effect: 'ENABLE',
+                condition: {
+                    scope: '#/properties/tokenIn',
+                    schema: {
+                        const: CUSTOM_TOKEN.address
+                    }
+                }
             }
         },
-        uiSchema: {
-            type: 'Categorization',
-            elements: [
-                {
-                    type: 'Category',
-                    label: 'General',
-                    elements: [
-                        {
-                            type: 'VerticalLayout',
-                            elements: [
-                                {
-                                    type: 'Control',
-                                    scope: '#/properties/offerIndex'
-                                },
-                                {
-                                    type: 'Control',
-                                    scope: '#/properties/chainId'
-                                },
-                                {
-                                    type: 'Control',
-                                    scope: '#/properties/tokenIn'
-                                },
-                                {
-                                    type: 'Control',
-                                    scope: '#/properties/tokenOut'
-                                }
-                            ]
-                        }
-                    ]
-                },
-                //themeUISchema
-            ]
+        {
+            type: 'Control',
+            scope: '#/properties/tokenOut'
         },
-        customControls() {
-            return getCustomControls()
+        {
+            type: 'Control',
+            scope: '#/properties/customTokenOut',
+            rule: {
+                effect: 'ENABLE',
+                condition: {
+                    scope: '#/properties/tokenOut',
+                    schema: {
+                        const: CUSTOM_TOKEN.address
+                    }
+                }
+            }
         }
+    ]
+    if (isOwner) {
+        elements.push({
+            type: 'Control',
+            scope: '#/properties/offerIndex'
+        })
+    } else {
+        elements.unshift({
+            type: 'Control',
+            scope: '#/properties/offerIndex'
+        })
     }
-}
-
-export function getProjectOwnerSchema(state: State) {
     return {
         dataSchema: {
             type: 'object',
             properties: {
-                chainId: {
+                offerIndex: {
                     type: 'number',
                     required: true
                 },
-                offerIndex: {
+                chainId: {
                     type: 'number',
                     required: true
                 },
                 tokenIn: {
                     type: 'string',
+                    required: true
+                },
+                customTokenIn: {
+                    type: 'string',
+                    title: 'Token In Address',
+                    required: true
                 },
                 tokenOut: {
                     type: 'string',
+                    required: true
+                },
+                customTokenOut: {
+                    type: 'string',
+                    title: 'Token Out Address',
+                    required: true
                 }
             }
         },
         uiSchema: {
             type: 'VerticalLayout',
-            elements: [
-                {
-                    type: 'Control',
-                    scope: '#/properties/chainId'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/tokenIn'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/tokenOut'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/offerIndex'
-                },
-            ]
+            elements
         },
-        customControls(getData: Function) {
-            return getCustomControls(state, getData, true);
+        customControls(getData?: Function) {
+            return getCustomControls(state, getData, isOwner);
         }
     }
 }
 
 const getCustomControls = (state?: State, getData?: Function, isOwner?: boolean) => {
     let networkPicker: ScomNetworkPicker;
-    let firstTokenInput: ScomTokenInput;
-    let secondTokenInput: ScomTokenInput;
+    let tokenInInput: ScomTokenInput;
+    let customTokenInInput: Input;
+    let tokenOutInput: ScomTokenInput;
+    let customTokenOutInput: Input;
     let comboOfferIndex: ComboBox;
     let offerIndexes: IComboItem[] = [];
-    const onSelectToken = async () => {
-        const chainId = networkPicker?.selectedNetwork?.chainId;
-        if (chainId && firstTokenInput.token && secondTokenInput.token) {
-            const indexes = await getOffers(state, chainId, firstTokenInput.token, secondTokenInput.token);
-            comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
-        }
-    }
-    const setTokenData = (control: ScomTokenInput, value: string, rowData: any) => {
-        if (rowData) control.chainId = rowData.chainId;
-        if (!control.chainId) control.chainId = networkPicker?.selectedNetwork?.chainId;
-        if (isOwner && !value) {
-            const tokens = tokenStore.getTokenList(control.chainId);
-            let token = tokens.find(token => !token.address);
-            control.token = token;
-        } else {
-            control.address = value;
-        }
-    }
-    const setTokenByChainId = (control: ScomTokenInput, chainId: number) => {
-        if (control && chainId !== control.chainId) {
-            const noChainId = !control.chainId;
-            control.chainId = chainId;
-            if (noChainId && control.address) {
-                control.address = control.address;
-                control.onSelectToken(control.token);
+    const selectToken = async (token: ITokenObject, tokenInput: ScomTokenInput, customInput: Input) => {
+        if (!token) {
+            if (customInput) customInput.value = '';
+        } else if (customInput) {
+            const { address } = token;
+            const isCustomToken = address?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
+            if (!isCustomToken) {
+                customInput.value = (address && address !== nullAddress) ? address : 'Native Token';
+                if (customInput.value) (customInput as any).onChanged();
             } else {
-                control.token = undefined;
+                customInput.value = '';
+            }
+        }
+        if (tokenInput.onChanged) {
+            tokenInput.onChanged(tokenInput.token);
+        }
+        if (isOwner) {
+            const chainId = networkPicker?.selectedNetwork?.chainId;
+            if (chainId && tokenInInput.token && tokenOutInput.token) {
+                const indexes = await getOffers(state, chainId, tokenInInput.token, tokenOutInput.token);
+                comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
+            }
+        }
+    }
+    const setTokenData = async (tokenInput: ScomTokenInput, value: string, chainId: number, customInput: Input) => {
+        await tokenInput.ready();
+        tokenInput.chainId = chainId;
+        tokenInput.address = value;
+        if (tokenInput.onChanged) {
+            tokenInput.onChanged(tokenInput.token);
+        }
+        if (customInput) {
+            const isCustomToken = value?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
+            if (!isCustomToken) {
+                customInput.value = (value && value !== nullAddress) ? value : 'Native Token';
+                if (customInput.value) (customInput as any).onChanged();
+            }
+        }
+    }
+    const setTokenByChainId = (chainId: number, tokenInput: ScomTokenInput, customInput: Input) => {
+        if (tokenInput && chainId !== tokenInput.chainId) {
+            const noChainId = !tokenInput.chainId;
+            tokenInput.chainId = chainId;
+            tokenInput.tokenDataListProp = getSupportedTokens(chainId);
+            if (noChainId && tokenInput.address) {
+                tokenInput.address = tokenInput.address;
+                tokenInput.onSelectToken(tokenInput.token);
+            } else {
+                tokenInput.token = undefined;
+                customInput.value = '';
+                customInput.enabled = false;
             }
         }
     }
@@ -262,11 +275,17 @@ const getCustomControls = (state?: State, getData?: Function, isOwner?: boolean)
                     networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v } }),
                     onCustomNetworkSelected: () => {
                         const chainId = networkPicker.selectedNetwork?.chainId;
-                        if (firstTokenInput.chainId != chainId) {
-                            firstTokenInput.token = null;
-                            secondTokenInput.token = null;
-                            firstTokenInput.chainId = chainId;
-                            secondTokenInput.chainId = chainId;
+                        if (tokenInInput.chainId != chainId) {
+                            tokenInInput.token = null;
+                            tokenOutInput.token = null;
+                            tokenInInput.chainId = chainId;
+                            tokenOutInput.chainId = chainId;
+                            tokenInInput.tokenDataListProp = getSupportedTokens(chainId);
+                            tokenOutInput.tokenDataListProp = getSupportedTokens(chainId);
+                            customTokenInInput.value = '';
+                            customTokenInInput.enabled = false;
+                            customTokenOutInput.value = '';
+                            customTokenOutInput.enabled = false;
                             if (isOwner) {
                                 comboOfferIndex.items = offerIndexes = [];
                                 comboOfferIndex.clear();
@@ -281,54 +300,110 @@ const getCustomControls = (state?: State, getData?: Function, isOwner?: boolean)
             },
             setData: (control: ScomNetworkPicker, value: number) => {
                 control.setNetworkByChainId(value);
-                setTokenByChainId(firstTokenInput, value);
-                setTokenByChainId(secondTokenInput, value);
+                setTokenByChainId(value, tokenInInput, customTokenInInput);
+                setTokenByChainId(value, tokenOutInput, customTokenOutInput);
             }
         },
         '#/properties/tokenIn': {
             render: () => {
-                firstTokenInput = new ScomTokenInput(undefined, {
+                tokenInInput = new ScomTokenInput(undefined, {
                     type: 'combobox',
                     isBalanceShown: false,
                     isBtnMaxShown: false,
-                    isInputShown: false
+                    isInputShown: false,
+                    isCustomTokenShown: true,
+                    supportValidAddress: true
                 });
                 const chainId = networkPicker?.selectedNetwork?.chainId;
-                if (chainId && firstTokenInput.chainId !== chainId) {
-                    firstTokenInput.chainId = chainId;
+                tokenInInput.chainId = chainId;
+                tokenInInput.tokenDataListProp = getSupportedTokens(chainId);
+                tokenInInput.onSelectToken = (token: ITokenObject) => {
+                    selectToken(token, tokenInInput, customTokenInInput);
                 }
-                if (isOwner) {
-                    firstTokenInput.onSelectToken = onSelectToken;
-                }
-                return firstTokenInput;
+                return tokenInInput;
             },
             getData: (control: ScomTokenInput) => {
                 return (control.token?.address || control.token?.symbol);
             },
-            setData: setTokenData
+            setData: async (control: ScomTokenInput, value: string, rowData: any) => {
+                await setTokenData(control, value, rowData?.chainId, customTokenInInput);
+            }
+        },
+        '#/properties/customTokenIn': {
+            render: () => {
+                customTokenInInput = new Input(undefined, {
+                    inputType: 'text',
+                    height: '42px',
+                    width: '100%'
+                });
+                customTokenInInput.classList.add(formInputStyle);
+                return customTokenInInput;
+            },
+            getData: (control: Input) => {
+                return control.value;
+            },
+            setData: async (control: Input, value: string) => {
+                await control.ready();
+                control.value = value;
+                if (!value && tokenInInput?.token) {
+                    const address = tokenInInput.address;
+                    const isCustomToken = address?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
+                    if (!isCustomToken) {
+                        control.value = (address && address !== nullAddress) ? address : 'Native Token';
+                    }
+                }
+            }
         },
         '#/properties/tokenOut': {
             render: () => {
-                secondTokenInput = new ScomTokenInput(undefined, {
+                tokenOutInput = new ScomTokenInput(undefined, {
                     type: 'combobox',
                     isBalanceShown: false,
                     isBtnMaxShown: false,
-                    isInputShown: false
+                    isInputShown: false,
+                    isCustomTokenShown: true,
+                    supportValidAddress: true
                 });
                 const chainId = networkPicker?.selectedNetwork?.chainId;
-                if (chainId && secondTokenInput.chainId !== chainId) {
-                    secondTokenInput.chainId = chainId;
+                tokenOutInput.chainId = chainId;
+                tokenOutInput.tokenDataListProp = getSupportedTokens(chainId);
+                tokenOutInput.onSelectToken = (token: ITokenObject) => {
+                    selectToken(token, tokenOutInput, customTokenOutInput);
                 }
-                if (isOwner) {
-                    secondTokenInput.onSelectToken = onSelectToken;
-                }
-                return secondTokenInput;
+                return tokenOutInput;
             },
             getData: (control: ScomTokenInput) => {
                 return (control.token?.address || control.token?.symbol);
             },
-            setData: setTokenData
-        }
+            setData: async (control: ScomTokenInput, value: string, rowData: any) => {
+                await setTokenData(control, value, rowData?.chainId, customTokenOutInput);
+            }
+        },
+        '#/properties/customTokenOut': {
+            render: () => {
+                customTokenOutInput = new Input(undefined, {
+                    inputType: 'text',
+                    height: '42px',
+                    width: '100%'
+                });
+                customTokenOutInput.classList.add(formInputStyle);
+                return customTokenOutInput;
+            },
+            getData: (control: Input) => {
+                return control.value;
+            },
+            setData: async (control: Input, value: string) => {
+                await control.ready();
+                control.value = value;
+                if (!value && tokenOutInput?.token) {
+                    const address = tokenOutInput.address;
+                    const isCustomToken = address?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
+                    if (!isCustomToken) {
+                        control.value = (address && address !== nullAddress) ? address : 'Native Token';
+                    }
+                }
+            }
+        },
     }
     if (isOwner) {
         controls['#/properties/offerIndex'] = {
