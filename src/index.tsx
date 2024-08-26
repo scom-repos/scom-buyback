@@ -7,12 +7,13 @@ import { executeSwap, getHybridRouterAddress, getProxySelectors } from './swap-u
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
-import { getBuilderSchema, getProjectOwnerSchema } from './formSchema';
+import { getSchema } from './formSchema';
 import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObject } from '@scom/scom-token-list';
 import { buybackComponent, buybackDappContainer } from './index.css';
 import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
+import { CUSTOM_TOKEN } from '@scom/scom-token-input';
 
 const Theme = Styles.Theme.ThemeVars;
 const ROUNDING_NUMBER = 1;
@@ -24,7 +25,9 @@ interface ScomBuybackElement extends ControlElement {
 	logo?: string;
 	offerIndex: number;
 	tokenIn: string;
+	customTokenIn?: string;
 	tokenOut: string;
+	customTokenOut?: string;
 	commissions?: ICommissionInfo[];
 	defaultChainId: number;
 	networks: INetworkConfig[];
@@ -105,7 +108,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	private _getActions(category?: string) {
-		const formSchema = getBuilderSchema();
+		const formSchema = getSchema();
 		const actions: any[] = [];
 
 		if (category !== 'offers') {
@@ -133,7 +136,9 @@ export default class ScomBuyback extends Module {
 								offerIndex,
 								chainId,
 								tokenIn,
+								customTokenIn,
 								tokenOut,
+								customTokenOut,
 								...themeSettings
 							} = userInputData;
 
@@ -143,7 +148,9 @@ export default class ScomBuyback extends Module {
 								offerIndex,
 								chainId,
 								tokenIn,
-								tokenOut
+								customTokenIn,
+								tokenOut,
+								customTokenOut
 							};
 
 							this._data.chainId = generalSettings.chainId;
@@ -151,7 +158,9 @@ export default class ScomBuyback extends Module {
 							this._data.logo = generalSettings.logo;
 							this._data.offerIndex = generalSettings.offerIndex;
 							this._data.tokenIn = generalSettings.tokenIn;
+							this._data.customTokenIn = generalSettings.customTokenIn;
 							this._data.tokenOut = generalSettings.tokenOut;
+							this._data.customTokenOut = generalSettings.customTokenOut;
 							await this.resetRpcWallet();
 							this.refreshData(builder);
 
@@ -182,7 +191,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	private getProjectOwnerActions() {
-		const formSchema = getProjectOwnerSchema(this.state);
+		const formSchema = getSchema(this.state, true);
 		const actions: any[] = [
 			{
 				name: 'Settings',
@@ -477,7 +486,14 @@ export default class ScomBuyback extends Module {
 					tokenStore.updateTokenBalancesByChainId(chainId);
 				}
 				await this.initWallet();
-				this.buybackInfo = await getGuaranteedBuyBackInfo(this.state, { ...this._data });
+				const { tokenIn, tokenOut, customTokenIn, customTokenOut } = this._data;
+				const isCustomTokenIn = tokenIn?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
+				const isCustomTokenOut = tokenOut?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
+				this.buybackInfo = await getGuaranteedBuyBackInfo(this.state, {
+					...this._data,
+					tokenIn: isCustomTokenIn ? customTokenIn : tokenIn,
+					tokenOut: isCustomTokenOut ? customTokenOut : tokenOut
+				});
 				this.updateCommissionInfo();
 				await this.renderBuybackCampaign();
 				await this.renderLeftPart();
@@ -1226,7 +1242,9 @@ export default class ScomBuyback extends Module {
 			const title = this.getAttribute('title', true);
 			const offerIndex = this.getAttribute('offerIndex', true, 0);
 			const tokenIn = this.getAttribute('tokenIn', true, '');
+			const customTokenIn = this.getAttribute('customTokenIn', true, '');
 			const tokenOut = this.getAttribute('tokenOut', true, '');
+			const customTokenOut = this.getAttribute('customTokenOut', true, '');
 			// const commissions = this.getAttribute('commissions', true, []);
 			const networks = this.getAttribute('networks', true);
 			const wallets = this.getAttribute('wallets', true);
@@ -1237,7 +1255,9 @@ export default class ScomBuyback extends Module {
 				logo,
 				offerIndex,
 				tokenIn,
+				customTokenIn,
 				tokenOut,
+				customTokenOut,
 				// commissions,
 				defaultChainId,
 				networks,
