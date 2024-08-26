@@ -2031,6 +2031,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     !isClientConnected ? this.$render("i-button", { caption: "Connect Wallet", class: "btn-os", minHeight: 43, width: 300, maxWidth: "90%", margin: { top: 10, left: 'auto', right: 'auto' }, onClick: this.connectWallet }) : []));
                 this.noCampaignSection.visible = true;
             };
+            this.onToggleDetail = () => {
+                const isExpanding = this.detailWrapper.visible;
+                this.detailWrapper.visible = !isExpanding;
+                this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
+                this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
+            };
             this.renderEmpty = async () => {
                 this.infoStack.visible = false;
                 this.emptyStack.visible = true;
@@ -2062,7 +2068,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.bottomStack.clearInnerHTML();
                     this.bottomStack.appendChild(this.$render("i-panel", { padding: { bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }, height: "auto" },
                         this.$render("i-vstack", { gap: 10, width: "100%" },
-                            this.$render("i-hstack", { id: "detailWrapper", horizontalAlignment: "space-between", gap: 10, visible: false, wrap: "wrap" },
+                            this.$render("i-vstack", { id: "detailWrapper", gap: 10, width: "100%", visible: false },
                                 this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
                                     this.$render("i-label", { caption: "Group Queue Balance" }),
                                     this.$render("i-label", { caption: `${(0, index_8.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
@@ -2265,12 +2271,6 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             return 'Swap';
         }
         ;
-        onToggleDetail() {
-            const isExpanding = this.detailWrapper.visible;
-            this.detailWrapper.visible = !isExpanding;
-            this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
-            this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
-        }
         isEmptyData(value) {
             return !value || !value.chainId || !value.offerIndex;
         }

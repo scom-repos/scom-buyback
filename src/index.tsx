@@ -905,7 +905,7 @@ export default class ScomBuyback extends Module {
 		this.noCampaignSection.visible = true;
 	}
 
-	private onToggleDetail() {
+	private onToggleDetail = () => {
 		const isExpanding = this.detailWrapper.visible;
 		this.detailWrapper.visible = !isExpanding;
 		this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
@@ -946,7 +946,7 @@ export default class ScomBuyback extends Module {
 			this.bottomStack.appendChild(
 				<i-panel padding={{ bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }} height="auto">
 					<i-vstack gap={10} width="100%">
-						<i-hstack id="detailWrapper" horizontalAlignment="space-between" gap={10} visible={false} wrap="wrap">
+						<i-vstack id="detailWrapper" gap={10} width="100%" visible={false}>
 							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
 								<i-label caption="Group Queue Balance" />
 								<i-label caption={`${formatNumber(amount || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
@@ -959,7 +959,7 @@ export default class ScomBuyback extends Module {
 								<i-label caption="Your Balance" />
 								<i-label caption={`${formatNumber(balance || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
 							</i-hstack>
-						</i-hstack>
+						</i-vstack>
 						<i-button
 							id="btnDetail"
 							caption="More Information"
