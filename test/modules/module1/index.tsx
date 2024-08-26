@@ -84,11 +84,9 @@ export default class Module1 extends Module {
                     id="buybackElm"
                     defaultChainId={97}
                     chainId={97}
-                    title="OSwap IDO Buyback"
-                    logo="https://ipfs.scom.dev/ipfs/bafkreigsu7udzf7sdoyspnvdinm7vh42ihhfs4vwcvibqkozrckgdtp3ve"
-                    offerIndex={36}
-                    tokenIn="0x45eee762aaeA4e5ce317471BDa8782724972Ee19"
-                    tokenOut="0xDe9334C157968320f26e449331D6544b89bbD00F"
+                    offerIndex={18}
+                    tokenIn="0xDe9334C157968320f26e449331D6544b89bbD00F"
+                    tokenOut="0x45eee762aaeA4e5ce317471BDa8782724972Ee19"
                     networks={[
                         {
                             chainId: 43113
