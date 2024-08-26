@@ -173,6 +173,7 @@ export function getSchema(state?: State, isOwner?: boolean) {
                 },
                 chainId: {
                     type: 'number',
+                    title: 'Chain',
                     required: true
                 },
                 tokenIn: {

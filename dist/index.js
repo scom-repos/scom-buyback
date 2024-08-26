@@ -1213,6 +1213,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                     },
                     chainId: {
                         type: 'number',
+                        title: 'Chain',
                         required: true
                     },
                     tokenIn: {

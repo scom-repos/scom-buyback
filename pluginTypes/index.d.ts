@@ -345,6 +345,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 };
                 chainId: {
                     type: string;
+                    title: string;
                     required: boolean;
                 };
                 tokenIn: {
