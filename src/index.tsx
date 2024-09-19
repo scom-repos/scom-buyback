@@ -1,19 +1,17 @@
-import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, application, customModule, Input, moment, HStack, customElements } from '@ijstech/components';
-import { BigNumber, Constants, IERC20ApprovalAction, IEventBusRegistry, Wallet } from '@ijstech/eth-wallet';
+import { Styles, Module, Panel, Button, Label, VStack, Container, ControlElement, application, customModule, Input, HStack, customElements, moment } from '@ijstech/components';
+import { BigNumber, IERC20ApprovalAction, Wallet } from '@ijstech/eth-wallet';
 import { formatNumber, formatDate, limitInputNumber, IBuybackCampaign, ICommissionInfo, INetworkConfig } from './global/index';
 import { State, fallBackUrl, isClientWalletConnected } from './store/index';
-import { getGuaranteedBuyBackInfo, GuaranteedBuyBackInfo, ProviderGroupQueueInfo } from './buyback-utils/index';
-import { executeSwap, getHybridRouterAddress, getProxySelectors } from './swap-utils/index';
+import { ProviderGroupQueueInfo } from './buyback-utils/index';
+import { getHybridRouterAddress } from './swap-utils/index';
 import Assets from './assets';
 import ScomDappContainer from '@scom/scom-dapp-container';
 import configData from './data.json';
-import { getSchema } from './formSchema';
 import { ChainNativeTokenByChainId, tokenStore, assets as tokenAssets, ITokenObject } from '@scom/scom-token-list';
 import { buybackComponent, buybackDappContainer } from './index.css';
-import ScomCommissionFeeSetup from '@scom/scom-commission-fee-setup';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
-import { CUSTOM_TOKEN } from '@scom/scom-token-input';
+import { ConfigModel, BuybackModel } from './model/index';
 
 const Theme = Styles.Theme.ThemeVars;
 const ROUNDING_NUMBER = 1;
@@ -47,28 +45,15 @@ declare global {
 @customElements('i-scom-buyback')
 export default class ScomBuyback extends Module {
 	private state: State;
-	private _data: IBuybackCampaign = {
-		chainId: 0,
-		title: '',
-		logo: '',
-		offerIndex: 0,
-		tokenIn: '',
-		tokenOut: '',
-		wallets: [],
-		networks: []
-	};
 	tag: any = {};
 	defaultEdit: boolean = true;
 
 	private infoStack: VStack;
-	private topStack: VStack;
-	private bottomStack: VStack;
 	private emptyStack: VStack;
 
 	private loadingElm: Panel;
 	private txStatusModal: ScomTxStatusModal;
 	private noCampaignSection: Panel;
-	private buybackInfo: GuaranteedBuyBackInfo | null;
 	private firstInputBox: VStack;
 	private secondInputBox: VStack;
 	private firstInput: Input;
@@ -86,12 +71,17 @@ export default class ScomBuyback extends Module {
 
 	private dappContainer: ScomDappContainer;
 	private contractAddress: string;
-	private rpcWalletEvents: IEventBusRegistry[] = [];
+	private buybackModel: BuybackModel;
+	private configModel: ConfigModel;
 
 	static async create(options?: ScomBuybackElement, parent?: Container) {
 		let self = new this(parent, options);
 		await self.ready();
 		return self;
+	}
+
+	private get data() {
+		return this.configModel.getData();
 	}
 
 	onHide() {
@@ -100,274 +90,63 @@ export default class ScomBuyback extends Module {
 	}
 
 	removeRpcWalletEvents() {
-		const rpcWallet = this.rpcWallet;
-		for (let event of this.rpcWalletEvents) {
-			rpcWallet.unregisterWalletEvent(event);
-		}
-		this.rpcWalletEvents = [];
-	}
-
-	private _getActions(category?: string) {
-		const formSchema = getSchema();
-		const actions: any[] = [];
-
-		if (category !== 'offers') {
-			actions.push({
-				name: 'Edit',
-				icon: 'edit',
-				command: (builder: any, userInputData: any) => {
-					let oldData: IBuybackCampaign = {
-						chainId: 0,
-						title: '',
-						logo: '',
-						offerIndex: 0,
-						tokenIn: '',
-						tokenOut: '',
-						wallets: [],
-						networks: []
-					};
-					let oldTag = {};
-					return {
-						execute: async () => {
-							oldData = JSON.parse(JSON.stringify(this._data));
-							const {
-								title,
-								logo,
-								offerIndex,
-								chainId,
-								tokenIn,
-								customTokenIn,
-								tokenOut,
-								customTokenOut,
-								...themeSettings
-							} = userInputData;
-
-							const generalSettings = {
-								title,
-								logo,
-								offerIndex,
-								chainId,
-								tokenIn,
-								customTokenIn,
-								tokenOut,
-								customTokenOut
-							};
-
-							this._data.chainId = generalSettings.chainId;
-							this._data.title = generalSettings.title;
-							this._data.logo = generalSettings.logo;
-							this._data.offerIndex = generalSettings.offerIndex;
-							this._data.tokenIn = generalSettings.tokenIn;
-							this._data.customTokenIn = generalSettings.customTokenIn;
-							this._data.tokenOut = generalSettings.tokenOut;
-							this._data.customTokenOut = generalSettings.customTokenOut;
-							await this.resetRpcWallet();
-							this.refreshData(builder);
-
-							oldTag = JSON.parse(JSON.stringify(this.tag));
-							if (builder?.setTag) builder.setTag(themeSettings);
-							else this.setTag(themeSettings);
-							if (this.dappContainer) this.dappContainer.setTag(themeSettings);
-						},
-						undo: async () => {
-							this._data = JSON.parse(JSON.stringify(oldData));
-							this.refreshData(builder);
-
-							this.tag = JSON.parse(JSON.stringify(oldTag));
-							if (builder?.setTag) builder.setTag(this.tag);
-							else this.setTag(this.tag);
-							if (this.dappContainer) this.dappContainer.setTag(this.tag);
-						},
-						redo: () => { }
-					}
-				},
-				userInputDataSchema: formSchema.dataSchema,
-				userInputUISchema: formSchema.uiSchema,
-				customControls: formSchema.customControls()
-			});
-		}
-
-		return actions;
-	}
-
-	private getProjectOwnerActions() {
-		const formSchema = getSchema(this.state, true);
-		const actions: any[] = [
-			{
-				name: 'Settings',
-				userInputDataSchema: formSchema.dataSchema,
-				userInputUISchema: formSchema.uiSchema,
-				customControls: formSchema.customControls(this.getData.bind(this))
-			}
-		];
-		return actions;
+		this.configModel.removeRpcWalletEvents();
 	}
 
 	getConfigurators() {
-		let self = this;
-		return [
-			{
-				name: 'Project Owner Configurator',
-				target: 'Project Owners',
-				getProxySelectors: async (chainId: number) => {
-					const selectors = await getProxySelectors(this.state, chainId);
-					return selectors;
-				},
-				getActions: () => {
-					return this.getProjectOwnerActions();
-				},
-				getData: this.getData.bind(this),
-				setData: async (data: any) => {
-					await this.setData(data);
-				},
-				getTag: this.getTag.bind(this),
-				setTag: this.setTag.bind(this)
-			},
-			{
-				name: 'Builder Configurator',
-				target: 'Builders',
-				getActions: (category?: string) => {
-					return this._getActions(category);
-				},
-				getData: this.getData.bind(this),
-				setData: async (data: any) => {
-					const defaultData = configData.defaultBuilderData;
-					await this.setData({ ...defaultData, ...data });
-				},
-				getTag: this.getTag.bind(this),
-				setTag: this.setTag.bind(this)
-			},
-			{
-				name: 'Emdedder Configurator',
-				target: 'Embedders',
-				elementName: 'i-scom-commission-fee-setup',
-				getLinkParams: () => {
-					const commissions = this._data.commissions || [];
-					return {
-						data: window.btoa(JSON.stringify(commissions))
-					}
-				},
-				// setLinkParams: async (params: any) => {
-				// 	if (params.data) {
-				// 		const decodedString = window.atob(params.data);
-				// 		const commissions = JSON.parse(decodedString);
-				// 		let resultingData = {
-				// 			...self._data,
-				// 			commissions
-				// 		};
-				// 		await this.setData(resultingData);
-				// 	}
-				// },
-				bindOnChanged: (element: ScomCommissionFeeSetup, callback: (data: any) => Promise<void>) => {
-					element.onChanged = async (data: any) => {
-						let resultingData = {
-							...self._data,
-							...data
-						};
-						await this.setData(resultingData);
-						await callback(data);
-					}
-				},
-				getData: () => {
-					const fee = this.state.embedderCommissionFee;
-					const data = this.getData();
-					return { ...data, fee }
-				},
-				setData: async (properties: IBuybackCampaign, linkParams?: Record<string, any>) => {
-					let resultingData = {
-						...properties
-					}
-					if (linkParams?.data) {
-						const decodedString = window.atob(linkParams.data);
-						const commissions = JSON.parse(decodedString);
-						resultingData.commissions = commissions;
-					}
-					await this.setData(resultingData);
-				},
-				getTag: this.getTag.bind(this),
-				setTag: this.setTag.bind(this)
-			},
-			{
-				name: 'Editor',
-				target: 'Editor',
-				getActions: (category?: string) => {
-					const actions = this._getActions(category);
-					const editAction = actions.find(action => action.name === 'Edit');
-					return editAction ? [editAction] : [];
-				},
-				getData: this.getData.bind(this),
-				setData: this.setData.bind(this),
-				getTag: this.getTag.bind(this),
-				setTag: this.setTag.bind(this)
-			}
-		]
+		this.initModels();
+		return this.configModel.getConfigurators();
 	}
 
-	private getData() {
-		return this._data;
+	initModels() {
+		if (!this.state) {
+			this.state = new State(configData);
+		}
+		if (!this.buybackModel) {
+			this.buybackModel = new BuybackModel(this.state);
+		}
+		if (!this.configModel) {
+			this.configModel = new ConfigModel(this.state, this, {
+				refreshWidget: () => this.refreshWidget(),
+				refreshDappContainer: () => this.refreshDappContainer(),
+				setContaiterTag: (value: any) => this.setContaiterTag(value),
+				updateTheme: () => this.updateTheme()
+			});
+		}
 	}
 
-	private async resetRpcWallet() {
-		this.removeRpcWalletEvents();
-		const rpcWalletId = await this.state.initRpcWallet(this.defaultChainId);
-		const rpcWallet = this.rpcWallet;
-		const chainChangedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.ChainChanged, async (chainId: number) => {
-			this.refreshWidget();
-		});
-		const connectedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
-			this.refreshWidget();
-		});
-		this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
-		this.refreshDappContainer();
+	async getData() {
+		return this.configModel.getData();
 	}
 
-	private async setData(data: IBuybackCampaign) {
-		this._data = data;
-		await this.resetRpcWallet();
-		await this.refreshWidget();
+	async setData(data: IBuybackCampaign) {
+		this.configModel.setData(data);
 	}
 
 	async getTag() {
 		return this.tag;
 	}
 
-	private updateTag(type: 'light' | 'dark', value: any) {
-		this.tag[type] = this.tag[type] ?? {};
-		for (let prop in value) {
-			if (value.hasOwnProperty(prop))
-				this.tag[type][prop] = value[prop];
-		}
+	async setTag(value: any) {
+		this.configModel.setTag(value);
 	}
 
-	private async setTag(value: any) {
-		const newValue = value || {};
-		for (let prop in newValue) {
-			if (newValue.hasOwnProperty(prop)) {
-				if (prop === 'light' || prop === 'dark')
-					this.updateTag(prop, newValue[prop]);
-				else
-					this.tag[prop] = newValue[prop];
-			}
-		}
-		if (this.dappContainer)
-			this.dappContainer.setTag(this.tag);
-		this.updateTheme();
+	private setContaiterTag(value: any) {
+		if (this.dappContainer) this.dappContainer.setTag(value);
 	}
 
 	private updateStyle(name: string, value: any) {
-		value ?
-			this.style.setProperty(name, value) :
+		if (value) {
+			this.style.setProperty(name, value);
+		} else {
 			this.style.removeProperty(name);
+		}
 	}
 
 	private updateTheme() {
 		const themeVar = this.dappContainer?.theme || 'light';
 		this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
 		this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
-		// this.updateStyle('--colors-primary-main', this.tag[themeVar]?.buttonBackgroundColor);
-		// this.updateStyle('--colors-primary-contrast_text', this.tag[themeVar]?.buttonFontColor);
-		// this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryColor);
-		// this.updateStyle('--colors-secondary-contrast_text', this.tag[themeVar]?.secondaryFontColor);
 		this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
 		this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
 	}
@@ -381,48 +160,43 @@ export default class ScomBuyback extends Module {
 	}
 
 	get defaultChainId() {
-		return this._data.defaultChainId;
+		return this.configModel.defaultChainId;
 	}
 
 	set defaultChainId(value: number) {
-		this._data.defaultChainId = value;
+		this.configModel.defaultChainId = value;
 	}
 
 	get wallets() {
-		return this._data.wallets ?? [];
+		return this.configModel.wallets;
 	}
 
 	set wallets(value: IWalletPlugin[]) {
-		this._data.wallets = value;
+		this.configModel.wallets = value;
 	}
 
 	get networks() {
-		const { chainId, networks } = this._data;
-		if (chainId && networks) {
-			const matchNetwork = networks.find(v => v.chainId == chainId);
-			return matchNetwork ? [matchNetwork] : [{ chainId }];
-		}
-		return networks ?? [];
+		return this.configModel.networks;
 	}
 
 	set networks(value: INetworkConfig[]) {
-		this._data.networks = value;
+		this.configModel.networks = value;
 	}
 
 	get showHeader() {
-		return this._data.showHeader ?? true;
+		return this.configModel.showHeader;
 	}
 
 	set showHeader(value: boolean) {
-		this._data.showHeader = value;
+		this.configModel.showHeader = value;
 	}
 
 	get commissions() {
-		return this._data.commissions ?? [];
+		return this.configModel.commissions;
 	}
 
 	set commissions(value: ICommissionInfo[]) {
-		this._data.commissions = value;
+		this.configModel.commissions = value;
 	}
 
 	constructor(parent?: Container, options?: ControlElement) {
@@ -442,20 +216,12 @@ export default class ScomBuyback extends Module {
 		}
 	}
 
-	private refreshData = (builder: any) => {
-		this.refreshDappContainer();
-		this.refreshWidget();
-		if (builder?.setData) {
-			builder.setData(this._data);
-		}
-	}
-
 	private refreshDappContainer = () => {
 		const rpcWallet = this.rpcWallet;
 		const containerData = {
-			defaultChainId: this._data.chainId || this.defaultChainId,
+			defaultChainId: this.configModel.chainId || this.defaultChainId,
 			wallets: this.wallets,
-			networks: this.networks.length ? this.networks : [{ chainId: this._data.chainId || this.chainId }],
+			networks: this.networks.length ? this.networks : [{ chainId: this.configModel.chainId || this.chainId }],
 			showHeader: this.showHeader,
 			rpcWalletId: rpcWallet.instanceId
 		}
@@ -474,7 +240,7 @@ export default class ScomBuyback extends Module {
 			if (!hideLoading && this.loadingElm) {
 				this.loadingElm.visible = true;
 			}
-			if (!isClientWalletConnected() || !this._data || this._data.chainId !== chainId) {
+			if (!isClientWalletConnected() || !this.data || this.data.chainId !== chainId) {
 				this.renderEmpty();
 				return;
 			}
@@ -485,22 +251,14 @@ export default class ScomBuyback extends Module {
 				if (rpcWallet.address) {
 					tokenStore.updateTokenBalancesByChainId(chainId);
 				}
-				await this.initWallet();
-				const { tokenIn, tokenOut, customTokenIn, customTokenOut } = this._data;
-				const isCustomTokenIn = tokenIn?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
-				const isCustomTokenOut = tokenOut?.toLowerCase() === CUSTOM_TOKEN.address.toLowerCase();
-				this.buybackInfo = await getGuaranteedBuyBackInfo(this.state, {
-					...this._data,
-					tokenIn: isCustomTokenIn ? customTokenIn : tokenIn,
-					tokenOut: isCustomTokenOut ? customTokenOut : tokenOut
-				});
+				await this.configModel.initWallet();
+				await this.buybackModel.fetchGuaranteedBuyBackInfo(this.data);
 				this.updateCommissionInfo();
 				await this.renderBuybackCampaign();
-				await this.renderLeftPart();
-				const firstToken = this.getTokenObject('toTokenAddress');
+				const firstToken = this.buybackModel.secondTokenObject;
 				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[chainId]?.symbol && this.state.isRpcWalletConnected()) {
 					await this.initApprovalModelAction();
-				} else if ((this.isExpired || this.isUpcoming) && this.btnSwap) {
+				} else if ((this.buybackModel.isExpired || this.buybackModel.isUpcoming) && this.btnSwap) {
 					this.updateBtnSwap();
 				}
 			} catch {
@@ -510,81 +268,6 @@ export default class ScomBuyback extends Module {
 				this.loadingElm.visible = false;
 			}
 		});
-	}
-
-	private initWallet = async () => {
-		try {
-			await Wallet.getClientInstance().init();
-			await this.rpcWallet.init();
-		} catch (err) {
-			console.log(err);
-		}
-	}
-
-	private get isExpired() {
-		if (!this.buybackInfo) return null;
-		const info = this.buybackInfo.queueInfo;
-		if (!info?.endDate) return null;
-		return moment().isAfter(moment(info.endDate));
-	}
-
-	private get isUpcoming() {
-		if (!this.buybackInfo) return null;
-		const info = this.buybackInfo.queueInfo;
-		if (!info?.startDate) return null;
-		return moment().isBefore(moment(info.startDate));
-	}
-
-	private get isSwapDisabled() {
-		if (!this.buybackInfo) return true;
-		const info = this.buybackInfo.queueInfo;
-		if (!info) return true;
-		const { startDate, endDate, allowAll, isApprovedTrader } = info;
-		const isUpcoming = moment().isBefore(moment(startDate));
-		const isExpired = moment().isAfter(moment(endDate));
-		if (isUpcoming || isExpired) {
-			return true;
-		}
-		if (!allowAll) {
-			return !isApprovedTrader;
-		}
-		return false;
-	}
-
-	private getFirstAvailableBalance = () => {
-		const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId);
-		if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
-			return '0';
-		}
-		const { queueInfo } = this.buybackInfo;
-		const { available, offerPrice, tradeFee, amount } = queueInfo;
-		const tokenBalance = new BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')]);
-		const balance = new BigNumber(available).times(offerPrice).dividedBy(tradeFee);
-		const amountIn = new BigNumber(amount).times(offerPrice).dividedBy(tradeFee);
-		return (BigNumber.minimum(balance, tokenBalance, amountIn)).toFixed();
-	}
-
-	private getSecondAvailableBalance = () => {
-		if (!this.buybackInfo || !this.buybackInfo.queueInfo) {
-			return '0';
-		}
-		const { queueInfo } = this.buybackInfo;
-		const { offerPrice, tradeFee } = queueInfo;
-		return new BigNumber(this.getFirstAvailableBalance()).dividedBy(offerPrice).times(tradeFee).toFixed();
-	}
-
-	private getTokenObject = (key: string) => {
-		const chainId = this.chainId;
-		const tokenMap = tokenStore.getTokenMapByChainId(chainId);
-		const tokenAddress = this.getValueByKey(key);
-		if (tokenAddress && tokenMap) {
-			let token = tokenMap[tokenAddress.toLowerCase()];
-			if (!token) {
-				token = tokenMap[tokenAddress];
-			}
-			return token;
-		}
-		return null;
 	}
 
 	private handleFocusInput = (first: boolean, isFocus: boolean) => {
@@ -600,8 +283,8 @@ export default class ScomBuyback extends Module {
 		if (!this.hStackCommission) return;
 		if (this.state.getCurrentCommissions(this.commissions).length) {
 			this.hStackCommission.visible = true;
-			const firstToken = this.getTokenObject('toTokenAddress');
-			const secondToken = this.getTokenObject('fromTokenAddress');
+			const firstToken = this.buybackModel.secondTokenObject;
+			const secondToken = this.buybackModel.firstTokenObject;
 			if (firstToken && secondToken) {
 				const amount = new BigNumber(this.firstInput?.value || 0);
 				const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
@@ -616,12 +299,11 @@ export default class ScomBuyback extends Module {
 	}
 
 	private firstInputChange = () => {
-		const firstToken = this.getTokenObject('toTokenAddress');
-		const secondToken = this.getTokenObject('fromTokenAddress');
+		const firstToken = this.buybackModel.secondTokenObject;
+		const secondToken = this.buybackModel.firstTokenObject;
 		limitInputNumber(this.firstInput, firstToken?.decimals || 18);
-		if (!this.buybackInfo) return;
-		const info = this.buybackInfo.queueInfo || {} as any;
-		const { offerPrice, tradeFee } = info;
+		if (!this.buybackModel.buybackInfo) return;
+		const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {} as ProviderGroupQueueInfo;
 		const firstSymbol = firstToken?.symbol || '';
 		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
 		if (inputVal.isNaN()) {
@@ -636,12 +318,11 @@ export default class ScomBuyback extends Module {
 	}
 
 	private secondInputChange = () => {
-		const firstToken = this.getTokenObject('toTokenAddress');
-		const secondToken = this.getTokenObject('fromTokenAddress');
+		const firstToken = this.buybackModel.secondTokenObject;
+		const secondToken = this.buybackModel.firstTokenObject;
 		limitInputNumber(this.secondInput, secondToken?.decimals || 18);
-		if (!this.buybackInfo) return;
-		const info = this.buybackInfo.queueInfo || {} as any;
-		const { offerPrice, tradeFee } = info;
+		if (!this.buybackModel.buybackInfo) return;
+		const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {} as ProviderGroupQueueInfo;
 		const firstSymbol = firstToken?.symbol || '';
 		const inputVal = new BigNumber(this.secondInput.value).multipliedBy(offerPrice).dividedBy(tradeFee);
 		if (inputVal.isNaN()) {
@@ -656,19 +337,10 @@ export default class ScomBuyback extends Module {
 	}
 
 	private onSetMaxBalance = async () => {
-		const { tradeFee, offerPrice } = this.buybackInfo.queueInfo || {};
-		const firstAvailable = this.getFirstAvailableBalance();
-		const firstToken = this.getTokenObject('toTokenAddress');
-		const secondToken = this.getTokenObject('fromTokenAddress');
-
-		const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId) || {};
-		let totalAmount = new BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')] || 0);
-		const commissionAmount = this.state.getCommissionAmount(this.commissions, totalAmount);
-		if (commissionAmount.gt(0)) {
-			const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
-			totalAmount = totalAmount.dividedBy(totalFee);
-		}
-		const firstInputValue = totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
+		const { tradeFee, offerPrice } = this.buybackModel.buybackInfo.queueInfo || {} as ProviderGroupQueueInfo;
+		const firstToken = this.buybackModel.secondTokenObject;
+		const secondToken = this.buybackModel.firstTokenObject;
+		const firstInputValue = this.buybackModel.getAvailable(this.commissions);
 		this.firstInput.value = new BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
 		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
 		this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
@@ -683,22 +355,19 @@ export default class ScomBuyback extends Module {
 			this.btnSwap.caption = this.submitButtonText;
 			return;
 		}
-		if (!this.buybackInfo) return;
-		if (this.isSwapDisabled) {
+		if (!this.buybackModel.buybackInfo) return;
+		if (this.buybackModel.isSwapDisabled) {
 			this.btnSwap.enabled = false;
 			this.btnSwap.caption = this.submitButtonText;
 			return;
 		}
 		const firstVal = new BigNumber(this.firstInput.value);
 		const secondVal = new BigNumber(this.secondInput.value);
-		const firstAvailable = this.getFirstAvailableBalance();
-		const secondAvailable = this.getSecondAvailableBalance();
+		const firstAvailable = this.buybackModel.firstAvailableBalance;
+		const secondAvailable = this.buybackModel.secondAvailableBalance;
 
 		const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-		const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId);
-		const balance = new BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
-		// const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
-		// const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
+		const balance = new BigNumber(this.buybackModel.secondTokenBalance);
 		const total = firstVal.plus(commissionAmount);
 
 		if (firstVal.isNaN() || firstVal.lte(0) || firstVal.gt(firstAvailable) || secondVal.isNaN() || secondVal.lte(0) || secondVal.gt(secondAvailable) || total.gt(balance)) {
@@ -714,34 +383,23 @@ export default class ScomBuyback extends Module {
 			this.connectWallet();
 			return;
 		}
-		if (this.buybackInfo && this.isApproveButtonShown) {
-			const info = this.buybackInfo.queueInfo;
-			this.approvalModelAction.doApproveAction(this.getTokenObject('toTokenAddress') as ITokenObject, info.tokenInAvailable);
+		if (this.buybackModel.buybackInfo && this.isApproveButtonShown) {
+			const info = this.buybackModel.buybackInfo.queueInfo;
+			this.approvalModelAction.doApproveAction(this.buybackModel.secondTokenObject as ITokenObject, info.tokenInAvailable);
 		} else {
 			this.approvalModelAction.doPayAction();
 		}
 	}
 
 	private onSubmit = async () => {
-		if (!this.buybackInfo || !this.buybackInfo.queueInfo) return;
-		const firstToken = this.getTokenObject('toTokenAddress');
-		const secondToken = this.getTokenObject('fromTokenAddress');
-		const { pairAddress, offerIndex } = this.buybackInfo.queueInfo;
-		const amount = new BigNumber(this.firstInput?.value || 0);
-		const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-		this.showResultMessage('warning', `Swapping ${formatNumber(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
-		const params = {
-			provider: "RestrictedOracle",
-			routeTokens: [firstToken, secondToken],
-			bestSmartRoute: [firstToken, secondToken],
-			pairs: [pairAddress],
-			fromAmount: new BigNumber(this.firstInput.value),
-			toAmount: new BigNumber(this.secondInput.value),
-			isFromEstimated: false,
-			groupQueueOfferIndex: offerIndex,
-			commissions: this.commissions
-		}
-		const { error } = await executeSwap(this.state, params);
+		if (!this.buybackModel.buybackInfo || !this.buybackModel.buybackInfo.queueInfo) return;
+		const firstToken = this.buybackModel.secondTokenObject;
+		const secondToken = this.buybackModel.firstTokenObject;
+		const fromAmount = new BigNumber(this.firstInput?.value || 0);
+		const toAmount = new BigNumber(this.secondInput?.value || 0);
+		const commissionAmount = this.state.getCommissionAmount(this.commissions, fromAmount);
+		this.showResultMessage('warning', `Swapping ${formatNumber(fromAmount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
+		const { error } = await this.buybackModel.executeSwap(fromAmount, toAmount, this.commissions);
 		if (error) {
 			this.isSubmitting = false;
 			this.showResultMessage('error', error as any);
@@ -754,47 +412,12 @@ export default class ScomBuyback extends Module {
 	}
 
 	private get submitButtonText() {
-		if (!this.state.isRpcWalletConnected()) {
-			return 'Switch Network';
-		}
-		if (this.isUpcoming) {
-			return 'Upcoming';
-		}
-		if (this.isExpired) {
-			return 'Expired';
-		}
-		if (this.isApproveButtonShown) {
-			return this.isSubmitting ? 'Approving' : 'Approve';
-		}
-		const firstVal = new BigNumber(this.firstInput.value);
-		const secondVal = new BigNumber(this.secondInput.value);
-		if (firstVal.lt(0) || secondVal.lt(0)) {
-			return 'Amount must be greater than 0';
-		}
-		if (this.buybackInfo) {
-			const firstMaxVal = new BigNumber(this.getFirstAvailableBalance());
-			const secondMaxVal = new BigNumber(this.getSecondAvailableBalance());
-
-			const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-			const tokenBalances = tokenStore.getTokenBalancesByChainId(this.chainId);
-			const balance = new BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
-			// const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
-			// const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
-			const total = firstVal.plus(commissionAmount);
-
-			if (firstVal.gt(firstMaxVal) || secondVal.gt(secondMaxVal) || total.gt(balance)) {
-				return 'Insufficient amount available';
-			}
-		}
-		if (this.isSubmitting) {
-			return 'Swapping';
-		}
-		return 'Swap';
-	};
+		return this.buybackModel.getSubmitButtonText(this.isApproveButtonShown, this.isSubmitting, this.firstInput.value, this.secondInput.value, this.commissions);
+	}
 
 	private initApprovalModelAction = async () => {
 		if (!this.state.isRpcWalletConnected()) return;
-		if ((this.isExpired || this.isUpcoming) && this.btnSwap) {
+		if ((this.buybackModel.isExpired || this.buybackModel.isUpcoming) && this.btnSwap) {
 			this.updateBtnSwap();
 			return;
 		}
@@ -808,8 +431,8 @@ export default class ScomBuyback extends Module {
 			},
 			onToBePaid: async (token: ITokenObject) => {
 				this.updateBtnSwap();
-				this.btnSwap.caption = this.submitButtonText;
 				this.isApproveButtonShown = false;
+				this.btnSwap.caption = this.submitButtonText;
 			},
 			onApproving: async (token: ITokenObject, receipt?: string, data?: any) => {
 				this.showResultMessage('success', receipt || '');
@@ -857,14 +480,8 @@ export default class ScomBuyback extends Module {
 			}
 		});
 		this.state.approvalModel.spenderAddress = this.contractAddress;
-		const firstToken = this.getTokenObject('toTokenAddress') as ITokenObject;
-		await this.approvalModelAction.checkAllowance(firstToken, this.getFirstAvailableBalance());
-	}
-
-	private getValueByKey = (key: string) => {
-		const item = this.buybackInfo;
-		if (!item?.queueInfo) return null;
-		return item.queueInfo[key];
+		const firstToken = this.buybackModel.secondTokenObject;
+		await this.approvalModelAction.checkAllowance(firstToken, this.buybackModel.firstAvailableBalance);
 	}
 
 	private showResultMessage = (status: 'warning' | 'success' | 'error', content?: string | Error) => {
@@ -942,27 +559,41 @@ export default class ScomBuyback extends Module {
 	}
 
 	private renderBuybackCampaign = async () => {
-		if (this.buybackInfo) {
-			this.bottomStack.clearInnerHTML();
+		if (this.buybackModel.buybackInfo) {
+			this.infoStack.clearInnerHTML();
 			const chainId = this.chainId;
 			const isRpcConnected = this.state.isRpcWalletConnected();
-			const { queueInfo } = this.buybackInfo;
-			const { amount, allowAll, tradeFee, available } = queueInfo || {};
-			const tokenMap = tokenStore.getTokenMapByChainId(chainId);
-			const firstTokenObj = tokenMap[this.getValueByKey('toTokenAddress')];
-			const secondTokenObj = tokenMap[this.getValueByKey('fromTokenAddress')];
-			const firstSymbol = firstTokenObj?.symbol ?? '';
-			const secondSymbol = secondTokenObj?.symbol ?? '';
+			const { firstTokenObject, firstTokenBalance, secondTokenObject, firstAvailableBalance, secondAvailableBalance, buybackInfo } = this.buybackModel;
+			const { amount, allowAll, tradeFee, available, offerPrice, startDate, endDate } = buybackInfo?.queueInfo || {} as ProviderGroupQueueInfo;
+			const firstTokenObj = secondTokenObject;
+			const secondTokenObj = firstTokenObject;
+			const firstSymbol = firstTokenObj?.symbol || '';
+			const secondSymbol = secondTokenObj?.symbol || '';
+			const rate = `1 ${firstSymbol} : ${formatNumber(new BigNumber(1).dividedBy(offerPrice))} ${secondSymbol}`;
+			const reverseRate = `1 ${secondSymbol} : ${offerPrice} ${firstSymbol}`;
+			const hStackEndTime = await HStack.create({ gap: 4, verticalAlignment: 'center' });
+			const lbEndTime = await Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
+			hStackEndTime.appendChild(lbEndTime);
+			hStackEndTime.appendChild(<i-label caption={formatDate(endDate)} font={{ size: '0.875rem', bold: true, color: Theme.colors.primary.main }} margin={{ left: 'auto' }} />);
 
-			const tokenBalances = tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
-			const balance = tokenBalances[firstTokenObj.address.toLowerCase() || firstTokenObj.symbol];
+			const balance = firstTokenBalance;
 			const commissionFee = this.state.embedderCommissionFee;
 			const hasCommission = !!this.state.getCurrentCommissions(this.commissions).length;
-			this.bottomStack.clearInnerHTML();
-			this.bottomStack.appendChild(
+			const lbRate = new Label(undefined, {
+				caption: rate,
+				font: { bold: true, color: Theme.colors.primary.main },
+			});
+			let isToggled = false;
+			const onToggleRate = () => {
+				isToggled = !isToggled;
+				lbRate.caption = isToggled ? reverseRate : rate;
+			}
+			this.infoStack.clearInnerHTML();
+			this.infoStack.appendChild(
 				<i-panel padding={{ bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }} height="auto">
 					<i-vstack gap={10} width="100%">
 						<i-vstack id="detailWrapper" gap={10} width="100%" visible={false}>
+							{hStackEndTime}
 							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
 								<i-label caption="Group Queue Balance" />
 								<i-label caption={`${formatNumber(amount || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
@@ -988,11 +619,26 @@ export default class ScomBuyback extends Module {
 							margin={{ top: 4, bottom: 16, left: 'auto', right: 'auto' }}
 							onClick={this.onToggleDetail}
 						/>
+						<i-hstack gap={4} verticalAlignment="center" horizontalAlignment="space-between" wrap="wrap">
+							<i-label caption="Buyback Price" font={{ bold: true }} />
+							<i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="end">
+								{lbRate}
+								<i-icon
+									name="exchange-alt"
+									width={14}
+									height={14}
+									fill={Theme.text.primary}
+									opacity={0.9}
+									cursor="pointer"
+									onClick={onToggleRate}
+								/>
+							</i-hstack>
+						</i-hstack>
 						<i-hstack gap={4} wrap="wrap">
 							<i-label caption="Swap Available" />
 							<i-vstack gap={4} margin={{ left: 'auto' }} horizontalAlignment="end">
-								<i-label caption={`${formatNumber(this.getFirstAvailableBalance())} ${firstSymbol}`} font={{ color: Theme.colors.primary.main }} />
-								<i-label caption={`(${formatNumber(this.getSecondAvailableBalance())} ${secondSymbol})`} font={{ color: Theme.colors.primary.main }} />
+								<i-label caption={`${formatNumber(firstAvailableBalance)} ${firstSymbol}`} font={{ color: Theme.colors.primary.main }} />
+								<i-label caption={`(${formatNumber(secondAvailableBalance)} ${secondSymbol})`} font={{ color: Theme.colors.primary.main }} />
 							</i-vstack>
 						</i-hstack>
 						<i-hstack
@@ -1020,7 +666,7 @@ export default class ScomBuyback extends Module {
 							<i-hstack gap={4} width={130} verticalAlignment="center">
 								<i-button
 									caption="Max"
-									enabled={isRpcConnected && new BigNumber(this.getFirstAvailableBalance()).gt(0)}
+									enabled={isRpcConnected && new BigNumber(firstAvailableBalance).gt(0)}
 									padding={{ top: 3, bottom: 3, left: 6, right: 6 }}
 									border={{ radius: 6 }}
 									font={{ size: '14px' }}
@@ -1059,7 +705,7 @@ export default class ScomBuyback extends Module {
 							<i-hstack gap={4} margin={{ right: 8 }} width={130} verticalAlignment="center">
 								<i-button
 									caption="Max"
-									enabled={isRpcConnected && new BigNumber(this.getSecondAvailableBalance()).gt(0)}
+									enabled={isRpcConnected && new BigNumber(secondAvailableBalance).gt(0)}
 									padding={{ top: 3, bottom: 3, left: 6, right: 6 }}
 									border={{ radius: 6 }}
 									font={{ size: '14px' }}
@@ -1098,142 +744,28 @@ export default class ScomBuyback extends Module {
 						</i-panel>
 					</i-vstack>
 				</i-panel>
-			)
+			);
+			const currentTime = moment().valueOf();
+			if (this.buybackModel.isUpcoming) {
+				const startTime = moment(startDate).valueOf();
+				setTimeout(() => {
+					this.updateBtnSwap();
+				}, currentTime - startTime);
+			}
+			if (!this.buybackModel.isExpired) {
+				const endTime = moment(endDate).valueOf();
+				setTimeout(() => {
+					this.updateBtnSwap();
+				}, endTime - currentTime);
+			}
 		} else {
 			this.renderEmpty();
 		}
 	}
 
-	private renderLeftPart = async () => {
-		if (this.buybackInfo) {
-			this.topStack.clearInnerHTML();
-			const { tokenIn, tokenOut, queueInfo } = this.buybackInfo;
-			const info = queueInfo || {} as ProviderGroupQueueInfo;
-			const { startDate, endDate } = info;
-			const firstToken = tokenOut?.startsWith('0x') ? tokenOut.toLowerCase() : tokenOut;
-			const secondToken = tokenIn?.startsWith('0x') ? tokenIn.toLowerCase() : tokenIn;
-			const tokenMap = tokenStore.getTokenMapByChainId(this.chainId);
-			const firstTokenObj = tokenMap[firstToken];
-			const firstSymbol = firstTokenObj?.symbol ?? '';
-			const secondTokenObj = tokenMap[secondToken];
-			const secondSymbol = secondTokenObj?.symbol ?? '';
-			const rate = `1 ${firstSymbol} : ${formatNumber(1 / this.getValueByKey('offerPrice'))} ${secondSymbol}`;
-			const reverseRate = `1 ${secondSymbol} : ${this.getValueByKey('offerPrice')} ${firstSymbol}`;
-			const { title, logo } = this._data;
-			const hasBranch = !!title || !!logo;
-			let imgLogo: string;
-			if (logo?.startsWith('ipfs://')) {
-				imgLogo = logo.replace('ipfs://', '/ipfs/');
-			} else {
-				imgLogo = logo;
-			}
-
-			const hStackEndTime = await HStack.create({ gap: 4, verticalAlignment: 'center' });
-			const lbEndTime = await Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
-			hStackEndTime.appendChild(lbEndTime);
-			hStackEndTime.appendChild(<i-label caption={formatDate(endDate)} font={{ size: '0.875rem', bold: true, color: Theme.colors.primary.main }} margin={{ left: 'auto' }} />);
-
-			// const optionTimer = { background: { color: Theme.colors.secondary.main }, font: { color: Theme.colors.secondary.contrastText } };
-			// const hStackTimer = await HStack.create({ gap: 4, verticalAlignment: 'center' });
-			// const lbTimer = await Label.create({ caption: 'Starts In', font: { size: '0.875rem', bold: true } });
-			// const endHour = await Label.create(optionTimer);
-			// const endDay = await Label.create(optionTimer);
-			// const endMin = await Label.create(optionTimer);
-			// endHour.classList.add('timer-value');
-			// endDay.classList.add('timer-value');
-			// endMin.classList.add('timer-value');
-			// hStackTimer.appendChild(lbTimer);
-			// hStackTimer.appendChild(
-			// 	<i-hstack gap={4} margin={{ left: 'auto' }} verticalAlignment="center" class="custom-timer">
-			// 		{endDay}
-			// 		<i-label caption="D" class="timer-unit" />
-			// 		{endHour}
-			// 		<i-label caption="H" class="timer-unit" />
-			// 		{endMin}
-			// 		<i-label caption="M" class="timer-unit" />
-			// 	</i-hstack>
-			// );
-
-			// let interval: any;
-			// const setTimer = () => {
-			// 	let days = 0;
-			// 	let hours = 0;
-			// 	let mins = 0;
-			// 	if (moment().isBefore(moment(startDate))) {
-			// 		lbTimer.caption = 'Starts In';
-			// 		lbEndTime.caption = 'End Time';
-			// 		days = moment(startDate).diff(moment(), 'days');
-			// 		hours = moment(startDate).diff(moment(), 'hours') - days * 24;
-			// 		mins = moment(startDate).diff(moment(), 'minutes') - days * 24 * 60 - hours * 60;
-			// 	} else if (moment(moment()).isBefore(endDate)) {
-			// 		lbTimer.caption = 'Ends In';
-			// 		hStackEndTime.visible = false;
-			// 		days = moment(endDate).diff(moment(), 'days');
-			// 		hours = moment(endDate).diff(moment(), 'hours') - days * 24;
-			// 		mins = moment(endDate).diff(moment(), 'minutes') - days * 24 * 60 - hours * 60;
-			// 	} else {
-			// 		hStackTimer.visible = false;
-			// 		hStackEndTime.visible = true;
-			// 		lbEndTime.caption = 'Ended On';
-			// 		days = hours = mins = 0;
-			// 		clearInterval(interval);
-			// 	}
-			// 	endDay.caption = `${days}`;
-			// 	endHour.caption = `${hours}`;
-			// 	endMin.caption = `${mins}`;
-			// }
-			// setTimer();
-			// interval = setInterval(() => {
-			// 	setTimer();
-			// }, 1000);
-
-			const lbRate = new Label(undefined, {
-				caption: rate,
-				font: { bold: true, color: Theme.colors.primary.main },
-			});
-			let isToggled = false;
-			const onToggleRate = () => {
-				isToggled = !isToggled;
-				lbRate.caption = isToggled ? reverseRate : rate;
-			}
-			this.topStack.clearInnerHTML();
-			this.topStack.appendChild(
-				<i-vstack gap={10} width="100%" padding={{ bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }}>
-					{
-						hasBranch ? <i-vstack gap="0.25rem" margin={{ bottom: '0.25rem' }} horizontalAlignment="center">
-							<i-label visible={!!title} caption={title} margin={{ top: '0.5em', bottom: '1em' }} font={{ weight: 600 }} />
-							<i-image visible={!!imgLogo} url={imgLogo} height={100} />
-						</i-vstack> : []
-					}
-					<i-hstack gap="0.25rem" verticalAlignment="center" horizontalAlignment="space-between" wrap="wrap">
-						<i-label caption="Buyback Price" font={{ bold: true }} />
-						<i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="end">
-							{lbRate}
-							<i-icon
-								name="exchange-alt"
-								width={14}
-								height={14}
-								fill={Theme.text.primary}
-								opacity={0.9}
-								cursor="pointer"
-								onClick={onToggleRate}
-							/>
-						</i-hstack>
-					</i-hstack>
-					{/* {hStackTimer} */}
-					{hStackEndTime}
-				</i-vstack>
-			)
-		}
-	}
-
-	private isEmptyData(value: IBuybackCampaign) {
-		return !value || !value.chainId || !value.offerIndex;
-	}
-
 	async init() {
+		this.initModels();
 		super.init();
-		this.state = new State(configData);
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);
 		if (!lazyLoad) {
 			const defaultChainId = this.getAttribute('defaultChainId', true);
@@ -1264,8 +796,8 @@ export default class ScomBuyback extends Module {
 				wallets,
 				showHeader
 			};
-			if (!this.isEmptyData(data)) {
-				await this.setData(data);
+			if (!this.buybackModel.isEmptyData(data)) {
+				await this.configModel.setData(data);
 			} else {
 				await this.renderEmpty();
 			}
@@ -1292,17 +824,16 @@ export default class ScomBuyback extends Module {
 						<i-vstack id="emptyStack" visible={false} minHeight={320} margin={{ top: 10, bottom: 10 }} verticalAlignment="center" horizontalAlignment="center" />
 						<i-vstack
 							id="infoStack"
+							gap="0.5rem"
 							width="100%"
 							minWidth={320}
 							maxWidth={500}
 							height="100%"
 							margin={{ left: 'auto', right: 'auto' }}
 							horizontalAlignment="center"
-						>
-							<i-vstack id="topStack" width="inherit" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} />
-							<i-panel width="calc(100% - 4rem)" height={2} background={{ color: Theme.input.background }} />
-							<i-vstack id="bottomStack" gap="0.5rem" width="inherit" padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }} background={{ color: Theme.background.main }} verticalAlignment="space-between" />
-						</i-vstack>
+							padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }}
+							background={{ color: Theme.background.main }}
+						/>
 					</i-panel>
 					<i-scom-tx-status-modal id="txStatusModal" />
 					<i-scom-wallet-modal id="mdWallet" wallets={[]} />
