@@ -461,7 +461,7 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
     import { INetworkConfig } from "@scom/scom-network-picker";
     import { IWalletPlugin } from "@scom/scom-wallet-modal";
     import ScomCommissionFeeSetup from "@scom/scom-commission-fee-setup";
-    interface IModelOptions {
+    interface IConfigOptions {
         refreshWidget: () => Promise<void>;
         refreshDappContainer: () => void;
         setContaiterTag: (value: any) => void;
@@ -473,7 +473,7 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
         private options;
         private _data;
         private rpcWalletEvents;
-        constructor(state: State, module: Module, options: IModelOptions);
+        constructor(state: State, module: Module, options: IConfigOptions);
         get chainId(): number;
         get defaultChainId(): number;
         set defaultChainId(value: number);

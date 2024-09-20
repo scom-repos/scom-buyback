@@ -10,7 +10,7 @@ import { getSchema } from '../formSchema';
 import ScomCommissionFeeSetup from "@scom/scom-commission-fee-setup";
 import configData from "../data.json";
 
-interface IModelOptions {
+interface IConfigOptions {
   refreshWidget: () => Promise<void>;
   refreshDappContainer: () => void;
   setContaiterTag: (value: any) => void;
@@ -20,7 +20,7 @@ interface IModelOptions {
 export class ConfigModel {
   private state: State;
   private module: Module;
-  private options: IModelOptions = {
+  private options: IConfigOptions = {
     refreshWidget: async () => { },
     refreshDappContainer: () => { },
     setContaiterTag: (value: any) => { },
@@ -38,7 +38,7 @@ export class ConfigModel {
   };
   private rpcWalletEvents: IEventBusRegistry[] = [];
 
-  constructor(state: State, module: Module, options: IModelOptions) {
+  constructor(state: State, module: Module, options: IConfigOptions) {
     this.state = state;
     this.module = module;
     this.options = options;
