@@ -2154,7 +2154,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         await this.buybackModel.fetchGuaranteedBuyBackInfo(this.data);
                         this.updateCommissionInfo();
                         await this.renderBuybackCampaign();
-                        const firstToken = this.buybackModel.secondTokenObject;
+                        const firstToken = this.buybackModel.firstTokenObject;
                         if (firstToken && firstToken.symbol !== scom_token_list_9.ChainNativeTokenByChainId[chainId]?.symbol && this.state.isRpcWalletConnected()) {
                             await this.initApprovalModelAction();
                         }
@@ -2184,12 +2184,11 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     return;
                 if (this.state.getCurrentCommissions(this.commissions).length) {
                     this.hStackCommission.visible = true;
-                    const firstToken = this.buybackModel.secondTokenObject;
-                    const secondToken = this.buybackModel.firstTokenObject;
-                    if (firstToken && secondToken) {
+                    const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                    if (firstTokenObject && secondTokenObject) {
                         const amount = new eth_wallet_7.BigNumber(this.firstInput?.value || 0);
                         const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-                        this.lbCommissionFee.caption = `${(0, index_15.formatNumber)(commissionAmount, 6)} ${firstToken?.symbol || ''}`;
+                        this.lbCommissionFee.caption = `${(0, index_15.formatNumber)(commissionAmount, 6)} ${firstTokenObject?.symbol || ''}`;
                         this.hStackCommission.visible = true;
                     }
                     else {
@@ -2201,13 +2200,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
             };
             this.firstInputChange = () => {
-                const firstToken = this.buybackModel.secondTokenObject;
-                const secondToken = this.buybackModel.firstTokenObject;
-                (0, index_15.limitInputNumber)(this.firstInput, firstToken?.decimals || 18);
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                (0, index_15.limitInputNumber)(this.firstInput, firstTokenObject?.decimals || 18);
                 if (!this.buybackModel.buybackInfo)
                     return;
                 const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {};
-                const firstSymbol = firstToken?.symbol || '';
+                const firstSymbol = firstTokenObject?.symbol || '';
                 const inputVal = new eth_wallet_7.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
                 if (inputVal.isNaN()) {
                     this.lbFee.caption = `0 ${firstSymbol}`;
@@ -2215,26 +2213,25 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
                 else {
                     this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-                    this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                    this.secondInput.value = inputVal.dp(secondTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
             };
             this.secondInputChange = () => {
-                const firstToken = this.buybackModel.secondTokenObject;
-                const secondToken = this.buybackModel.firstTokenObject;
-                (0, index_15.limitInputNumber)(this.secondInput, secondToken?.decimals || 18);
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                (0, index_15.limitInputNumber)(this.secondInput, secondTokenObject?.decimals || 18);
                 if (!this.buybackModel.buybackInfo)
                     return;
                 const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {};
-                const firstSymbol = firstToken?.symbol || '';
+                const firstSymbol = firstTokenObject?.symbol || '';
                 const inputVal = new eth_wallet_7.BigNumber(this.secondInput.value).multipliedBy(offerPrice).dividedBy(tradeFee);
                 if (inputVal.isNaN()) {
                     this.firstInput.value = '';
                     this.lbFee.caption = `0 ${firstSymbol}`;
                 }
                 else {
-                    this.firstInput.value = inputVal.dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                    this.firstInput.value = inputVal.dp(firstTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
                     this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
                 }
                 this.updateCommissionInfo();
@@ -2242,13 +2239,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             };
             this.onSetMaxBalance = async () => {
                 const { tradeFee, offerPrice } = this.buybackModel.buybackInfo.queueInfo || {};
-                const firstToken = this.buybackModel.secondTokenObject;
-                const secondToken = this.buybackModel.firstTokenObject;
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
                 const firstInputValue = this.buybackModel.getAvailable(this.commissions);
-                this.firstInput.value = new eth_wallet_7.BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                this.firstInput.value = new eth_wallet_7.BigNumber(firstInputValue).dp(firstTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
                 const inputVal = new eth_wallet_7.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-                this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
-                this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstToken?.symbol || ''}`;
+                this.secondInput.value = inputVal.dp(secondTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstTokenObject?.symbol || ''}`;
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
             };
@@ -2287,7 +2283,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
                 if (this.buybackModel.buybackInfo && this.isApproveButtonShown) {
                     const info = this.buybackModel.buybackInfo.queueInfo;
-                    this.approvalModelAction.doApproveAction(this.buybackModel.secondTokenObject, info.tokenInAvailable);
+                    this.approvalModelAction.doApproveAction(this.buybackModel.firstTokenObject, info.tokenInAvailable);
                 }
                 else {
                     this.approvalModelAction.doPayAction();
@@ -2296,12 +2292,11 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.onSubmit = async () => {
                 if (!this.buybackModel.buybackInfo || !this.buybackModel.buybackInfo.queueInfo)
                     return;
-                const firstToken = this.buybackModel.secondTokenObject;
-                const secondToken = this.buybackModel.firstTokenObject;
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
                 const fromAmount = new eth_wallet_7.BigNumber(this.firstInput?.value || 0);
                 const toAmount = new eth_wallet_7.BigNumber(this.secondInput?.value || 0);
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, fromAmount);
-                this.showResultMessage('warning', `Swapping ${(0, index_15.formatNumber)(fromAmount.plus(commissionAmount))} ${firstToken?.symbol} to ${(0, index_15.formatNumber)(this.secondInput.value)} ${secondToken?.symbol}`);
+                this.showResultMessage('warning', `Swapping ${(0, index_15.formatNumber)(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol} to ${(0, index_15.formatNumber)(this.secondInput.value)} ${secondTokenObject?.symbol}`);
                 const { error } = await this.buybackModel.executeSwap(fromAmount, toAmount, this.commissions);
                 if (error) {
                     this.isSubmitting = false;
@@ -2378,8 +2373,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     }
                 });
                 this.state.approvalModel.spenderAddress = this.contractAddress;
-                const firstToken = this.buybackModel.secondTokenObject;
-                await this.approvalModelAction.checkAllowance(firstToken, this.buybackModel.firstAvailableBalance);
+                const { firstTokenObject, firstAvailableBalance } = this.buybackModel;
+                await this.approvalModelAction.checkAllowance(firstTokenObject, firstAvailableBalance);
             };
             this.showResultMessage = (status, content) => {
                 if (!this.txStatusModal)
@@ -2447,10 +2442,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const isRpcConnected = this.state.isRpcWalletConnected();
                     const { firstTokenObject, firstTokenBalance, secondTokenObject, firstAvailableBalance, secondAvailableBalance, buybackInfo } = this.buybackModel;
                     const { amount, allowAll, tradeFee, available, offerPrice, startDate, endDate } = buybackInfo?.queueInfo || {};
-                    const firstTokenObj = secondTokenObject;
-                    const secondTokenObj = firstTokenObject;
-                    const firstSymbol = firstTokenObj?.symbol || '';
-                    const secondSymbol = secondTokenObj?.symbol || '';
+                    const firstSymbol = firstTokenObject?.symbol || '';
+                    const secondSymbol = secondTokenObject?.symbol || '';
                     const rate = `1 ${firstSymbol} : ${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).dividedBy(offerPrice))} ${secondSymbol}`;
                     const reverseRate = `1 ${secondSymbol} : ${offerPrice} ${firstSymbol}`;
                     const hStackEndTime = await components_7.HStack.create({ gap: 4, verticalAlignment: 'center' });
@@ -2498,7 +2491,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-input", { id: "firstInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.firstInputChange, onFocus: () => this.handleFocusInput(true, true), onBlur: () => this.handleFocusInput(true, false) }),
                                 this.$render("i-hstack", { gap: 4, width: 130, verticalAlignment: "center" },
                                     this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(firstAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_9.assets.tokenPath(firstTokenObj, chainId), fallbackUrl: index_16.fallBackUrl }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_9.assets.tokenPath(firstTokenObject, chainId), fallbackUrl: index_16.fallBackUrl }),
                                     this.$render("i-label", { caption: firstSymbol, font: { color: Theme.input.fontColor, bold: true } }))),
                             this.$render("i-vstack", { width: "100%", margin: { top: 4, bottom: 4 }, horizontalAlignment: "center" },
                                 this.$render("i-icon", { name: "arrow-down", width: 20, height: 20, fill: Theme.text.primary })),
@@ -2506,7 +2499,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-input", { id: "secondInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.secondInputChange, onFocus: () => this.handleFocusInput(false, true), onBlur: () => this.handleFocusInput(false, false) }),
                                 this.$render("i-hstack", { gap: 4, margin: { right: 8 }, width: 130, verticalAlignment: "center" },
                                     this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(secondAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_9.assets.tokenPath(secondTokenObj, chainId), fallbackUrl: index_16.fallBackUrl }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_9.assets.tokenPath(secondTokenObject, chainId), fallbackUrl: index_16.fallBackUrl }),
                                     this.$render("i-label", { caption: secondSymbol, font: { color: Theme.input.fontColor, bold: true } })))),
                         this.$render("i-hstack", { gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
                             this.$render("i-label", { caption: `Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_7.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`, font: { size: '0.75rem' } }),

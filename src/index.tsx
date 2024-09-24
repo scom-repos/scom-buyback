@@ -50,7 +50,6 @@ export default class ScomBuyback extends Module {
 
 	private infoStack: VStack;
 	private emptyStack: VStack;
-
 	private loadingElm: Panel;
 	private txStatusModal: ScomTxStatusModal;
 	private noCampaignSection: Panel;
@@ -255,7 +254,7 @@ export default class ScomBuyback extends Module {
 				await this.buybackModel.fetchGuaranteedBuyBackInfo(this.data);
 				this.updateCommissionInfo();
 				await this.renderBuybackCampaign();
-				const firstToken = this.buybackModel.secondTokenObject;
+				const firstToken = this.buybackModel.firstTokenObject;
 				if (firstToken && firstToken.symbol !== ChainNativeTokenByChainId[chainId]?.symbol && this.state.isRpcWalletConnected()) {
 					await this.initApprovalModelAction();
 				} else if ((this.buybackModel.isExpired || this.buybackModel.isUpcoming) && this.btnSwap) {
@@ -283,12 +282,11 @@ export default class ScomBuyback extends Module {
 		if (!this.hStackCommission) return;
 		if (this.state.getCurrentCommissions(this.commissions).length) {
 			this.hStackCommission.visible = true;
-			const firstToken = this.buybackModel.secondTokenObject;
-			const secondToken = this.buybackModel.firstTokenObject;
-			if (firstToken && secondToken) {
+			const { firstTokenObject, secondTokenObject } = this.buybackModel;
+			if (firstTokenObject && secondTokenObject) {
 				const amount = new BigNumber(this.firstInput?.value || 0);
 				const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-				this.lbCommissionFee.caption = `${formatNumber(commissionAmount, 6)} ${firstToken?.symbol || ''}`;
+				this.lbCommissionFee.caption = `${formatNumber(commissionAmount, 6)} ${firstTokenObject?.symbol || ''}`;
 				this.hStackCommission.visible = true;
 			} else {
 				this.hStackCommission.visible = false;
@@ -299,37 +297,35 @@ export default class ScomBuyback extends Module {
 	}
 
 	private firstInputChange = () => {
-		const firstToken = this.buybackModel.secondTokenObject;
-		const secondToken = this.buybackModel.firstTokenObject;
-		limitInputNumber(this.firstInput, firstToken?.decimals || 18);
+		const { firstTokenObject, secondTokenObject } = this.buybackModel;
+		limitInputNumber(this.firstInput, firstTokenObject?.decimals || 18);
 		if (!this.buybackModel.buybackInfo) return;
 		const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {} as ProviderGroupQueueInfo;
-		const firstSymbol = firstToken?.symbol || '';
+		const firstSymbol = firstTokenObject?.symbol || '';
 		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
 		if (inputVal.isNaN()) {
 			this.lbFee.caption = `0 ${firstSymbol}`;
 			this.secondInput.value = '';
 		} else {
 			this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-			this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+			this.secondInput.value = inputVal.dp(secondTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
 		}
 		this.updateCommissionInfo();
 		this.updateBtnSwap();
 	}
 
 	private secondInputChange = () => {
-		const firstToken = this.buybackModel.secondTokenObject;
-		const secondToken = this.buybackModel.firstTokenObject;
-		limitInputNumber(this.secondInput, secondToken?.decimals || 18);
+		const { firstTokenObject, secondTokenObject } = this.buybackModel;
+		limitInputNumber(this.secondInput, secondTokenObject?.decimals || 18);
 		if (!this.buybackModel.buybackInfo) return;
 		const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {} as ProviderGroupQueueInfo;
-		const firstSymbol = firstToken?.symbol || '';
+		const firstSymbol = firstTokenObject?.symbol || '';
 		const inputVal = new BigNumber(this.secondInput.value).multipliedBy(offerPrice).dividedBy(tradeFee);
 		if (inputVal.isNaN()) {
 			this.firstInput.value = '';
 			this.lbFee.caption = `0 ${firstSymbol}`;
 		} else {
-			this.firstInput.value = inputVal.dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+			this.firstInput.value = inputVal.dp(firstTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
 			this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
 		}
 		this.updateCommissionInfo();
@@ -338,13 +334,12 @@ export default class ScomBuyback extends Module {
 
 	private onSetMaxBalance = async () => {
 		const { tradeFee, offerPrice } = this.buybackModel.buybackInfo.queueInfo || {} as ProviderGroupQueueInfo;
-		const firstToken = this.buybackModel.secondTokenObject;
-		const secondToken = this.buybackModel.firstTokenObject;
+		const { firstTokenObject, secondTokenObject } = this.buybackModel;
 		const firstInputValue = this.buybackModel.getAvailable(this.commissions);
-		this.firstInput.value = new BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+		this.firstInput.value = new BigNumber(firstInputValue).dp(firstTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
 		const inputVal = new BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-		this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
-		this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstToken?.symbol || ''}`;
+		this.secondInput.value = inputVal.dp(secondTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
+		this.lbFee.caption = `${formatNumber(new BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstTokenObject?.symbol || ''}`;
 		this.updateCommissionInfo();
 		this.updateBtnSwap();
 	}
@@ -385,7 +380,7 @@ export default class ScomBuyback extends Module {
 		}
 		if (this.buybackModel.buybackInfo && this.isApproveButtonShown) {
 			const info = this.buybackModel.buybackInfo.queueInfo;
-			this.approvalModelAction.doApproveAction(this.buybackModel.secondTokenObject as ITokenObject, info.tokenInAvailable);
+			this.approvalModelAction.doApproveAction(this.buybackModel.firstTokenObject, info.tokenInAvailable);
 		} else {
 			this.approvalModelAction.doPayAction();
 		}
@@ -393,12 +388,11 @@ export default class ScomBuyback extends Module {
 
 	private onSubmit = async () => {
 		if (!this.buybackModel.buybackInfo || !this.buybackModel.buybackInfo.queueInfo) return;
-		const firstToken = this.buybackModel.secondTokenObject;
-		const secondToken = this.buybackModel.firstTokenObject;
+		const { firstTokenObject, secondTokenObject } = this.buybackModel;
 		const fromAmount = new BigNumber(this.firstInput?.value || 0);
 		const toAmount = new BigNumber(this.secondInput?.value || 0);
 		const commissionAmount = this.state.getCommissionAmount(this.commissions, fromAmount);
-		this.showResultMessage('warning', `Swapping ${formatNumber(fromAmount.plus(commissionAmount))} ${firstToken?.symbol} to ${formatNumber(this.secondInput.value)} ${secondToken?.symbol}`);
+		this.showResultMessage('warning', `Swapping ${formatNumber(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol} to ${formatNumber(this.secondInput.value)} ${secondTokenObject?.symbol}`);
 		const { error } = await this.buybackModel.executeSwap(fromAmount, toAmount, this.commissions);
 		if (error) {
 			this.isSubmitting = false;
@@ -480,8 +474,8 @@ export default class ScomBuyback extends Module {
 			}
 		});
 		this.state.approvalModel.spenderAddress = this.contractAddress;
-		const firstToken = this.buybackModel.secondTokenObject;
-		await this.approvalModelAction.checkAllowance(firstToken, this.buybackModel.firstAvailableBalance);
+		const { firstTokenObject, firstAvailableBalance } = this.buybackModel;
+		await this.approvalModelAction.checkAllowance(firstTokenObject, firstAvailableBalance);
 	}
 
 	private showResultMessage = (status: 'warning' | 'success' | 'error', content?: string | Error) => {
@@ -565,10 +559,8 @@ export default class ScomBuyback extends Module {
 			const isRpcConnected = this.state.isRpcWalletConnected();
 			const { firstTokenObject, firstTokenBalance, secondTokenObject, firstAvailableBalance, secondAvailableBalance, buybackInfo } = this.buybackModel;
 			const { amount, allowAll, tradeFee, available, offerPrice, startDate, endDate } = buybackInfo?.queueInfo || {} as ProviderGroupQueueInfo;
-			const firstTokenObj = secondTokenObject;
-			const secondTokenObj = firstTokenObject;
-			const firstSymbol = firstTokenObj?.symbol || '';
-			const secondSymbol = secondTokenObj?.symbol || '';
+			const firstSymbol = firstTokenObject?.symbol || '';
+			const secondSymbol = secondTokenObject?.symbol || '';
 			const rate = `1 ${firstSymbol} : ${formatNumber(new BigNumber(1).dividedBy(offerPrice))} ${secondSymbol}`;
 			const reverseRate = `1 ${secondSymbol} : ${offerPrice} ${firstSymbol}`;
 			const hStackEndTime = await HStack.create({ gap: 4, verticalAlignment: 'center' });
@@ -673,7 +665,7 @@ export default class ScomBuyback extends Module {
 									class="btn-os"
 									onClick={this.onSetMaxBalance}
 								/>
-								<i-image width={24} height={24} url={tokenAssets.tokenPath(firstTokenObj, chainId)} fallbackUrl={fallBackUrl} />
+								<i-image width={24} height={24} url={tokenAssets.tokenPath(firstTokenObject, chainId)} fallbackUrl={fallBackUrl} />
 								<i-label caption={firstSymbol} font={{ color: Theme.input.fontColor, bold: true }} />
 							</i-hstack>
 						</i-hstack>
@@ -712,7 +704,7 @@ export default class ScomBuyback extends Module {
 									class="btn-os"
 									onClick={this.onSetMaxBalance}
 								/>
-								<i-image width={24} height={24} url={tokenAssets.tokenPath(secondTokenObj, chainId)} fallbackUrl={fallBackUrl} />
+								<i-image width={24} height={24} url={tokenAssets.tokenPath(secondTokenObject, chainId)} fallbackUrl={fallBackUrl} />
 								<i-label caption={secondSymbol} font={{ color: Theme.input.fontColor, bold: true }} />
 							</i-hstack>
 						</i-hstack>
