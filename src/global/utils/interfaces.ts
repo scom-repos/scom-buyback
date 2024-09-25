@@ -13,7 +13,9 @@ export interface IBuybackCampaign {
   pairAddress?: string;
   offerIndex: number;
   tokenIn: string;
+  customTokenIn?: string;
   tokenOut: string;
+  customTokenOut?: string;
 
   commissions?: ICommissionInfo[];
   wallets: IWalletPlugin[];

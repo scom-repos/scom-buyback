@@ -170,3 +170,20 @@ export const comboBoxStyle = Styles.style({
       }
   }
 })
+
+export const formInputStyle = Styles.style({
+  width: '100% !important',
+  $nest: {
+    '& > input': {
+      height: '100% !important',
+      width: '100% !important',
+      maxWidth: '100%',
+      padding: '0.5rem 1rem',
+      color: Theme.input.fontColor,
+      backgroundColor: Theme.input.background,
+      borderColor: Theme.input.background,
+      borderRadius: '0.625rem',
+      outline: 'none'
+    }
+  }
+})

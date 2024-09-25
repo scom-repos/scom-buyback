@@ -37,7 +37,7 @@ define("@scom/scom-buyback/global/utils/helper.ts", ["require", "exports", "@ijs
             value = value.toFixed();
         }
         const minValue = '0.0000001';
-        return components_1.FormatUtils.formatNumber(value, { decimalFigures: decimalFigures || 4, minValue });
+        return components_1.FormatUtils.formatNumber(value, { decimalFigures: decimalFigures || 4, minValue, hasTrailingZero: false });
     };
     exports.formatNumber = formatNumber;
     const isInvalidInput = (val) => {
@@ -149,11 +149,11 @@ define("@scom/scom-buyback/assets.ts", ["require", "exports", "@ijstech/componen
         fullPath
     };
 });
+///<amd-module name='@scom/scom-buyback/store/data/index.ts'/> 
 define("@scom/scom-buyback/store/data/index.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CoreContractAddressesByChainId = void 0;
-    ///<amd-module name='@scom/scom-buyback/store/data/index.ts'/> 
     exports.CoreContractAddressesByChainId = {
         1: {
             "WETH9": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -361,14 +361,120 @@ define("@scom/scom-buyback/store/utils.ts", ["require", "exports", "@ijstech/eth
     }
     exports.isClientWalletConnected = isClientWalletConnected;
 });
-define("@scom/scom-buyback/store/index.ts", ["require", "exports", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/store/utils.ts"], function (require, exports, assets_1, utils_1) {
+define("@scom/scom-buyback/store/tokens/mainnet/avalanche.ts", ["require", "exports", "@scom/scom-token-list"], function (require, exports, scom_token_list_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Tokens_Avalanche = void 0;
+    exports.Tokens_Avalanche = [
+        {
+            "address": "0xc7198437980c041c805A1EDcbA50c1Ce5db95118",
+            "name": "Tether USD",
+            "symbol": "USDT.e",
+            "decimals": 6,
+            "isCommon": true
+        },
+        {
+            ...scom_token_list_2.ChainNativeTokenByChainId[43114]
+        }
+    ];
+});
+define("@scom/scom-buyback/store/tokens/mainnet/bsc.ts", ["require", "exports", "@scom/scom-token-list"], function (require, exports, scom_token_list_3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Tokens_BSC = void 0;
+    exports.Tokens_BSC = [
+        {
+            "name": "Binance Pegged USDT",
+            "symbol": "USDT",
+            "address": "0x55d398326f99059fF775485246999027B3197955",
+            "decimals": 18,
+            "isCommon": true
+        },
+        {
+            ...scom_token_list_3.ChainNativeTokenByChainId[56]
+        }
+    ];
+});
+define("@scom/scom-buyback/store/tokens/mainnet/index.ts", ["require", "exports", "@scom/scom-buyback/store/tokens/mainnet/avalanche.ts", "@scom/scom-buyback/store/tokens/mainnet/bsc.ts"], function (require, exports, avalanche_1, bsc_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Tokens_BSC = exports.Tokens_Avalanche = void 0;
+    Object.defineProperty(exports, "Tokens_Avalanche", { enumerable: true, get: function () { return avalanche_1.Tokens_Avalanche; } });
+    Object.defineProperty(exports, "Tokens_BSC", { enumerable: true, get: function () { return bsc_1.Tokens_BSC; } });
+});
+define("@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts", ["require", "exports", "@scom/scom-token-list"], function (require, exports, scom_token_list_4) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Tokens_BSC_Testnet = void 0;
+    exports.Tokens_BSC_Testnet = [
+        {
+            "name": "USDT",
+            "address": "0x29386B60e0A9A1a30e1488ADA47256577ca2C385",
+            "symbol": "USDT",
+            "decimals": 6,
+            "isCommon": true
+        },
+        {
+            "name": "OpenSwap",
+            "address": "0x45eee762aaeA4e5ce317471BDa8782724972Ee19",
+            "symbol": "OSWAP",
+            "decimals": 18
+        },
+        {
+            "name": "BUSD Token",
+            "symbol": "BUSD",
+            "address": "0xDe9334C157968320f26e449331D6544b89bbD00F",
+            "decimals": 18
+        },
+        {
+            ...scom_token_list_4.ChainNativeTokenByChainId[97]
+        }
+    ];
+});
+define("@scom/scom-buyback/store/tokens/testnet/fuji.ts", ["require", "exports", "@scom/scom-token-list"], function (require, exports, scom_token_list_5) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Tokens_Fuji = void 0;
+    exports.Tokens_Fuji = [
+        {
+            "name": "Tether USD",
+            "address": "0xb9C31Ea1D475c25E58a1bE1a46221db55E5A7C6e",
+            "symbol": "USDT.e",
+            "decimals": 6
+        },
+        {
+            ...scom_token_list_5.ChainNativeTokenByChainId[43113]
+        }
+    ];
+});
+define("@scom/scom-buyback/store/tokens/testnet/index.ts", ["require", "exports", "@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts", "@scom/scom-buyback/store/tokens/testnet/fuji.ts"], function (require, exports, bsc_testnet_1, fuji_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Tokens_Fuji = exports.Tokens_BSC_Testnet = void 0;
+    Object.defineProperty(exports, "Tokens_BSC_Testnet", { enumerable: true, get: function () { return bsc_testnet_1.Tokens_BSC_Testnet; } });
+    Object.defineProperty(exports, "Tokens_Fuji", { enumerable: true, get: function () { return fuji_1.Tokens_Fuji; } });
+});
+define("@scom/scom-buyback/store/tokens/index.ts", ["require", "exports", "@scom/scom-buyback/store/tokens/mainnet/index.ts", "@scom/scom-buyback/store/tokens/testnet/index.ts"], function (require, exports, index_4, index_5) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.SupportedERC20Tokens = void 0;
+    const SupportedERC20Tokens = {
+        56: index_4.Tokens_BSC.map(v => { return { ...v, chainId: 56 }; }),
+        97: index_5.Tokens_BSC_Testnet.map(v => { return { ...v, chainId: 97 }; }),
+        43113: index_5.Tokens_Fuji.map(v => { return { ...v, chainId: 43113 }; }),
+        43114: index_4.Tokens_Avalanche.map(v => { return { ...v, chainId: 43114 }; }),
+    };
+    exports.SupportedERC20Tokens = SupportedERC20Tokens;
+});
+define("@scom/scom-buyback/store/index.ts", ["require", "exports", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/store/utils.ts", "@scom/scom-buyback/store/tokens/index.ts"], function (require, exports, assets_1, utils_1, index_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.fallBackUrl = void 0;
     exports.fallBackUrl = assets_1.default.fullPath('img/token-placeholder.svg');
     __exportStar(utils_1, exports);
+    __exportStar(index_6, exports);
 });
-define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@scom/scom-buyback/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list"], function (require, exports, index_4, eth_wallet_4, index_5, oswap_openswap_contract_1, scom_token_list_2) {
+define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@scom/scom-buyback/global/index.ts", "@ijstech/eth-wallet", "@scom/scom-buyback/store/index.ts", "@scom/oswap-openswap-contract", "@scom/scom-token-list"], function (require, exports, index_7, eth_wallet_4, index_8, oswap_openswap_contract_1, scom_token_list_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getOffers = exports.getGuaranteedBuyBackInfo = exports.getGroupQueueExecuteData = void 0;
@@ -380,7 +486,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     };
     const mapTokenObjectSet = (state, obj) => {
         let chainId = state.getChainId();
-        const WETH9 = (0, index_5.getWETH)(chainId);
+        const WETH9 = (0, index_8.getWETH)(chainId);
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 if (!obj[key]?.address)
@@ -392,9 +498,9 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     const getTokenObjectByAddress = (state, address) => {
         let chainId = state.getChainId();
         if (!address || address.toLowerCase() === getAddressByKey(state, 'WETH9')?.toLowerCase()) {
-            return (0, index_5.getWETH)(chainId);
+            return (0, index_8.getWETH)(chainId);
         }
-        let tokenMap = scom_token_list_2.tokenStore.getTokenMapByChainId(chainId);
+        let tokenMap = scom_token_list_6.tokenStore.getTokenMapByChainId(chainId);
         return tokenMap[address.toLowerCase()];
     };
     const getPair = async (state, tokenA, tokenB) => {
@@ -407,8 +513,8 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     };
     const getGroupQueueExecuteData = (offerIndex) => {
         let indexArr = [offerIndex];
-        let ratioArr = [(0, index_4.toWeiInv)('1')];
-        let data = "0x" + (0, index_4.numberToBytes32)((indexArr.length * 2 + 1) * 32) + (0, index_4.numberToBytes32)(indexArr.length) + indexArr.map(e => (0, index_4.numberToBytes32)(e)).join('') + ratioArr.map(e => (0, index_4.numberToBytes32)(e)).join('');
+        let ratioArr = [(0, index_7.toWeiInv)('1')];
+        let data = "0x" + (0, index_7.numberToBytes32)((indexArr.length * 2 + 1) * 32) + (0, index_7.numberToBytes32)(indexArr.length) + indexArr.map(e => (0, index_7.numberToBytes32)(e)).join('') + ratioArr.map(e => (0, index_7.numberToBytes32)(e)).join('');
         return data;
     };
     exports.getGroupQueueExecuteData = getGroupQueueExecuteData;
@@ -434,7 +540,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     const getProviderGroupQueueInfoByIndex = async (state, pairAddress, tokenInAddress, offerIndex) => {
         let wallet = state.getRpcWallet();
         let chainId = state.getChainId();
-        const nativeToken = (0, index_5.getChainNativeToken)(chainId);
+        const nativeToken = (0, index_8.getChainNativeToken)(chainId);
         const WETH9Address = getAddressByKey(state, 'WETH9');
         const oracleContract = new oswap_openswap_contract_1.Contracts.OSWAP_RestrictedPair(wallet, pairAddress);
         let [token0Address, token1Address] = await Promise.all([oracleContract.token0(), oracleContract.token1()]);
@@ -461,7 +567,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
             param2: offerIndex,
             param3: wallet.address
         });
-        let price = (0, index_4.toWeiInv)(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
+        let price = (0, index_7.toWeiInv)(offer.restrictedPrice.shiftedBy(-tokenOut.decimals).toFixed()).shiftedBy(-tokenIn.decimals).toFixed();
         let amount = new eth_wallet_4.BigNumber(offer.amount).shiftedBy(-Number(tokenIn.decimals)).toFixed();
         let userAllo = { address: wallet.address, allocation: new eth_wallet_4.BigNumber(allocation).shiftedBy(-Number(tokenIn.decimals)).toFixed() };
         let available = offer.allowAll ? amount : new eth_wallet_4.BigNumber(userAllo.allocation).toFixed();
@@ -507,7 +613,7 @@ define("@scom/scom-buyback/buyback-utils/index.ts", ["require", "exports", "@sco
     };
     exports.getOffers = getOffers;
 });
-define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/oswap-openswap-contract", "@scom/scom-commission-proxy-contract", "@scom/scom-buyback/buyback-utils/index.ts"], function (require, exports, eth_wallet_5, oswap_openswap_contract_2, scom_commission_proxy_contract_1, index_6) {
+define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstech/eth-wallet", "@scom/oswap-openswap-contract", "@scom/scom-commission-proxy-contract", "@scom/scom-buyback/buyback-utils/index.ts"], function (require, exports, eth_wallet_5, oswap_openswap_contract_2, scom_commission_proxy_contract_1, index_9) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getProxySelectors = exports.getHybridRouterAddress = exports.executeSwap = void 0;
@@ -670,7 +776,7 @@ define("@scom/scom-buyback/swap-utils/index.ts", ["require", "exports", "@ijstec
             const transactionDeadlineInMinutes = state.transactionDeadline;
             const transactionDeadline = Math.floor(Date.now() / 1000 + transactionDeadlineInMinutes * 60);
             if (swapData.provider === "RestrictedOracle") {
-                const data = (0, index_6.getGroupQueueExecuteData)(swapData.groupQueueOfferIndex);
+                const data = (0, index_9.getGroupQueueExecuteData)(swapData.groupQueueOfferIndex);
                 if (!data)
                     return {
                         receipt: null,
@@ -735,11 +841,9 @@ define("@scom/scom-buyback/data.json.ts", ["require", "exports"], function (requ
         "defaultBuilderData": {
             "defaultChainId": 97,
             "chainId": 97,
-            "title": "OSwap IDO Buyback",
-            "logo": "https://ipfs.scom.dev/ipfs/bafkreigsu7udzf7sdoyspnvdinm7vh42ihhfs4vwcvibqkozrckgdtp3ve",
-            "offerIndex": 36,
-            "tokenIn": "0x45eee762aaeA4e5ce317471BDa8782724972Ee19",
-            "tokenOut": "0xDe9334C157968320f26e449331D6544b89bbD00F",
+            "offerIndex": 18,
+            "tokenIn": "0xDe9334C157968320f26e449331D6544b89bbD00F",
+            "tokenOut": "0x45eee762aaeA4e5ce317471BDa8782724972Ee19",
             "networks": [
                 {
                     "chainId": 43113
@@ -759,7 +863,7 @@ define("@scom/scom-buyback/data.json.ts", ["require", "exports"], function (requ
 define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.comboBoxStyle = exports.buybackComponent = exports.buybackDappContainer = void 0;
+    exports.formInputStyle = exports.comboBoxStyle = exports.buybackComponent = exports.buybackDappContainer = void 0;
     const Theme = components_4.Styles.Theme.ThemeVars;
     const colorVar = {
         primaryButton: 'transparent linear-gradient(90deg, #AC1D78 0%, #E04862 100%) 0% 0% no-repeat padding-box',
@@ -924,11 +1028,221 @@ define("@scom/scom-buyback/index.css.ts", ["require", "exports", "@ijstech/compo
             }
         }
     });
+    exports.formInputStyle = components_4.Styles.style({
+        width: '100% !important',
+        $nest: {
+            '& > input': {
+                height: '100% !important',
+                width: '100% !important',
+                maxWidth: '100%',
+                padding: '0.5rem 1rem',
+                color: Theme.input.fontColor,
+                backgroundColor: Theme.input.background,
+                borderColor: Theme.input.background,
+                borderRadius: '0.625rem',
+                outline: 'none'
+            }
+        }
+    });
 });
-define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/components", "@scom/scom-network-picker", "@scom/scom-token-input", "@scom/scom-token-list", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_5, scom_network_picker_1, scom_token_input_1, scom_token_list_3, index_7, index_css_1) {
+define("@scom/scom-buyback/model/buybackModel.ts", ["require", "exports", "@ijstech/components", "@scom/scom-token-list", "@ijstech/eth-contract", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-token-input"], function (require, exports, components_5, scom_token_list_7, eth_contract_1, index_10, index_11, scom_token_input_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getProjectOwnerSchema = exports.getBuilderSchema = void 0;
+    exports.BuybackModel = void 0;
+    class BuybackModel {
+        constructor(state) {
+            this.getAvailable = (commissions) => {
+                const firstAvailable = this.firstAvailableBalance;
+                let totalAmount = new eth_contract_1.BigNumber(this.secondTokenBalance);
+                const commissionAmount = this.state.getCommissionAmount(commissions, totalAmount);
+                if (commissionAmount.gt(0)) {
+                    const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
+                    totalAmount = totalAmount.dividedBy(totalFee);
+                }
+                return totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
+            };
+            this.executeSwap = async (fromAmount, toAmount, commissions) => {
+                const { pairAddress, offerIndex } = this.buybackInfo.queueInfo;
+                const firstToken = this.secondTokenObject;
+                const secondToken = this.firstTokenObject;
+                const params = {
+                    provider: "RestrictedOracle",
+                    routeTokens: [firstToken, secondToken],
+                    bestSmartRoute: [firstToken, secondToken],
+                    pairs: [pairAddress],
+                    fromAmount,
+                    toAmount,
+                    isFromEstimated: false,
+                    groupQueueOfferIndex: offerIndex,
+                    commissions
+                };
+                const data = await (0, index_10.executeSwap)(this.state, params);
+                return data;
+            };
+            this.fetchGuaranteedBuyBackInfo = async (data) => {
+                const { tokenIn, tokenOut, customTokenIn, customTokenOut } = data;
+                const isCustomTokenIn = tokenIn?.toLowerCase() === scom_token_input_1.CUSTOM_TOKEN.address.toLowerCase();
+                const isCustomTokenOut = tokenOut?.toLowerCase() === scom_token_input_1.CUSTOM_TOKEN.address.toLowerCase();
+                const buybackInfo = await (0, index_11.getGuaranteedBuyBackInfo)(this.state, {
+                    ...data,
+                    tokenIn: isCustomTokenIn ? (customTokenIn?.toLowerCase() === 'native token' ? null : customTokenIn) : tokenIn,
+                    tokenOut: isCustomTokenOut ? (customTokenOut?.toLowerCase() === 'native token' ? null : customTokenOut) : tokenOut
+                });
+                this._buybackInfo = buybackInfo;
+                return buybackInfo;
+            };
+            this.getValueByKey = (key) => {
+                const item = this.buybackInfo;
+                if (!item?.queueInfo)
+                    return null;
+                return item.queueInfo[key];
+            };
+            this.getTokenObject = (key) => {
+                const chainId = this.chainId;
+                const tokenMap = scom_token_list_7.tokenStore.getTokenMapByChainId(chainId);
+                const tokenAddress = this.getValueByKey(key);
+                if (tokenAddress && tokenMap) {
+                    let token = tokenMap[tokenAddress.toLowerCase()];
+                    if (!token) {
+                        token = tokenMap[tokenAddress];
+                    }
+                    return token;
+                }
+                return null;
+            };
+            this.getTokenBalace = (token) => {
+                const tokenBalances = scom_token_list_7.tokenStore.getTokenBalancesByChainId(this.chainId);
+                if (token && tokenBalances) {
+                    return tokenBalances[token.address?.toLowerCase() || token.symbol] || 0;
+                }
+                return 0;
+            };
+            this.state = state;
+        }
+        get chainId() {
+            return this.state.getChainId();
+        }
+        set buybackInfo(value) {
+            this._buybackInfo = value;
+        }
+        get buybackInfo() {
+            return this._buybackInfo;
+        }
+        get isExpired() {
+            if (!this.buybackInfo)
+                return null;
+            const info = this.buybackInfo.queueInfo;
+            if (!info?.endDate)
+                return null;
+            return (0, components_5.moment)().isAfter((0, components_5.moment)(info.endDate));
+        }
+        get isUpcoming() {
+            if (!this.buybackInfo)
+                return null;
+            const info = this.buybackInfo.queueInfo;
+            if (!info?.startDate)
+                return null;
+            return (0, components_5.moment)().isBefore((0, components_5.moment)(info.startDate));
+        }
+        get isSwapDisabled() {
+            if (!this.buybackInfo)
+                return true;
+            const info = this.buybackInfo.queueInfo;
+            if (!info)
+                return true;
+            const { startDate, endDate, allowAll, isApprovedTrader } = info;
+            const isUpcoming = (0, components_5.moment)().isBefore((0, components_5.moment)(startDate));
+            const isExpired = (0, components_5.moment)().isAfter((0, components_5.moment)(endDate));
+            if (isUpcoming || isExpired) {
+                return true;
+            }
+            if (!allowAll) {
+                return !isApprovedTrader;
+            }
+            return false;
+        }
+        get firstAvailableBalance() {
+            const tokenBalances = scom_token_list_7.tokenStore.getTokenBalancesByChainId(this.chainId);
+            if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
+                return '0';
+            }
+            const { queueInfo } = this.buybackInfo;
+            const { available, offerPrice, tradeFee, amount } = queueInfo;
+            const tokenBalance = new eth_contract_1.BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')]);
+            const balance = new eth_contract_1.BigNumber(available).times(offerPrice).dividedBy(tradeFee);
+            const amountIn = new eth_contract_1.BigNumber(amount).times(offerPrice).dividedBy(tradeFee);
+            return (eth_contract_1.BigNumber.minimum(balance, tokenBalance, amountIn)).toFixed();
+        }
+        get secondAvailableBalance() {
+            if (!this.buybackInfo || !this.buybackInfo.queueInfo) {
+                return '0';
+            }
+            const { queueInfo } = this.buybackInfo;
+            const { offerPrice, tradeFee } = queueInfo;
+            return new eth_contract_1.BigNumber(this.firstAvailableBalance).dividedBy(offerPrice).times(tradeFee).toFixed();
+        }
+        get firstTokenObject() {
+            return this.getTokenObject('fromTokenAddress');
+        }
+        get secondTokenObject() {
+            return this.getTokenObject('toTokenAddress');
+        }
+        get firstTokenBalance() {
+            return this.getTokenBalace(this.firstTokenObject);
+        }
+        get secondTokenBalance() {
+            return this.getTokenBalace(this.secondTokenObject);
+        }
+        get offerPrice() {
+            return this.getValueByKey('offerPrice');
+        }
+        getSubmitButtonText(isApproveButtonShown, isSubmitting, firstValue, secondValue, commissions) {
+            if (!this.state.isRpcWalletConnected()) {
+                return 'Switch Network';
+            }
+            if (this.isUpcoming) {
+                return 'Upcoming';
+            }
+            if (this.isExpired) {
+                return 'Expired';
+            }
+            if (isApproveButtonShown) {
+                return isSubmitting ? 'Approving' : 'Approve';
+            }
+            const firstVal = new eth_contract_1.BigNumber(firstValue);
+            const secondVal = new eth_contract_1.BigNumber(secondValue);
+            if (firstVal.lt(0) || secondVal.lt(0)) {
+                return 'Amount must be greater than 0';
+            }
+            if (this.buybackInfo) {
+                const firstMaxVal = new eth_contract_1.BigNumber(this.firstAvailableBalance);
+                const secondMaxVal = new eth_contract_1.BigNumber(this.secondAvailableBalance);
+                const commissionAmount = this.state.getCommissionAmount(commissions, firstVal);
+                const tokenBalances = scom_token_list_7.tokenStore.getTokenBalancesByChainId(this.chainId);
+                const balance = new eth_contract_1.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
+                const total = firstVal.plus(commissionAmount);
+                if (firstVal.gt(firstMaxVal) || secondVal.gt(secondMaxVal) || total.gt(balance)) {
+                    return 'Insufficient amount available';
+                }
+            }
+            if (isSubmitting) {
+                return 'Swapping';
+            }
+            return 'Swap';
+        }
+        isEmptyData(value) {
+            return !value || !value.chainId || !value.offerIndex;
+        }
+    }
+    exports.BuybackModel = BuybackModel;
+});
+define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/components", "@scom/scom-network-picker", "@scom/scom-token-input", "@scom/scom-token-list", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/index.css.ts", "@scom/scom-buyback/store/index.ts", "@ijstech/eth-contract"], function (require, exports, components_6, scom_network_picker_1, scom_token_input_2, scom_token_list_8, index_12, index_css_1, index_13, eth_contract_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.getSchema = void 0;
+    const getSupportedTokens = (chainId) => {
+        return index_13.SupportedERC20Tokens[chainId] || [];
+    };
     const theme = {
         type: 'object',
         properties: {
@@ -950,617 +1264,482 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
             }
         }
     };
-    function getBuilderSchema() {
-        return {
-            dataSchema: {
-                type: 'object',
-                properties: {
-                    title: {
-                        type: 'string'
-                    },
-                    logo: {
-                        type: 'string',
-                        format: 'data-url'
-                    },
-                    offerIndex: {
-                        type: 'number',
-                        required: true
-                    },
-                    chainId: {
-                        type: 'number',
-                        required: true
-                    },
-                    tokenIn: {
-                        type: 'string',
-                        required: true
-                    },
-                    tokenOut: {
-                        type: 'string',
-                        required: true
-                    },
-                    dark: theme,
-                    light: theme
-                }
-            },
-            uiSchema: {
-                type: 'Categorization',
+    const themeUISchema = {
+        type: 'Category',
+        label: 'Theme',
+        elements: [
+            {
+                type: 'VerticalLayout',
                 elements: [
                     {
-                        type: 'Category',
-                        label: 'General',
+                        type: 'Group',
+                        label: 'Dark',
                         elements: [
                             {
-                                type: 'VerticalLayout',
+                                type: 'HorizontalLayout',
                                 elements: [
                                     {
                                         type: 'Control',
-                                        scope: '#/properties/title'
+                                        scope: '#/properties/dark/properties/backgroundColor'
                                     },
                                     {
                                         type: 'Control',
-                                        scope: '#/properties/logo'
+                                        scope: '#/properties/dark/properties/fontColor'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'HorizontalLayout',
+                                elements: [
+                                    {
+                                        type: 'Control',
+                                        scope: '#/properties/dark/properties/inputBackgroundColor'
                                     },
                                     {
                                         type: 'Control',
-                                        scope: '#/properties/offerIndex'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/chainId'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/tokenIn'
-                                    },
-                                    {
-                                        type: 'Control',
-                                        scope: '#/properties/tokenOut'
+                                        scope: '#/properties/dark/properties/inputFontColor'
                                     }
                                 ]
                             }
                         ]
                     },
                     {
-                        type: 'Category',
-                        label: 'Theme',
+                        type: 'Group',
+                        label: 'Light',
                         elements: [
                             {
-                                type: 'VerticalLayout',
+                                type: 'HorizontalLayout',
                                 elements: [
                                     {
                                         type: 'Control',
-                                        label: 'Dark',
-                                        scope: '#/properties/dark'
+                                        scope: '#/properties/light/properties/backgroundColor'
                                     },
                                     {
                                         type: 'Control',
-                                        label: 'Light',
-                                        scope: '#/properties/light'
+                                        scope: '#/properties/light/properties/fontColor'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'HorizontalLayout',
+                                elements: [
+                                    {
+                                        type: 'Control',
+                                        scope: '#/properties/light/properties/inputBackgroundColor'
+                                    },
+                                    {
+                                        type: 'Control',
+                                        scope: '#/properties/light/properties/inputFontColor'
                                     }
                                 ]
                             }
                         ]
                     }
                 ]
+            }
+        ]
+    };
+    function getSchema(state, isOwner) {
+        const elements = [
+            {
+                type: 'Control',
+                scope: '#/properties/chainId'
             },
-            customControls() {
-                let networkPicker;
-                let firstTokenInput;
-                let secondTokenInput;
-                return {
-                    "#/properties/chainId": {
-                        render: () => {
-                            networkPicker = new scom_network_picker_1.default(undefined, {
-                                type: 'combobox',
-                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114].map(v => { return { chainId: v }; }),
-                                onCustomNetworkSelected: () => {
-                                    const chainId = networkPicker.selectedNetwork?.chainId;
-                                    firstTokenInput.chainId = chainId;
-                                    secondTokenInput.chainId = chainId;
-                                }
-                            });
-                            return networkPicker;
-                        },
-                        getData: (control) => {
-                            return control.selectedNetwork?.chainId;
-                        },
-                        setData: (control, value) => {
-                            control.setNetworkByChainId(value);
-                            if (firstTokenInput)
-                                firstTokenInput.chainId = value;
-                            if (secondTokenInput)
-                                secondTokenInput.chainId = value;
-                        }
-                    },
-                    "#/properties/tokenIn": {
-                        render: () => {
-                            firstTokenInput = new scom_token_input_1.default(undefined, {
-                                type: 'combobox',
-                                isBalanceShown: false,
-                                isBtnMaxShown: false,
-                                isInputShown: false,
-                                maxWidth: 300
-                            });
-                            const chainId = networkPicker?.selectedNetwork?.chainId;
-                            if (chainId && firstTokenInput.chainId !== chainId) {
-                                firstTokenInput.chainId = chainId;
-                            }
-                            return firstTokenInput;
-                        },
-                        getData: (control) => {
-                            return control.token?.address || control.token?.symbol;
-                        },
-                        setData: (control, value) => {
-                            control.address = value;
-                        }
-                    },
-                    "#/properties/tokenOut": {
-                        render: () => {
-                            secondTokenInput = new scom_token_input_1.default(undefined, {
-                                type: 'combobox',
-                                isBalanceShown: false,
-                                isBtnMaxShown: false,
-                                isInputShown: false,
-                                maxWidth: 300
-                            });
-                            const chainId = networkPicker?.selectedNetwork?.chainId;
-                            if (chainId && secondTokenInput.chainId !== chainId) {
-                                secondTokenInput.chainId = chainId;
-                            }
-                            return secondTokenInput;
-                        },
-                        getData: (control) => {
-                            return control.token?.address || control.token?.symbol;
-                        },
-                        setData: (control, value) => {
-                            control.address = value;
+            {
+                type: 'Control',
+                scope: '#/properties/tokenIn'
+            },
+            {
+                type: 'Control',
+                scope: '#/properties/customTokenIn',
+                rule: {
+                    effect: 'ENABLE',
+                    condition: {
+                        scope: '#/properties/tokenIn',
+                        schema: {
+                            const: scom_token_input_2.CUSTOM_TOKEN.address
                         }
                     }
-                };
+                }
+            },
+            {
+                type: 'Control',
+                scope: '#/properties/tokenOut'
+            },
+            {
+                type: 'Control',
+                scope: '#/properties/customTokenOut',
+                rule: {
+                    effect: 'ENABLE',
+                    condition: {
+                        scope: '#/properties/tokenOut',
+                        schema: {
+                            const: scom_token_input_2.CUSTOM_TOKEN.address
+                        }
+                    }
+                }
             }
-        };
-    }
-    exports.getBuilderSchema = getBuilderSchema;
-    function getProjectOwnerSchema(state) {
+        ];
+        if (isOwner) {
+            elements.push({
+                type: 'Control',
+                scope: '#/properties/offerIndex'
+            });
+        }
+        else {
+            elements.unshift({
+                type: 'Control',
+                scope: '#/properties/offerIndex'
+            });
+        }
         return {
             dataSchema: {
                 type: 'object',
                 properties: {
-                    title: {
-                        type: 'string'
-                    },
-                    logo: {
-                        type: 'string',
-                        format: 'data-url'
-                    },
-                    chainId: {
-                        type: 'number',
-                        required: true
-                    },
                     offerIndex: {
                         type: 'number',
                         required: true
                     },
+                    chainId: {
+                        type: 'number',
+                        title: 'Chain',
+                        required: true
+                    },
                     tokenIn: {
                         type: 'string',
+                        required: true
+                    },
+                    customTokenIn: {
+                        type: 'string',
+                        title: 'Token In Address',
+                        required: true
                     },
                     tokenOut: {
                         type: 'string',
+                        required: true
+                    },
+                    customTokenOut: {
+                        type: 'string',
+                        title: 'Token Out Address',
+                        required: true
                     }
                 }
             },
             uiSchema: {
                 type: 'VerticalLayout',
-                elements: [
-                    {
-                        type: 'Control',
-                        scope: '#/properties/title'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/logo'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/chainId'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/tokenIn'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/tokenOut'
-                    },
-                    {
-                        type: 'Control',
-                        scope: '#/properties/offerIndex'
-                    },
-                ]
+                elements
             },
             customControls(getData) {
-                let networkPicker;
-                let firstTokenInput;
-                let secondTokenInput;
-                let comboOfferIndex;
-                let offerIndexes = [];
-                const onSelectToken = async () => {
-                    const chainId = networkPicker?.selectedNetwork?.chainId;
-                    if (chainId && firstTokenInput.token && secondTokenInput.token) {
-                        const indexes = await (0, index_7.getOffers)(state, chainId, firstTokenInput.token, secondTokenInput.token);
-                        comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
-                    }
-                };
-                const setTokenData = (control, value) => {
-                    if (!value) {
-                        const chainId = networkPicker?.selectedNetwork?.chainId;
-                        const tokens = scom_token_list_3.tokenStore.getTokenList(chainId);
-                        let token = tokens.find(token => !token.address);
-                        control.token = token;
-                    }
-                    else {
-                        control.address = value;
-                    }
-                };
-                return {
-                    "#/properties/chainId": {
-                        render: () => {
-                            networkPicker = new scom_network_picker_1.default(undefined, {
-                                type: 'combobox',
-                                networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
-                                onCustomNetworkSelected: () => {
-                                    const chainId = networkPicker.selectedNetwork?.chainId;
-                                    if (firstTokenInput.chainId != chainId) {
-                                        firstTokenInput.token = null;
-                                        secondTokenInput.token = null;
-                                        comboOfferIndex.items = offerIndexes = [];
-                                        comboOfferIndex.clear();
-                                    }
-                                    firstTokenInput.chainId = chainId;
-                                    secondTokenInput.chainId = chainId;
-                                }
-                            });
-                            return networkPicker;
-                        },
-                        getData: (control) => {
-                            return control.selectedNetwork?.chainId;
-                        },
-                        setData: (control, value) => {
-                            control.setNetworkByChainId(value);
-                            if (firstTokenInput)
-                                firstTokenInput.chainId = value;
-                            if (secondTokenInput)
-                                secondTokenInput.chainId = value;
-                        }
-                    },
-                    "#/properties/tokenIn": {
-                        render: () => {
-                            firstTokenInput = new scom_token_input_1.default(undefined, {
-                                type: 'combobox',
-                                isBalanceShown: false,
-                                isBtnMaxShown: false,
-                                isInputShown: false
-                            });
-                            const chainId = networkPicker?.selectedNetwork?.chainId;
-                            if (chainId && firstTokenInput.chainId !== chainId) {
-                                firstTokenInput.chainId = chainId;
-                            }
-                            firstTokenInput.onSelectToken = onSelectToken;
-                            return firstTokenInput;
-                        },
-                        getData: (control) => {
-                            return control.token?.address || "";
-                        },
-                        setData: setTokenData
-                    },
-                    "#/properties/tokenOut": {
-                        render: () => {
-                            secondTokenInput = new scom_token_input_1.default(undefined, {
-                                type: 'combobox',
-                                isBalanceShown: false,
-                                isBtnMaxShown: false,
-                                isInputShown: false
-                            });
-                            const chainId = networkPicker?.selectedNetwork?.chainId;
-                            if (chainId && secondTokenInput.chainId !== chainId) {
-                                secondTokenInput.chainId = chainId;
-                            }
-                            secondTokenInput.onSelectToken = onSelectToken;
-                            return secondTokenInput;
-                        },
-                        getData: (control) => {
-                            return control.token?.address || "";
-                        },
-                        setData: setTokenData
-                    },
-                    "#/properties/offerIndex": {
-                        render: () => {
-                            comboOfferIndex = new components_5.ComboBox(undefined, {
-                                height: '42px',
-                                icon: {
-                                    name: 'caret-down'
-                                },
-                                items: offerIndexes
-                            });
-                            comboOfferIndex.classList.add(index_css_1.comboBoxStyle);
-                            return comboOfferIndex;
-                        },
-                        getData: (control) => {
-                            return Number(control.selectedItem?.value);
-                        },
-                        setData: async (control, value) => {
-                            const data = getData();
-                            if (data.chainId && data.tokenIn != null && data.tokenOut != null) {
-                                const tokens = scom_token_list_3.tokenStore.getTokenList(data.chainId);
-                                let tokenIn = tokens.find(token => (token.address ?? "") == data.tokenIn);
-                                let tokenOut = tokens.find(token => (token.address ?? "") == data.tokenOut);
-                                const indexes = await (0, index_7.getOffers)(state, data.chainId, tokenIn, tokenOut);
-                                comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
-                            }
-                            control.selectedItem = offerIndexes.find(offer => offer.value === value.toString()) || null;
-                        },
-                    }
-                };
+                return getCustomControls(state, getData, isOwner);
             }
         };
     }
-    exports.getProjectOwnerSchema = getProjectOwnerSchema;
+    exports.getSchema = getSchema;
+    const getCustomControls = (state, getData, isOwner) => {
+        let networkPicker;
+        let tokenInInput;
+        let customTokenInInput;
+        let tokenOutInput;
+        let customTokenOutInput;
+        let comboOfferIndex;
+        let offerIndexes = [];
+        const selectToken = async (token, tokenInput, customInput) => {
+            if (!token) {
+                if (customInput)
+                    customInput.value = '';
+            }
+            else if (customInput) {
+                const { address } = token;
+                const isCustomToken = address?.toLowerCase() === scom_token_input_2.CUSTOM_TOKEN.address.toLowerCase();
+                if (!isCustomToken) {
+                    customInput.value = (address && address !== eth_contract_2.nullAddress) ? address : 'Native Token';
+                    if (customInput.value)
+                        customInput.onChanged();
+                }
+                else {
+                    customInput.value = '';
+                }
+            }
+            if (tokenInput.onChanged) {
+                tokenInput.onChanged(tokenInput.token);
+            }
+            if (isOwner) {
+                const chainId = networkPicker?.selectedNetwork?.chainId;
+                if (chainId && tokenInInput.token && tokenOutInput.token) {
+                    const indexes = await (0, index_12.getOffers)(state, chainId, tokenInInput.token, tokenOutInput.token);
+                    comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
+                }
+            }
+        };
+        const setTokenData = async (tokenInput, value, chainId, customInput) => {
+            await tokenInput.ready();
+            tokenInput.chainId = chainId;
+            tokenInput.address = value;
+            if (tokenInput.onChanged) {
+                tokenInput.onChanged(tokenInput.token);
+            }
+            if (customInput) {
+                const isCustomToken = value?.toLowerCase() === scom_token_input_2.CUSTOM_TOKEN.address.toLowerCase();
+                if (!isCustomToken) {
+                    customInput.value = (value && value !== eth_contract_2.nullAddress) ? value : 'Native Token';
+                    if (customInput.value)
+                        customInput.onChanged();
+                }
+            }
+        };
+        const setTokenByChainId = (chainId, tokenInput, customInput) => {
+            if (tokenInput && chainId !== tokenInput.chainId) {
+                const noChainId = !tokenInput.chainId;
+                tokenInput.chainId = chainId;
+                tokenInput.tokenDataListProp = getSupportedTokens(chainId);
+                if (noChainId && tokenInput.address) {
+                    tokenInput.address = tokenInput.address;
+                    tokenInput.onSelectToken(tokenInput.token);
+                }
+                else {
+                    tokenInput.token = undefined;
+                    customInput.value = '';
+                    customInput.enabled = false;
+                }
+            }
+        };
+        let controls = {
+            '#/properties/chainId': {
+                render: () => {
+                    networkPicker = new scom_network_picker_1.default(undefined, {
+                        type: 'combobox',
+                        networks: [1, 56, 137, 250, 97, 80001, 43113, 43114, 42161, 421613].map(v => { return { chainId: v }; }),
+                        onCustomNetworkSelected: () => {
+                            const chainId = networkPicker.selectedNetwork?.chainId;
+                            if (tokenInInput.chainId != chainId) {
+                                tokenInInput.token = null;
+                                tokenOutInput.token = null;
+                                tokenInInput.chainId = chainId;
+                                tokenOutInput.chainId = chainId;
+                                tokenInInput.tokenDataListProp = getSupportedTokens(chainId);
+                                tokenOutInput.tokenDataListProp = getSupportedTokens(chainId);
+                                customTokenInInput.value = '';
+                                customTokenInInput.enabled = false;
+                                customTokenOutInput.value = '';
+                                customTokenOutInput.enabled = false;
+                                if (isOwner) {
+                                    comboOfferIndex.items = offerIndexes = [];
+                                    comboOfferIndex.clear();
+                                }
+                            }
+                        }
+                    });
+                    return networkPicker;
+                },
+                getData: (control) => {
+                    return control.selectedNetwork?.chainId;
+                },
+                setData: (control, value) => {
+                    control.setNetworkByChainId(value);
+                    setTokenByChainId(value, tokenInInput, customTokenInInput);
+                    setTokenByChainId(value, tokenOutInput, customTokenOutInput);
+                }
+            },
+            '#/properties/tokenIn': {
+                render: () => {
+                    tokenInInput = new scom_token_input_2.default(undefined, {
+                        type: 'combobox',
+                        isBalanceShown: false,
+                        isBtnMaxShown: false,
+                        isInputShown: false,
+                        isCustomTokenShown: true,
+                        supportValidAddress: true
+                    });
+                    const chainId = networkPicker?.selectedNetwork?.chainId;
+                    tokenInInput.chainId = chainId;
+                    tokenInInput.tokenDataListProp = getSupportedTokens(chainId);
+                    tokenInInput.onSelectToken = (token) => {
+                        selectToken(token, tokenInInput, customTokenInInput);
+                    };
+                    return tokenInInput;
+                },
+                getData: (control) => {
+                    return (control.token?.address || control.token?.symbol);
+                },
+                setData: async (control, value, rowData) => {
+                    await setTokenData(control, value, rowData?.chainId, customTokenInInput);
+                }
+            },
+            '#/properties/customTokenIn': {
+                render: () => {
+                    customTokenInInput = new components_6.Input(undefined, {
+                        inputType: 'text',
+                        height: '42px',
+                        width: '100%'
+                    });
+                    customTokenInInput.classList.add(index_css_1.formInputStyle);
+                    return customTokenInInput;
+                },
+                getData: (control) => {
+                    return control.value;
+                },
+                setData: async (control, value) => {
+                    await control.ready();
+                    control.value = value;
+                    if (!value && tokenInInput?.token) {
+                        const address = tokenInInput.address;
+                        const isCustomToken = address?.toLowerCase() === scom_token_input_2.CUSTOM_TOKEN.address.toLowerCase();
+                        if (!isCustomToken) {
+                            control.value = (address && address !== eth_contract_2.nullAddress) ? address : 'Native Token';
+                        }
+                    }
+                }
+            },
+            '#/properties/tokenOut': {
+                render: () => {
+                    tokenOutInput = new scom_token_input_2.default(undefined, {
+                        type: 'combobox',
+                        isBalanceShown: false,
+                        isBtnMaxShown: false,
+                        isInputShown: false,
+                        isCustomTokenShown: true,
+                        supportValidAddress: true
+                    });
+                    const chainId = networkPicker?.selectedNetwork?.chainId;
+                    tokenOutInput.chainId = chainId;
+                    tokenOutInput.tokenDataListProp = getSupportedTokens(chainId);
+                    tokenOutInput.onSelectToken = (token) => {
+                        selectToken(token, tokenOutInput, customTokenOutInput);
+                    };
+                    return tokenOutInput;
+                },
+                getData: (control) => {
+                    return (control.token?.address || control.token?.symbol);
+                },
+                setData: async (control, value, rowData) => {
+                    await setTokenData(control, value, rowData?.chainId, customTokenOutInput);
+                }
+            },
+            '#/properties/customTokenOut': {
+                render: () => {
+                    customTokenOutInput = new components_6.Input(undefined, {
+                        inputType: 'text',
+                        height: '42px',
+                        width: '100%'
+                    });
+                    customTokenOutInput.classList.add(index_css_1.formInputStyle);
+                    return customTokenOutInput;
+                },
+                getData: (control) => {
+                    return control.value;
+                },
+                setData: async (control, value) => {
+                    await control.ready();
+                    control.value = value;
+                    if (!value && tokenOutInput?.token) {
+                        const address = tokenOutInput.address;
+                        const isCustomToken = address?.toLowerCase() === scom_token_input_2.CUSTOM_TOKEN.address.toLowerCase();
+                        if (!isCustomToken) {
+                            control.value = (address && address !== eth_contract_2.nullAddress) ? address : 'Native Token';
+                        }
+                    }
+                }
+            },
+        };
+        if (isOwner) {
+            controls['#/properties/offerIndex'] = {
+                render: () => {
+                    comboOfferIndex = new components_6.ComboBox(undefined, {
+                        height: '42px',
+                        icon: {
+                            name: 'caret-down'
+                        },
+                        items: offerIndexes
+                    });
+                    comboOfferIndex.classList.add(index_css_1.comboBoxStyle);
+                    return comboOfferIndex;
+                },
+                getData: (control) => {
+                    return Number(control.selectedItem?.value);
+                },
+                setData: async (control, value) => {
+                    const data = getData();
+                    if (data.chainId && data.tokenIn != null && data.tokenOut != null) {
+                        const tokens = scom_token_list_8.tokenStore.getTokenList(data.chainId);
+                        const nativeToken = scom_token_list_8.ChainNativeTokenByChainId[data.chainId];
+                        let tokenIn = data.tokenIn === nativeToken?.symbol ? nativeToken : tokens.find(token => (token.address ?? "") == data.tokenIn);
+                        let tokenOut = data.tokenOut === nativeToken?.symbol ? nativeToken : tokens.find(token => (token.address ?? "") == data.tokenOut);
+                        const indexes = await (0, index_12.getOffers)(state, data.chainId, tokenIn, tokenOut);
+                        comboOfferIndex.items = offerIndexes = indexes.map(index => ({ label: index.toString(), value: index.toString() }));
+                    }
+                    control.selectedItem = offerIndexes.find(offer => offer.value === value.toString()) || null;
+                },
+            };
+        }
+        return controls;
+    };
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/buyback-utils/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-buyback/formSchema.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts"], function (require, exports, components_6, eth_wallet_6, index_8, index_9, index_10, index_11, assets_2, data_json_1, formSchema_1, scom_token_list_4, index_css_2) {
+///<amd-module name='@scom/scom-buyback/model/configModel.ts'/> 
+define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/scom-buyback/swap-utils/index.ts", "@ijstech/eth-wallet", "@scom/scom-buyback/formSchema.ts", "@scom/scom-buyback/data.json.ts"], function (require, exports, index_14, eth_wallet_6, formSchema_1, data_json_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_6.Styles.Theme.ThemeVars;
-    const ROUNDING_NUMBER = 1;
-    let ScomBuyback = class ScomBuyback extends components_6.Module {
-        static async create(options, parent) {
-            let self = new this(parent, options);
-            await self.ready();
-            return self;
-        }
-        onHide() {
-            this.dappContainer.onHide();
-            this.removeRpcWalletEvents();
-        }
-        removeRpcWalletEvents() {
-            const rpcWallet = this.rpcWallet;
-            for (let event of this.rpcWalletEvents) {
-                rpcWallet.unregisterWalletEvent(event);
-            }
+    exports.ConfigModel = void 0;
+    class ConfigModel {
+        constructor(state, module, options) {
+            this.options = {
+                refreshWidget: async () => { },
+                refreshDappContainer: () => { },
+                setContaiterTag: (value) => { },
+                updateTheme: () => { }
+            };
+            this._data = {
+                chainId: 0,
+                title: '',
+                logo: '',
+                offerIndex: 0,
+                tokenIn: '',
+                tokenOut: '',
+                wallets: [],
+                networks: []
+            };
             this.rpcWalletEvents = [];
-        }
-        _getActions(category) {
-            const formSchema = (0, formSchema_1.getBuilderSchema)();
-            const self = this;
-            const actions = [];
-            if (category && category !== 'offers') {
-                actions.push({
-                    name: 'Edit',
-                    icon: 'edit',
-                    command: (builder, userInputData) => {
-                        let oldData = {
-                            chainId: 0,
-                            title: '',
-                            logo: '',
-                            offerIndex: 0,
-                            tokenIn: '',
-                            tokenOut: '',
-                            wallets: [],
-                            networks: []
-                        };
-                        let oldTag = {};
-                        return {
-                            execute: async () => {
-                                oldData = JSON.parse(JSON.stringify(this._data));
-                                const { title, logo, offerIndex, chainId, tokenIn, tokenOut, ...themeSettings } = userInputData;
-                                const generalSettings = {
-                                    title,
-                                    logo,
-                                    offerIndex,
-                                    chainId,
-                                    tokenIn,
-                                    tokenOut
-                                };
-                                this._data.chainId = generalSettings.chainId;
-                                this._data.title = generalSettings.title;
-                                this._data.logo = generalSettings.logo;
-                                this._data.offerIndex = generalSettings.offerIndex;
-                                this._data.tokenIn = generalSettings.tokenIn;
-                                this._data.tokenOut = generalSettings.tokenOut;
-                                await this.resetRpcWallet();
-                                this.refreshData(builder);
-                                oldTag = JSON.parse(JSON.stringify(this.tag));
-                                if (builder?.setTag)
-                                    builder.setTag(themeSettings);
-                                else
-                                    this.setTag(themeSettings);
-                                if (this.dappContainer)
-                                    this.dappContainer.setTag(themeSettings);
-                            },
-                            undo: async () => {
-                                this._data = JSON.parse(JSON.stringify(oldData));
-                                this.refreshData(builder);
-                                this.tag = JSON.parse(JSON.stringify(oldTag));
-                                if (builder?.setTag)
-                                    builder.setTag(this.tag);
-                                else
-                                    this.setTag(this.tag);
-                                if (this.dappContainer)
-                                    this.dappContainer.setTag(this.tag);
-                            },
-                            redo: () => { }
-                        };
-                    },
-                    userInputDataSchema: formSchema.dataSchema,
-                    userInputUISchema: formSchema.uiSchema,
-                    customControls: formSchema.customControls()
+            this.refreshData = (builder) => {
+                this.options.refreshDappContainer();
+                this.options.refreshWidget();
+                if (builder?.setData) {
+                    builder.setData(this._data);
+                }
+            };
+            this.removeRpcWalletEvents = () => {
+                const rpcWallet = this.rpcWallet;
+                for (let event of this.rpcWalletEvents) {
+                    rpcWallet.unregisterWalletEvent(event);
+                }
+                this.rpcWalletEvents = [];
+            };
+            this.resetRpcWallet = async () => {
+                this.removeRpcWalletEvents();
+                const rpcWalletId = await this.state.initRpcWallet(this.defaultChainId);
+                const rpcWallet = this.rpcWallet;
+                const chainChangedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_6.Constants.RpcWalletEvent.ChainChanged, async (chainId) => {
+                    this.options.refreshWidget();
                 });
-            }
-            return actions;
-        }
-        getProjectOwnerActions() {
-            const formSchema = (0, formSchema_1.getProjectOwnerSchema)(this.state);
-            const actions = [
-                {
-                    name: 'Settings',
-                    userInputDataSchema: formSchema.dataSchema,
-                    userInputUISchema: formSchema.uiSchema,
-                    customControls: formSchema.customControls(this.getData.bind(this))
+                const connectedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_6.Constants.RpcWalletEvent.Connected, async (connected) => {
+                    this.options.refreshWidget();
+                });
+                this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
+                this.options.refreshDappContainer();
+            };
+            this.initWallet = async () => {
+                try {
+                    await eth_wallet_6.Wallet.getClientInstance().init();
+                    await this.rpcWallet.init();
                 }
-            ];
-            return actions;
-        }
-        getConfigurators() {
-            let self = this;
-            return [
-                {
-                    name: 'Project Owner Configurator',
-                    target: 'Project Owners',
-                    getProxySelectors: async (chainId) => {
-                        const selectors = await (0, index_11.getProxySelectors)(this.state, chainId);
-                        return selectors;
-                    },
-                    getActions: () => {
-                        return this.getProjectOwnerActions();
-                    },
-                    getData: this.getData.bind(this),
-                    setData: async (data) => {
-                        await this.setData(data);
-                    },
-                    getTag: this.getTag.bind(this),
-                    setTag: this.setTag.bind(this)
-                },
-                {
-                    name: 'Builder Configurator',
-                    target: 'Builders',
-                    getActions: (category) => {
-                        return this._getActions(category);
-                    },
-                    getData: this.getData.bind(this),
-                    setData: async (data) => {
-                        const defaultData = data_json_1.default.defaultBuilderData;
-                        await this.setData({ ...defaultData, ...data });
-                    },
-                    getTag: this.getTag.bind(this),
-                    setTag: this.setTag.bind(this)
-                },
-                {
-                    name: 'Emdedder Configurator',
-                    target: 'Embedders',
-                    elementName: 'i-scom-commission-fee-setup',
-                    getLinkParams: () => {
-                        const commissions = this._data.commissions || [];
-                        return {
-                            data: window.btoa(JSON.stringify(commissions))
-                        };
-                    },
-                    // setLinkParams: async (params: any) => {
-                    // 	if (params.data) {
-                    // 		const decodedString = window.atob(params.data);
-                    // 		const commissions = JSON.parse(decodedString);
-                    // 		let resultingData = {
-                    // 			...self._data,
-                    // 			commissions
-                    // 		};
-                    // 		await this.setData(resultingData);
-                    // 	}
-                    // },
-                    bindOnChanged: (element, callback) => {
-                        element.onChanged = async (data) => {
-                            let resultingData = {
-                                ...self._data,
-                                ...data
-                            };
-                            await this.setData(resultingData);
-                            await callback(data);
-                        };
-                    },
-                    getData: () => {
-                        const fee = this.state.embedderCommissionFee;
-                        const data = this.getData();
-                        return { ...data, fee };
-                    },
-                    setData: async (properties, linkParams) => {
-                        let resultingData = {
-                            ...properties
-                        };
-                        if (linkParams?.data) {
-                            const decodedString = window.atob(linkParams.data);
-                            const commissions = JSON.parse(decodedString);
-                            resultingData.commissions = commissions;
-                        }
-                        await this.setData(resultingData);
-                    },
-                    getTag: this.getTag.bind(this),
-                    setTag: this.setTag.bind(this)
+                catch (err) {
+                    console.log(err);
                 }
-            ];
-        }
-        getData() {
-            return this._data;
-        }
-        async resetRpcWallet() {
-            this.removeRpcWalletEvents();
-            const rpcWalletId = await this.state.initRpcWallet(this.defaultChainId);
-            const rpcWallet = this.rpcWallet;
-            const chainChangedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_6.Constants.RpcWalletEvent.ChainChanged, async (chainId) => {
-                this.refreshWidget();
-            });
-            const connectedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_6.Constants.RpcWalletEvent.Connected, async (connected) => {
-                this.refreshWidget();
-            });
-            this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
-            this.refreshDappContainer();
-        }
-        async setData(data) {
-            this._data = data;
-            await this.resetRpcWallet();
-            await this.refreshWidget();
-        }
-        async getTag() {
-            return this.tag;
-        }
-        updateTag(type, value) {
-            this.tag[type] = this.tag[type] ?? {};
-            for (let prop in value) {
-                if (value.hasOwnProperty(prop))
-                    this.tag[type][prop] = value[prop];
-            }
-        }
-        async setTag(value) {
-            const newValue = value || {};
-            for (let prop in newValue) {
-                if (newValue.hasOwnProperty(prop)) {
-                    if (prop === 'light' || prop === 'dark')
-                        this.updateTag(prop, newValue[prop]);
-                    else
-                        this.tag[prop] = newValue[prop];
-                }
-            }
-            if (this.dappContainer)
-                this.dappContainer.setTag(this.tag);
-            this.updateTheme();
-        }
-        updateStyle(name, value) {
-            value ?
-                this.style.setProperty(name, value) :
-                this.style.removeProperty(name);
-        }
-        updateTheme() {
-            const themeVar = this.dappContainer?.theme || 'light';
-            this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
-            this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
-            // this.updateStyle('--colors-primary-main', this.tag[themeVar]?.buttonBackgroundColor);
-            // this.updateStyle('--colors-primary-contrast_text', this.tag[themeVar]?.buttonFontColor);
-            // this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryColor);
-            // this.updateStyle('--colors-secondary-contrast_text', this.tag[themeVar]?.secondaryFontColor);
-            this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
-            this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
+            };
+            this.state = state;
+            this.module = module;
+            this.options = options;
         }
         get chainId() {
             return this.state.getChainId();
-        }
-        get rpcWallet() {
-            return this.state.getRpcWallet();
         }
         get defaultChainId() {
             return this._data.defaultChainId;
@@ -1597,47 +1776,352 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
         set commissions(value) {
             this._data.commissions = value;
         }
+        get rpcWallet() {
+            return this.state.getRpcWallet();
+        }
+        _getActions(category) {
+            const formSchema = (0, formSchema_1.getSchema)();
+            const actions = [];
+            if (category !== 'offers') {
+                actions.push({
+                    name: 'Edit',
+                    icon: 'edit',
+                    command: (builder, userInputData) => {
+                        let oldData = {
+                            chainId: 0,
+                            title: '',
+                            logo: '',
+                            offerIndex: 0,
+                            tokenIn: '',
+                            tokenOut: '',
+                            wallets: [],
+                            networks: []
+                        };
+                        let oldTag = {};
+                        return {
+                            execute: async () => {
+                                oldData = JSON.parse(JSON.stringify(this._data));
+                                const { title, logo, offerIndex, chainId, tokenIn, customTokenIn, tokenOut, customTokenOut, ...themeSettings } = userInputData;
+                                const generalSettings = {
+                                    title,
+                                    logo,
+                                    offerIndex,
+                                    chainId,
+                                    tokenIn,
+                                    customTokenIn,
+                                    tokenOut,
+                                    customTokenOut
+                                };
+                                this._data.chainId = generalSettings.chainId;
+                                this._data.title = generalSettings.title;
+                                this._data.logo = generalSettings.logo;
+                                this._data.offerIndex = generalSettings.offerIndex;
+                                this._data.tokenIn = generalSettings.tokenIn;
+                                this._data.customTokenIn = generalSettings.customTokenIn;
+                                this._data.tokenOut = generalSettings.tokenOut;
+                                this._data.customTokenOut = generalSettings.customTokenOut;
+                                await this.resetRpcWallet();
+                                this.refreshData(builder);
+                                oldTag = JSON.parse(JSON.stringify(this.module.tag));
+                                if (builder?.setTag)
+                                    builder.setTag(themeSettings);
+                                else
+                                    this.setTag(themeSettings);
+                                this.options.setContaiterTag(themeSettings);
+                            },
+                            undo: async () => {
+                                this._data = JSON.parse(JSON.stringify(oldData));
+                                this.refreshData(builder);
+                                const tag = JSON.parse(JSON.stringify(oldTag));
+                                this.module.tag = tag;
+                                if (builder?.setTag)
+                                    builder.setTag(tag);
+                                else
+                                    this.setTag(tag);
+                                this.options.setContaiterTag(tag);
+                            },
+                            redo: () => { }
+                        };
+                    },
+                    userInputDataSchema: formSchema.dataSchema,
+                    userInputUISchema: formSchema.uiSchema,
+                    customControls: formSchema.customControls()
+                });
+            }
+            return actions;
+        }
+        getProjectOwnerActions() {
+            const formSchema = (0, formSchema_1.getSchema)(this.state, true);
+            const actions = [
+                {
+                    name: 'Settings',
+                    userInputDataSchema: formSchema.dataSchema,
+                    userInputUISchema: formSchema.uiSchema,
+                    customControls: formSchema.customControls(this.getData.bind(this))
+                }
+            ];
+            return actions;
+        }
+        getConfigurators() {
+            const self = this;
+            return [
+                {
+                    name: 'Project Owner Configurator',
+                    target: 'Project Owners',
+                    getProxySelectors: async (chainId) => {
+                        const selectors = await (0, index_14.getProxySelectors)(this.state, chainId);
+                        return selectors;
+                    },
+                    getActions: () => {
+                        return this.getProjectOwnerActions();
+                    },
+                    getData: this.getData.bind(this),
+                    setData: async (data) => {
+                        await this.setData(data);
+                    },
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                },
+                {
+                    name: 'Builder Configurator',
+                    target: 'Builders',
+                    getActions: (category) => {
+                        return this._getActions(category);
+                    },
+                    getData: this.getData.bind(this),
+                    setData: async (data) => {
+                        const defaultData = data_json_1.default.defaultBuilderData;
+                        await this.setData({ ...defaultData, ...data });
+                    },
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                },
+                {
+                    name: 'Emdedder Configurator',
+                    target: 'Embedders',
+                    elementName: 'i-scom-commission-fee-setup',
+                    getLinkParams: () => {
+                        const commissions = this._data.commissions || [];
+                        return {
+                            data: window.btoa(JSON.stringify(commissions))
+                        };
+                    },
+                    bindOnChanged: (element, callback) => {
+                        element.onChanged = async (data) => {
+                            let resultingData = {
+                                ...self._data,
+                                ...data
+                            };
+                            await this.setData(resultingData);
+                            await callback(data);
+                        };
+                    },
+                    getData: () => {
+                        const fee = this.state.embedderCommissionFee;
+                        const data = this.getData();
+                        return { ...data, fee };
+                    },
+                    setData: async (properties, linkParams) => {
+                        let resultingData = {
+                            ...properties
+                        };
+                        if (linkParams?.data) {
+                            const decodedString = window.atob(linkParams.data);
+                            const commissions = JSON.parse(decodedString);
+                            resultingData.commissions = commissions;
+                        }
+                        await this.setData(resultingData);
+                    },
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                },
+                {
+                    name: 'Editor',
+                    target: 'Editor',
+                    getActions: (category) => {
+                        const actions = this._getActions(category);
+                        const editAction = actions.find(action => action.name === 'Edit');
+                        return editAction ? [editAction] : [];
+                    },
+                    getData: this.getData.bind(this),
+                    setData: this.setData.bind(this),
+                    getTag: this.getTag.bind(this),
+                    setTag: this.setTag.bind(this)
+                }
+            ];
+        }
+        getData() {
+            return this._data;
+        }
+        async setData(data) {
+            this._data = data;
+            await this.resetRpcWallet();
+            await this.options.refreshWidget();
+        }
+        async getTag() {
+            return this.module.tag;
+        }
+        setTag(value) {
+            const newValue = value || {};
+            for (let prop in newValue) {
+                if (newValue.hasOwnProperty(prop)) {
+                    if (prop === 'light' || prop === 'dark')
+                        this.updateTag(prop, newValue[prop]);
+                    else
+                        this.module.tag[prop] = newValue[prop];
+                }
+            }
+            this.options.setContaiterTag(this.module.tag);
+            this.options.updateTheme();
+        }
+        updateTag(type, value) {
+            this.module.tag[type] = this.module.tag[type] ?? {};
+            for (let prop in value) {
+                if (value.hasOwnProperty(prop))
+                    this.module.tag[type][prop] = value[prop];
+            }
+        }
+    }
+    exports.ConfigModel = ConfigModel;
+});
+define("@scom/scom-buyback/model/index.ts", ["require", "exports", "@scom/scom-buyback/model/buybackModel.ts", "@scom/scom-buyback/model/configModel.ts"], function (require, exports, buybackModel_1, configModel_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.ConfigModel = exports.BuybackModel = void 0;
+    Object.defineProperty(exports, "BuybackModel", { enumerable: true, get: function () { return buybackModel_1.BuybackModel; } });
+    Object.defineProperty(exports, "ConfigModel", { enumerable: true, get: function () { return configModel_1.ConfigModel; } });
+});
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@scom/scom-buyback/model/index.ts"], function (require, exports, components_7, eth_wallet_7, index_15, index_16, index_17, assets_2, data_json_2, scom_token_list_9, index_css_2, index_18) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    const Theme = components_7.Styles.Theme.ThemeVars;
+    const ROUNDING_NUMBER = 1;
+    let ScomBuyback = class ScomBuyback extends components_7.Module {
+        static async create(options, parent) {
+            let self = new this(parent, options);
+            await self.ready();
+            return self;
+        }
+        get data() {
+            return this.configModel.getData();
+        }
+        onHide() {
+            this.dappContainer.onHide();
+            this.removeRpcWalletEvents();
+        }
+        removeRpcWalletEvents() {
+            this.configModel.removeRpcWalletEvents();
+        }
+        getConfigurators() {
+            this.initModels();
+            return this.configModel.getConfigurators();
+        }
+        initModels() {
+            if (!this.state) {
+                this.state = new index_16.State(data_json_2.default);
+            }
+            if (!this.buybackModel) {
+                this.buybackModel = new index_18.BuybackModel(this.state);
+            }
+            if (!this.configModel) {
+                this.configModel = new index_18.ConfigModel(this.state, this, {
+                    refreshWidget: () => this.refreshWidget(),
+                    refreshDappContainer: () => this.refreshDappContainer(),
+                    setContaiterTag: (value) => this.setContaiterTag(value),
+                    updateTheme: () => this.updateTheme()
+                });
+            }
+        }
+        async getData() {
+            return this.configModel.getData();
+        }
+        async setData(data) {
+            this.configModel.setData(data);
+        }
+        async getTag() {
+            return this.tag;
+        }
+        async setTag(value) {
+            this.configModel.setTag(value);
+        }
+        setContaiterTag(value) {
+            if (this.dappContainer)
+                this.dappContainer.setTag(value);
+        }
+        updateStyle(name, value) {
+            if (value) {
+                this.style.setProperty(name, value);
+            }
+            else {
+                this.style.removeProperty(name);
+            }
+        }
+        updateTheme() {
+            const themeVar = this.dappContainer?.theme || 'light';
+            this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
+            this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
+            this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
+            this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
+        }
+        get chainId() {
+            return this.state.getChainId();
+        }
+        get rpcWallet() {
+            return this.state.getRpcWallet();
+        }
+        get defaultChainId() {
+            return this.configModel.defaultChainId;
+        }
+        set defaultChainId(value) {
+            this.configModel.defaultChainId = value;
+        }
+        get wallets() {
+            return this.configModel.wallets;
+        }
+        set wallets(value) {
+            this.configModel.wallets = value;
+        }
+        get networks() {
+            return this.configModel.networks;
+        }
+        set networks(value) {
+            this.configModel.networks = value;
+        }
+        get showHeader() {
+            return this.configModel.showHeader;
+        }
+        set showHeader(value) {
+            this.configModel.showHeader = value;
+        }
+        get commissions() {
+            return this.configModel.commissions;
+        }
+        set commissions(value) {
+            this.configModel.commissions = value;
+        }
         constructor(parent, options) {
             super(parent, options);
-            this._data = {
-                chainId: 0,
-                title: '',
-                logo: '',
-                offerIndex: 0,
-                tokenIn: '',
-                tokenOut: '',
-                wallets: [],
-                networks: []
-            };
             this.tag = {};
             this.defaultEdit = true;
-            this.rpcWalletEvents = [];
             this.updateContractAddress = () => {
                 const hasCommission = this.state.getCurrentCommissions(this.commissions).length;
                 if (hasCommission) {
                     this.contractAddress = this.state.getProxyAddress();
                 }
                 else {
-                    this.contractAddress = (0, index_11.getHybridRouterAddress)(this.state);
+                    this.contractAddress = (0, index_17.getHybridRouterAddress)(this.state);
                 }
                 if (this.state?.approvalModel && this.approvalModelAction) {
                     this.state.approvalModel.spenderAddress = this.contractAddress;
                     this.updateCommissionInfo();
                 }
             };
-            this.refreshData = (builder) => {
-                this.refreshDappContainer();
-                this.refreshWidget();
-                if (builder?.setData) {
-                    builder.setData(this._data);
-                }
-            };
             this.refreshDappContainer = () => {
                 const rpcWallet = this.rpcWallet;
                 const containerData = {
-                    defaultChainId: this._data.chainId || this.defaultChainId,
+                    defaultChainId: this.configModel.chainId || this.defaultChainId,
                     wallets: this.wallets,
-                    networks: this.networks,
+                    networks: this.networks.length ? this.networks : [{ chainId: this.configModel.chainId || this.chainId }],
                     showHeader: this.showHeader,
                     rpcWalletId: rpcWallet.instanceId
                 };
@@ -1655,25 +2139,27 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     if (!hideLoading && this.loadingElm) {
                         this.loadingElm.visible = true;
                     }
-                    if (!(0, index_9.isClientWalletConnected)() || !this._data || this._data.chainId !== chainId) {
+                    if (!(0, index_16.isClientWalletConnected)() || !this.data || this.data.chainId !== chainId) {
                         this.renderEmpty();
                         return;
                     }
                     try {
                         this.infoStack.visible = true;
                         this.emptyStack.visible = false;
-                        scom_token_list_4.tokenStore.updateTokenMapData(chainId);
+                        scom_token_list_9.tokenStore.updateTokenMapData(chainId);
                         if (rpcWallet.address) {
-                            scom_token_list_4.tokenStore.updateTokenBalancesByChainId(chainId);
+                            scom_token_list_9.tokenStore.updateTokenBalancesByChainId(chainId);
                         }
-                        await this.initWallet();
-                        this.buybackInfo = await (0, index_10.getGuaranteedBuyBackInfo)(this.state, { ...this._data });
+                        await this.configModel.initWallet();
+                        await this.buybackModel.fetchGuaranteedBuyBackInfo(this.data);
                         this.updateCommissionInfo();
                         await this.renderBuybackCampaign();
-                        await this.renderLeftPart();
-                        const firstToken = this.getTokenObject('toTokenAddress');
-                        if (firstToken && firstToken.symbol !== scom_token_list_4.ChainNativeTokenByChainId[chainId]?.symbol && this.state.isRpcWalletConnected()) {
+                        const firstToken = this.buybackModel.firstTokenObject;
+                        if (firstToken && firstToken.symbol !== scom_token_list_9.ChainNativeTokenByChainId[chainId]?.symbol && this.state.isRpcWalletConnected()) {
                             await this.initApprovalModelAction();
+                        }
+                        else if ((this.buybackModel.isExpired || this.buybackModel.isUpcoming) && this.btnSwap) {
+                            this.updateBtnSwap();
                         }
                     }
                     catch {
@@ -1683,48 +2169,6 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.loadingElm.visible = false;
                     }
                 });
-            };
-            this.initWallet = async () => {
-                try {
-                    await eth_wallet_6.Wallet.getClientInstance().init();
-                    await this.rpcWallet.init();
-                }
-                catch (err) {
-                    console.log(err);
-                }
-            };
-            this.getFirstAvailableBalance = () => {
-                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId);
-                if (!this.buybackInfo || this.isSwapDisabled || !tokenBalances) {
-                    return '0';
-                }
-                const { queueInfo } = this.buybackInfo;
-                const { available, offerPrice, tradeFee, amount } = queueInfo;
-                const tokenBalance = new eth_wallet_6.BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')]);
-                const balance = new eth_wallet_6.BigNumber(available).times(offerPrice).dividedBy(tradeFee);
-                const amountIn = new eth_wallet_6.BigNumber(amount).times(offerPrice).dividedBy(tradeFee);
-                return (eth_wallet_6.BigNumber.minimum(balance, tokenBalance, amountIn)).toFixed();
-            };
-            this.getSecondAvailableBalance = () => {
-                if (!this.buybackInfo || !this.buybackInfo.queueInfo) {
-                    return '0';
-                }
-                const { queueInfo } = this.buybackInfo;
-                const { offerPrice, tradeFee } = queueInfo;
-                return new eth_wallet_6.BigNumber(this.getFirstAvailableBalance()).dividedBy(offerPrice).times(tradeFee).toFixed();
-            };
-            this.getTokenObject = (key) => {
-                const chainId = this.chainId;
-                const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(chainId);
-                const tokenAddress = this.getValueByKey(key);
-                if (tokenAddress && tokenMap) {
-                    let token = tokenMap[tokenAddress.toLowerCase()];
-                    if (!token) {
-                        token = tokenMap[tokenAddress];
-                    }
-                    return token;
-                }
-                return null;
             };
             this.handleFocusInput = (first, isFocus) => {
                 const elm = first ? this.firstInputBox : this.secondInputBox;
@@ -1740,12 +2184,11 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     return;
                 if (this.state.getCurrentCommissions(this.commissions).length) {
                     this.hStackCommission.visible = true;
-                    const firstToken = this.getTokenObject('toTokenAddress');
-                    const secondToken = this.getTokenObject('fromTokenAddress');
-                    if (firstToken && secondToken) {
-                        const amount = new eth_wallet_6.BigNumber(this.firstInput?.value || 0);
+                    const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                    if (firstTokenObject && secondTokenObject) {
+                        const amount = new eth_wallet_7.BigNumber(this.firstInput?.value || 0);
                         const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-                        this.lbCommissionFee.caption = `${(0, index_8.formatNumber)(commissionAmount, 6)} ${firstToken?.symbol || ''}`;
+                        this.lbCommissionFee.caption = `${(0, index_15.formatNumber)(commissionAmount, 6)} ${firstTokenObject?.symbol || ''}`;
                         this.hStackCommission.visible = true;
                     }
                     else {
@@ -1757,87 +2200,73 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
             };
             this.firstInputChange = () => {
-                const firstToken = this.getTokenObject('toTokenAddress');
-                const secondToken = this.getTokenObject('fromTokenAddress');
-                (0, index_8.limitInputNumber)(this.firstInput, firstToken?.decimals || 18);
-                if (!this.buybackInfo)
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                (0, index_15.limitInputNumber)(this.firstInput, firstTokenObject?.decimals || 18);
+                if (!this.buybackModel.buybackInfo)
                     return;
-                const info = this.buybackInfo.queueInfo || {};
-                const { offerPrice, tradeFee } = info;
-                const firstSymbol = firstToken?.symbol || '';
-                const inputVal = new eth_wallet_6.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
+                const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {};
+                const firstSymbol = firstTokenObject?.symbol || '';
+                const inputVal = new eth_wallet_7.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
                 if (inputVal.isNaN()) {
                     this.lbFee.caption = `0 ${firstSymbol}`;
                     this.secondInput.value = '';
                 }
                 else {
-                    this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
-                    this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                    this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
+                    this.secondInput.value = inputVal.dp(secondTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
             };
             this.secondInputChange = () => {
-                const firstToken = this.getTokenObject('toTokenAddress');
-                const secondToken = this.getTokenObject('fromTokenAddress');
-                (0, index_8.limitInputNumber)(this.secondInput, secondToken?.decimals || 18);
-                if (!this.buybackInfo)
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                (0, index_15.limitInputNumber)(this.secondInput, secondTokenObject?.decimals || 18);
+                if (!this.buybackModel.buybackInfo)
                     return;
-                const info = this.buybackInfo.queueInfo || {};
-                const { offerPrice, tradeFee } = info;
-                const firstSymbol = firstToken?.symbol || '';
-                const inputVal = new eth_wallet_6.BigNumber(this.secondInput.value).multipliedBy(offerPrice).dividedBy(tradeFee);
+                const { offerPrice, tradeFee } = this.buybackModel.buybackInfo.queueInfo || {};
+                const firstSymbol = firstTokenObject?.symbol || '';
+                const inputVal = new eth_wallet_7.BigNumber(this.secondInput.value).multipliedBy(offerPrice).dividedBy(tradeFee);
                 if (inputVal.isNaN()) {
                     this.firstInput.value = '';
                     this.lbFee.caption = `0 ${firstSymbol}`;
                 }
                 else {
-                    this.firstInput.value = inputVal.dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
-                    this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
+                    this.firstInput.value = inputVal.dp(firstTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                    this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstSymbol}`;
                 }
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
             };
             this.onSetMaxBalance = async () => {
-                const { tradeFee, offerPrice } = this.buybackInfo.queueInfo || {};
-                const firstAvailable = this.getFirstAvailableBalance();
-                const firstToken = this.getTokenObject('toTokenAddress');
-                const secondToken = this.getTokenObject('fromTokenAddress');
-                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId) || {};
-                let totalAmount = new eth_wallet_6.BigNumber(tokenBalances[this.getValueByKey('toTokenAddress')] || 0);
-                const commissionAmount = this.state.getCommissionAmount(this.commissions, totalAmount);
-                if (commissionAmount.gt(0)) {
-                    const totalFee = totalAmount.plus(commissionAmount).dividedBy(totalAmount);
-                    totalAmount = totalAmount.dividedBy(totalFee);
-                }
-                const firstInputValue = totalAmount.gt(firstAvailable) ? firstAvailable : totalAmount;
-                this.firstInput.value = new eth_wallet_6.BigNumber(firstInputValue).dp(firstToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
-                const inputVal = new eth_wallet_6.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
-                this.secondInput.value = inputVal.dp(secondToken?.decimals || 18, ROUNDING_NUMBER).toFixed();
-                this.lbFee.caption = `${(0, index_8.formatNumber)(new eth_wallet_6.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstToken?.symbol || ''}`;
+                const { tradeFee, offerPrice } = this.buybackModel.buybackInfo.queueInfo || {};
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                const firstInputValue = this.buybackModel.getAvailable(this.commissions);
+                this.firstInput.value = new eth_wallet_7.BigNumber(firstInputValue).dp(firstTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                const inputVal = new eth_wallet_7.BigNumber(this.firstInput.value).dividedBy(offerPrice).times(tradeFee);
+                this.secondInput.value = inputVal.dp(secondTokenObject?.decimals || 18, ROUNDING_NUMBER).toFixed();
+                this.lbFee.caption = `${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).minus(tradeFee).times(this.firstInput.value), 6)} ${firstTokenObject?.symbol || ''}`;
                 this.updateCommissionInfo();
                 this.updateBtnSwap();
             };
             this.updateBtnSwap = () => {
                 if (!this.state.isRpcWalletConnected()) {
                     this.btnSwap.enabled = true;
+                    this.btnSwap.caption = this.submitButtonText;
                     return;
                 }
-                if (!this.buybackInfo)
+                if (!this.buybackModel.buybackInfo)
                     return;
-                if (this.isSwapDisabled) {
+                if (this.buybackModel.isSwapDisabled) {
                     this.btnSwap.enabled = false;
+                    this.btnSwap.caption = this.submitButtonText;
                     return;
                 }
-                const firstVal = new eth_wallet_6.BigNumber(this.firstInput.value);
-                const secondVal = new eth_wallet_6.BigNumber(this.secondInput.value);
-                const firstAvailable = this.getFirstAvailableBalance();
-                const secondAvailable = this.getSecondAvailableBalance();
+                const firstVal = new eth_wallet_7.BigNumber(this.firstInput.value);
+                const secondVal = new eth_wallet_7.BigNumber(this.secondInput.value);
+                const firstAvailable = this.buybackModel.firstAvailableBalance;
+                const secondAvailable = this.buybackModel.secondAvailableBalance;
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId);
-                const balance = new eth_wallet_6.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
-                // const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
-                // const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
+                const balance = new eth_wallet_7.BigNumber(this.buybackModel.secondTokenBalance);
                 const total = firstVal.plus(commissionAmount);
                 if (firstVal.isNaN() || firstVal.lte(0) || firstVal.gt(firstAvailable) || secondVal.isNaN() || secondVal.lte(0) || secondVal.gt(secondAvailable) || total.gt(balance)) {
                     this.btnSwap.enabled = false;
@@ -1852,36 +2281,25 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.connectWallet();
                     return;
                 }
-                if (this.buybackInfo && this.isApproveButtonShown) {
-                    const info = this.buybackInfo.queueInfo;
-                    this.approvalModelAction.doApproveAction(this.getTokenObject('toTokenAddress'), info.tokenInAvailable);
+                if (this.buybackModel.buybackInfo && this.isApproveButtonShown) {
+                    const info = this.buybackModel.buybackInfo.queueInfo;
+                    this.approvalModelAction.doApproveAction(this.buybackModel.firstTokenObject, info.tokenInAvailable);
                 }
                 else {
                     this.approvalModelAction.doPayAction();
                 }
             };
             this.onSubmit = async () => {
-                if (!this.buybackInfo || !this.buybackInfo.queueInfo)
+                if (!this.buybackModel.buybackInfo || !this.buybackModel.buybackInfo.queueInfo)
                     return;
-                const firstToken = this.getTokenObject('toTokenAddress');
-                const secondToken = this.getTokenObject('fromTokenAddress');
-                const { pairAddress, offerIndex } = this.buybackInfo.queueInfo;
-                const amount = new eth_wallet_6.BigNumber(this.firstInput?.value || 0);
-                const commissionAmount = this.state.getCommissionAmount(this.commissions, amount);
-                this.showResultMessage('warning', `Swapping ${(0, index_8.formatNumber)(amount.plus(commissionAmount))} ${firstToken?.symbol} to ${(0, index_8.formatNumber)(this.secondInput.value)} ${secondToken?.symbol}`);
-                const params = {
-                    provider: "RestrictedOracle",
-                    routeTokens: [firstToken, secondToken],
-                    bestSmartRoute: [firstToken, secondToken],
-                    pairs: [pairAddress],
-                    fromAmount: new eth_wallet_6.BigNumber(this.firstInput.value),
-                    toAmount: new eth_wallet_6.BigNumber(this.secondInput.value),
-                    isFromEstimated: false,
-                    groupQueueOfferIndex: offerIndex,
-                    commissions: this.commissions
-                };
-                const { error } = await (0, index_11.executeSwap)(this.state, params);
+                const { firstTokenObject, secondTokenObject } = this.buybackModel;
+                const fromAmount = new eth_wallet_7.BigNumber(this.firstInput?.value || 0);
+                const toAmount = new eth_wallet_7.BigNumber(this.secondInput?.value || 0);
+                const commissionAmount = this.state.getCommissionAmount(this.commissions, fromAmount);
+                this.showResultMessage('warning', `Swapping ${(0, index_15.formatNumber)(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol} to ${(0, index_15.formatNumber)(this.secondInput.value)} ${secondTokenObject?.symbol}`);
+                const { error } = await this.buybackModel.executeSwap(fromAmount, toAmount, this.commissions);
                 if (error) {
+                    this.isSubmitting = false;
                     this.showResultMessage('error', error);
                 }
             };
@@ -1892,6 +2310,10 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             this.initApprovalModelAction = async () => {
                 if (!this.state.isRpcWalletConnected())
                     return;
+                if ((this.buybackModel.isExpired || this.buybackModel.isUpcoming) && this.btnSwap) {
+                    this.updateBtnSwap();
+                    return;
+                }
                 this.approvalModelAction = await this.state.setApprovalModelAction({
                     sender: this,
                     payAction: this.onSubmit,
@@ -1902,16 +2324,18 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     },
                     onToBePaid: async (token) => {
                         this.updateBtnSwap();
-                        this.btnSwap.caption = this.submitButtonText;
                         this.isApproveButtonShown = false;
+                        this.btnSwap.caption = this.submitButtonText;
                     },
                     onApproving: async (token, receipt, data) => {
                         this.showResultMessage('success', receipt || '');
+                        this.isSubmitting = true;
                         this.btnSwap.rightIcon.visible = true;
                         this.btnSwap.caption = 'Approving';
                         this.updateInput(false);
                     },
                     onApproved: async (token, data) => {
+                        this.isSubmitting = false;
                         this.isApproveButtonShown = false;
                         this.btnSwap.rightIcon.visible = false;
                         this.btnSwap.caption = this.submitButtonText;
@@ -1921,17 +2345,20 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     onApprovingError: async (token, err) => {
                         this.showResultMessage('error', err);
                         this.updateInput(true);
+                        this.isSubmitting = false;
                         this.btnSwap.caption = 'Approve';
                         this.btnSwap.rightIcon.visible = false;
                     },
                     onPaying: async (receipt, data) => {
                         this.showResultMessage('success', receipt || '');
+                        this.isSubmitting = true;
                         this.btnSwap.rightIcon.visible = true;
                         this.btnSwap.caption = this.submitButtonText;
                         this.updateInput(false);
                     },
                     onPaid: async (data) => {
                         await this.initializeWidgetConfig(true);
+                        this.isSubmitting = false;
                         this.firstInput.value = '';
                         this.secondInput.value = '';
                         this.btnSwap.rightIcon.visible = false;
@@ -1939,20 +2366,15 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     },
                     onPayingError: async (err) => {
                         this.showResultMessage('error', err);
+                        this.isSubmitting = false;
                         this.btnSwap.rightIcon.visible = false;
                         this.btnSwap.enabled = true;
                         this.btnSwap.caption = this.submitButtonText;
                     }
                 });
                 this.state.approvalModel.spenderAddress = this.contractAddress;
-                const firstToken = this.getTokenObject('toTokenAddress');
-                await this.approvalModelAction.checkAllowance(firstToken, this.getFirstAvailableBalance());
-            };
-            this.getValueByKey = (key) => {
-                const item = this.buybackInfo;
-                if (!item?.queueInfo)
-                    return null;
-                return item.queueInfo[key];
+                const { firstTokenObject, firstAvailableBalance } = this.buybackModel;
+                await this.approvalModelAction.checkAllowance(firstTokenObject, firstAvailableBalance);
             };
             this.showResultMessage = (status, content) => {
                 if (!this.txStatusModal)
@@ -1968,9 +2390,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.txStatusModal.showModal();
             };
             this.connectWallet = async () => {
-                if (!(0, index_9.isClientWalletConnected)()) {
+                if (!(0, index_16.isClientWalletConnected)()) {
                     if (this.mdWallet) {
-                        await components_6.application.loadPackage('@scom/scom-wallet-modal', '*');
+                        await components_7.application.loadPackage('@scom/scom-wallet-modal', '*');
                         this.mdWallet.networks = this.networks;
                         this.mdWallet.wallets = this.wallets;
                         this.mdWallet.showModal();
@@ -1978,15 +2400,15 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     return;
                 }
                 if (!this.state.isRpcWalletConnected()) {
-                    const clientWallet = eth_wallet_6.Wallet.getClientInstance();
+                    const clientWallet = eth_wallet_7.Wallet.getClientInstance();
                     await clientWallet.switchNetwork(this.chainId);
                 }
             };
             this.initEmptyUI = async () => {
                 if (!this.noCampaignSection) {
-                    this.noCampaignSection = await components_6.Panel.create({ width: '100%', height: '100%' });
+                    this.noCampaignSection = await components_7.Panel.create({ width: '100%', height: '100%' });
                 }
-                const isClientConnected = (0, index_9.isClientWalletConnected)();
+                const isClientConnected = (0, index_16.isClientWalletConnected)();
                 this.noCampaignSection.clearInnerHTML();
                 this.noCampaignSection.appendChild(this.$render("i-vstack", { class: "no-buyback", height: "100%", background: { color: Theme.background.main }, verticalAlignment: "center" },
                     this.$render("i-vstack", { gap: 10, verticalAlignment: "center", horizontalAlignment: "center" },
@@ -1994,6 +2416,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.$render("i-label", { caption: isClientConnected ? 'No Buybacks' : 'Please connect with your wallet!' })),
                     !isClientConnected ? this.$render("i-button", { caption: "Connect Wallet", class: "btn-os", minHeight: 43, width: 300, maxWidth: "90%", margin: { top: 10, left: 'auto', right: 'auto' }, onClick: this.connectWallet }) : []));
                 this.noCampaignSection.visible = true;
+            };
+            this.onToggleDetail = () => {
+                const isExpanding = this.detailWrapper.visible;
+                this.detailWrapper.visible = !isExpanding;
+                this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
+                this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
             };
             this.renderEmpty = async () => {
                 this.infoStack.visible = false;
@@ -2008,214 +2436,107 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 }
             };
             this.renderBuybackCampaign = async () => {
-                if (this.buybackInfo) {
-                    this.bottomStack.clearInnerHTML();
+                if (this.buybackModel.buybackInfo) {
+                    this.infoStack.clearInnerHTML();
                     const chainId = this.chainId;
                     const isRpcConnected = this.state.isRpcWalletConnected();
-                    const { queueInfo } = this.buybackInfo;
-                    const { amount, allowAll, tradeFee, available } = queueInfo || {};
-                    const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(chainId);
-                    const firstTokenObj = tokenMap[this.getValueByKey('toTokenAddress')];
-                    const secondTokenObj = tokenMap[this.getValueByKey('fromTokenAddress')];
-                    const firstSymbol = firstTokenObj?.symbol ?? '';
-                    const secondSymbol = secondTokenObj?.symbol ?? '';
-                    const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.state.getChainId()) || {};
-                    const balance = tokenBalances[firstTokenObj.address.toLowerCase() || firstTokenObj.symbol];
+                    const { firstTokenObject, firstTokenBalance, secondTokenObject, firstAvailableBalance, secondAvailableBalance, buybackInfo } = this.buybackModel;
+                    const { amount, allowAll, tradeFee, available, offerPrice, startDate, endDate } = buybackInfo?.queueInfo || {};
+                    const firstSymbol = firstTokenObject?.symbol || '';
+                    const secondSymbol = secondTokenObject?.symbol || '';
+                    const rate = `1 ${firstSymbol} : ${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).dividedBy(offerPrice))} ${secondSymbol}`;
+                    const reverseRate = `1 ${secondSymbol} : ${offerPrice} ${firstSymbol}`;
+                    const hStackEndTime = await components_7.HStack.create({ gap: 4, verticalAlignment: 'center' });
+                    const lbEndTime = await components_7.Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
+                    hStackEndTime.appendChild(lbEndTime);
+                    hStackEndTime.appendChild(this.$render("i-label", { caption: (0, index_15.formatDate)(endDate), font: { size: '0.875rem', bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } }));
+                    const balance = firstTokenBalance;
                     const commissionFee = this.state.embedderCommissionFee;
                     const hasCommission = !!this.state.getCurrentCommissions(this.commissions).length;
-                    this.bottomStack.clearInnerHTML();
-                    this.bottomStack.appendChild(this.$render("i-panel", { padding: { bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }, height: "auto" },
+                    const lbRate = new components_7.Label(undefined, {
+                        caption: rate,
+                        font: { bold: true, color: Theme.colors.primary.main },
+                    });
+                    let isToggled = false;
+                    const onToggleRate = () => {
+                        isToggled = !isToggled;
+                        lbRate.caption = isToggled ? reverseRate : rate;
+                    };
+                    this.infoStack.clearInnerHTML();
+                    this.infoStack.appendChild(this.$render("i-panel", { padding: { bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' }, height: "auto" },
                         this.$render("i-vstack", { gap: 10, width: "100%" },
-                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Group Queue Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
-                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Your Allocation" }),
-                                this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_8.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
-                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Your Balance" }),
-                                this.$render("i-label", { caption: `${(0, index_8.formatNumber)(balance || 0)} ${firstSymbol}`, margin: { left: 'auto' } })),
-                            this.$render("i-panel", { width: "100%", height: 2, background: { color: Theme.input.background }, margin: { top: 8, bottom: 8 } }),
+                            this.$render("i-vstack", { id: "detailWrapper", gap: 10, width: "100%", visible: false },
+                                hStackEndTime,
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
+                                    this.$render("i-label", { caption: "Group Queue Balance" }),
+                                    this.$render("i-label", { caption: `${(0, index_15.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
+                                    this.$render("i-label", { caption: "Your Allocation" }),
+                                    this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_15.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
+                                    this.$render("i-label", { caption: "Your Balance" }),
+                                    this.$render("i-label", { caption: `${(0, index_15.formatNumber)(balance || 0)} ${firstSymbol}`, margin: { left: 'auto' } }))),
+                            this.$render("i-button", { id: "btnDetail", caption: "More Information", rightIcon: { width: 10, height: 16, margin: { left: 5 }, fill: Theme.text.primary, name: 'caret-down' }, background: { color: 'transparent' }, border: { width: 1, style: 'solid', color: Theme.text.primary, radius: 8 }, width: 300, maxWidth: "100%", height: 36, margin: { top: 4, bottom: 16, left: 'auto', right: 'auto' }, onClick: this.onToggleDetail }),
+                            this.$render("i-hstack", { gap: 4, verticalAlignment: "center", horizontalAlignment: "space-between", wrap: "wrap" },
+                                this.$render("i-label", { caption: "Buyback Price", font: { bold: true } }),
+                                this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
+                                    lbRate,
+                                    this.$render("i-icon", { name: "exchange-alt", width: 14, height: 14, fill: Theme.text.primary, opacity: 0.9, cursor: "pointer", onClick: onToggleRate }))),
                             this.$render("i-hstack", { gap: 4, wrap: "wrap" },
                                 this.$render("i-label", { caption: "Swap Available" }),
                                 this.$render("i-vstack", { gap: 4, margin: { left: 'auto' }, horizontalAlignment: "end" },
-                                    this.$render("i-label", { caption: `${(0, index_8.formatNumber)(this.getFirstAvailableBalance())} ${firstSymbol}`, font: { color: Theme.colors.primary.main } }),
-                                    this.$render("i-label", { caption: `(${(0, index_8.formatNumber)(this.getSecondAvailableBalance())} ${secondSymbol})`, font: { color: Theme.colors.primary.main } }))),
+                                    this.$render("i-label", { caption: `${(0, index_15.formatNumber)(firstAvailableBalance)} ${firstSymbol}`, font: { color: Theme.colors.primary.main } }),
+                                    this.$render("i-label", { caption: `(${(0, index_15.formatNumber)(secondAvailableBalance)} ${secondSymbol})`, font: { color: Theme.colors.primary.main } }))),
                             this.$render("i-hstack", { id: "firstInputBox", gap: 8, width: "100%", height: 50, verticalAlignment: "center", background: { color: Theme.input.background }, border: { radius: 5, width: 2, style: 'solid', color: 'transparent' }, padding: { left: 7, right: 7 } },
                                 this.$render("i-input", { id: "firstInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.firstInputChange, onFocus: () => this.handleFocusInput(true, true), onBlur: () => this.handleFocusInput(true, false) }),
                                 this.$render("i-hstack", { gap: 4, width: 130, verticalAlignment: "center" },
-                                    this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_6.BigNumber(this.getFirstAvailableBalance()).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_4.assets.tokenPath(firstTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
+                                    this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(firstAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_9.assets.tokenPath(firstTokenObject, chainId), fallbackUrl: index_16.fallBackUrl }),
                                     this.$render("i-label", { caption: firstSymbol, font: { color: Theme.input.fontColor, bold: true } }))),
                             this.$render("i-vstack", { width: "100%", margin: { top: 4, bottom: 4 }, horizontalAlignment: "center" },
                                 this.$render("i-icon", { name: "arrow-down", width: 20, height: 20, fill: Theme.text.primary })),
                             this.$render("i-hstack", { id: "secondInputBox", gap: 8, width: "100%", height: 50, verticalAlignment: "center", background: { color: Theme.input.background }, border: { radius: 5, width: 2, style: 'solid', color: 'transparent' }, padding: { left: 7, right: 7 } },
                                 this.$render("i-input", { id: "secondInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.secondInputChange, onFocus: () => this.handleFocusInput(false, true), onBlur: () => this.handleFocusInput(false, false) }),
                                 this.$render("i-hstack", { gap: 4, margin: { right: 8 }, width: 130, verticalAlignment: "center" },
-                                    this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_6.BigNumber(this.getSecondAvailableBalance()).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
-                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_4.assets.tokenPath(secondTokenObj, chainId), fallbackUrl: index_9.fallBackUrl }),
+                                    this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(secondAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
+                                    this.$render("i-image", { width: 24, height: 24, url: scom_token_list_9.assets.tokenPath(secondTokenObject, chainId), fallbackUrl: index_16.fallBackUrl }),
                                     this.$render("i-label", { caption: secondSymbol, font: { color: Theme.input.fontColor, bold: true } })))),
                         this.$render("i-hstack", { gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
-                            this.$render("i-label", { caption: `Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_6.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`, font: { size: '0.75rem' } }),
+                            this.$render("i-label", { caption: `Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_7.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`, font: { size: '0.75rem' } }),
                             this.$render("i-label", { id: "lbFee", caption: `0 ${firstSymbol}`, font: { size: '0.75rem' } })),
                         this.$render("i-hstack", { id: "hStackCommission", visible: hasCommission, gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
                                 this.$render("i-label", { caption: "Commission Fee", font: { size: '0.75rem' } }),
-                                this.$render("i-icon", { tooltip: { content: `A commission fee of ${new eth_wallet_6.BigNumber(commissionFee).times(100)}% will be applied to the amount you input.` }, name: "question-circle", width: 14, height: 14 })),
+                                this.$render("i-icon", { tooltip: { content: `A commission fee of ${new eth_wallet_7.BigNumber(commissionFee).times(100)}% will be applied to the amount you input.` }, name: "question-circle", width: 14, height: 14 })),
                             this.$render("i-label", { id: "lbCommissionFee", caption: `0 ${firstSymbol}`, font: { size: '0.75rem' } })),
                         this.$render("i-vstack", { margin: { top: 15 }, verticalAlignment: "center", horizontalAlignment: "center" },
                             this.$render("i-panel", null,
-                                this.$render("i-button", { id: "btnSwap", minWidth: 150, minHeight: 36, caption: this.state.isRpcWalletConnected() ? 'Swap' : 'Switch Network', border: { radius: 12 }, rightIcon: { spin: true, visible: false, fill: '#fff' }, padding: { top: 4, bottom: 4, left: 16, right: 16 }, 
-                                    // font={{ size: '0.875rem', color: Theme.colors.primary.contrastText }}
-                                    // rightIcon={{ visible: false, fill: Theme.colors.primary.contrastText }}
-                                    class: "btn-os", onClick: this.onSwap.bind(this) })))));
+                                this.$render("i-button", { id: "btnSwap", minWidth: 150, minHeight: 36, caption: this.state.isRpcWalletConnected() ? 'Swap' : 'Switch Network', border: { radius: 12 }, rightIcon: { spin: true, visible: false, fill: '#fff' }, padding: { top: 4, bottom: 4, left: 16, right: 16 }, class: "btn-os", onClick: this.onSwap.bind(this) })))));
+                    const currentTime = (0, components_7.moment)().valueOf();
+                    if (this.buybackModel.isUpcoming) {
+                        const startTime = (0, components_7.moment)(startDate).valueOf();
+                        setTimeout(() => {
+                            this.updateBtnSwap();
+                        }, currentTime - startTime);
+                    }
+                    if (!this.buybackModel.isExpired) {
+                        const endTime = (0, components_7.moment)(endDate).valueOf();
+                        setTimeout(() => {
+                            this.updateBtnSwap();
+                        }, endTime - currentTime);
+                    }
                 }
                 else {
                     this.renderEmpty();
                 }
             };
-            this.renderLeftPart = async () => {
-                if (this.buybackInfo) {
-                    this.topStack.clearInnerHTML();
-                    const { tokenIn, queueInfo } = this.buybackInfo;
-                    const info = queueInfo || {};
-                    const { startDate, endDate } = info;
-                    const secondToken = tokenIn?.startsWith('0x') ? tokenIn.toLowerCase() : tokenIn;
-                    const tokenMap = scom_token_list_4.tokenStore.getTokenMapByChainId(this.chainId);
-                    const secondTokenObj = tokenMap[secondToken];
-                    const secondSymbol = secondTokenObj?.symbol ?? '';
-                    const { title, logo } = this._data;
-                    const hasBranch = !!title || !!logo;
-                    let imgLogo;
-                    if (logo?.startsWith('ipfs://')) {
-                        imgLogo = logo.replace('ipfs://', '/ipfs/');
-                    }
-                    else {
-                        imgLogo = logo;
-                    }
-                    const hStackEndTime = await components_6.HStack.create({ gap: 4, verticalAlignment: 'center' });
-                    const lbEndTime = await components_6.Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
-                    hStackEndTime.appendChild(lbEndTime);
-                    hStackEndTime.appendChild(this.$render("i-label", { caption: (0, index_8.formatDate)(endDate), font: { size: '0.875rem', bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } }));
-                    // const optionTimer = { background: { color: Theme.colors.secondary.main }, font: { color: Theme.colors.secondary.contrastText } };
-                    // const hStackTimer = await HStack.create({ gap: 4, verticalAlignment: 'center' });
-                    // const lbTimer = await Label.create({ caption: 'Starts In', font: { size: '0.875rem', bold: true } });
-                    // const endHour = await Label.create(optionTimer);
-                    // const endDay = await Label.create(optionTimer);
-                    // const endMin = await Label.create(optionTimer);
-                    // endHour.classList.add('timer-value');
-                    // endDay.classList.add('timer-value');
-                    // endMin.classList.add('timer-value');
-                    // hStackTimer.appendChild(lbTimer);
-                    // hStackTimer.appendChild(
-                    // 	<i-hstack gap={4} margin={{ left: 'auto' }} verticalAlignment="center" class="custom-timer">
-                    // 		{endDay}
-                    // 		<i-label caption="D" class="timer-unit" />
-                    // 		{endHour}
-                    // 		<i-label caption="H" class="timer-unit" />
-                    // 		{endMin}
-                    // 		<i-label caption="M" class="timer-unit" />
-                    // 	</i-hstack>
-                    // );
-                    // let interval: any;
-                    // const setTimer = () => {
-                    // 	let days = 0;
-                    // 	let hours = 0;
-                    // 	let mins = 0;
-                    // 	if (moment().isBefore(moment(startDate))) {
-                    // 		lbTimer.caption = 'Starts In';
-                    // 		lbEndTime.caption = 'End Time';
-                    // 		days = moment(startDate).diff(moment(), 'days');
-                    // 		hours = moment(startDate).diff(moment(), 'hours') - days * 24;
-                    // 		mins = moment(startDate).diff(moment(), 'minutes') - days * 24 * 60 - hours * 60;
-                    // 	} else if (moment(moment()).isBefore(endDate)) {
-                    // 		lbTimer.caption = 'Ends In';
-                    // 		hStackEndTime.visible = false;
-                    // 		days = moment(endDate).diff(moment(), 'days');
-                    // 		hours = moment(endDate).diff(moment(), 'hours') - days * 24;
-                    // 		mins = moment(endDate).diff(moment(), 'minutes') - days * 24 * 60 - hours * 60;
-                    // 	} else {
-                    // 		hStackTimer.visible = false;
-                    // 		hStackEndTime.visible = true;
-                    // 		lbEndTime.caption = 'Ended On';
-                    // 		days = hours = mins = 0;
-                    // 		clearInterval(interval);
-                    // 	}
-                    // 	endDay.caption = `${days}`;
-                    // 	endHour.caption = `${hours}`;
-                    // 	endMin.caption = `${mins}`;
-                    // }
-                    // setTimer();
-                    // interval = setInterval(() => {
-                    // 	setTimer();
-                    // }, 1000);
-                    this.topStack.clearInnerHTML();
-                    this.topStack.appendChild(this.$render("i-vstack", { gap: 10, width: "100%", padding: { bottom: '0.5rem', top: '0.5rem', right: '1rem', left: '1rem' } },
-                        hasBranch ? this.$render("i-vstack", { gap: "0.25rem", margin: { bottom: '0.25rem' }, horizontalAlignment: "center" },
-                            this.$render("i-label", { visible: !!title, caption: title, margin: { top: '0.5em', bottom: '1em' }, font: { weight: 600 } }),
-                            this.$render("i-image", { visible: !!imgLogo, url: imgLogo, height: 100 })) : [],
-                        this.$render("i-hstack", { gap: "0.25rem", verticalAlignment: "center" },
-                            this.$render("i-label", { caption: "Buyback Price", font: { bold: true } }),
-                            this.$render("i-label", { caption: `${1 / this.getValueByKey('offerPrice')} ${secondSymbol}`, font: { bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } })),
-                        hStackEndTime));
-                }
-            };
-        }
-        get isSwapDisabled() {
-            if (!this.buybackInfo)
-                return true;
-            const info = this.buybackInfo.queueInfo;
-            if (!info)
-                return true;
-            const { startDate, endDate, allowAll, isApprovedTrader } = info;
-            const isUpcoming = (0, components_6.moment)().isBefore((0, components_6.moment)(startDate));
-            const isEnded = (0, components_6.moment)().isAfter((0, components_6.moment)(endDate));
-            if (isUpcoming || isEnded) {
-                return true;
-            }
-            if (!allowAll) {
-                return !isApprovedTrader;
-            }
-            return false;
         }
         get submitButtonText() {
-            if (!this.state.isRpcWalletConnected()) {
-                return 'Switch Network';
-            }
-            if (this.isApproveButtonShown) {
-                return this.btnSwap?.rightIcon.visible ? 'Approving' : 'Approve';
-            }
-            const firstVal = new eth_wallet_6.BigNumber(this.firstInput.value);
-            const secondVal = new eth_wallet_6.BigNumber(this.secondInput.value);
-            if (firstVal.lt(0) || secondVal.lt(0)) {
-                return 'Amount must be greater than 0';
-            }
-            if (this.buybackInfo) {
-                const firstMaxVal = new eth_wallet_6.BigNumber(this.getFirstAvailableBalance());
-                const secondMaxVal = new eth_wallet_6.BigNumber(this.getSecondAvailableBalance());
-                const commissionAmount = this.state.getCommissionAmount(this.commissions, firstVal);
-                const tokenBalances = scom_token_list_4.tokenStore.getTokenBalancesByChainId(this.chainId);
-                const balance = new eth_wallet_6.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
-                // const tradeFee = (this.buybackInfo.queueInfo || {}).tradeFee || '0';
-                // const fee = new BigNumber(1).minus(tradeFee).times(this.firstInput.value);
-                const total = firstVal.plus(commissionAmount);
-                if (firstVal.gt(firstMaxVal) || secondVal.gt(secondMaxVal) || total.gt(balance)) {
-                    return 'Insufficient amount available';
-                }
-            }
-            if (this.btnSwap?.rightIcon.visible) {
-                return 'Swapping';
-            }
-            return 'Swap';
-        }
-        ;
-        isEmptyData(value) {
-            return !value || !value.tokenIn || !value.tokenOut || !value.networks || value.networks.length === 0;
+            return this.buybackModel.getSubmitButtonText(this.isApproveButtonShown, this.isSubmitting, this.firstInput.value, this.secondInput.value, this.commissions);
         }
         async init() {
-            this.isReadyCallbackQueued = true;
+            this.initModels();
             super.init();
-            this.state = new index_9.State(data_json_1.default);
             const lazyLoad = this.getAttribute('lazyLoad', true, false);
             if (!lazyLoad) {
                 const defaultChainId = this.getAttribute('defaultChainId', true);
@@ -2224,7 +2545,9 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const title = this.getAttribute('title', true);
                 const offerIndex = this.getAttribute('offerIndex', true, 0);
                 const tokenIn = this.getAttribute('tokenIn', true, '');
+                const customTokenIn = this.getAttribute('customTokenIn', true, '');
                 const tokenOut = this.getAttribute('tokenOut', true, '');
+                const customTokenOut = this.getAttribute('customTokenOut', true, '');
                 // const commissions = this.getAttribute('commissions', true, []);
                 const networks = this.getAttribute('networks', true);
                 const wallets = this.getAttribute('wallets', true);
@@ -2235,22 +2558,22 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     logo,
                     offerIndex,
                     tokenIn,
+                    customTokenIn,
                     tokenOut,
+                    customTokenOut,
                     // commissions,
                     defaultChainId,
                     networks,
                     wallets,
                     showHeader
                 };
-                if (!this.isEmptyData(data)) {
-                    await this.setData(data);
+                if (!this.buybackModel.isEmptyData(data)) {
+                    await this.configModel.setData(data);
                 }
                 else {
                     await this.renderEmpty();
                 }
             }
-            this.isReadyCallbackQueued = false;
-            this.executeReadyCallback();
         }
         render() {
             return (this.$render("i-scom-dapp-container", { id: "dappContainer", class: index_css_2.buybackDappContainer },
@@ -2261,17 +2584,14 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                                 this.$render("i-icon", { class: "i-loading-spinner_icon", image: { url: assets_2.default.fullPath('img/loading.svg'), width: 36, height: 36 } }),
                                 this.$render("i-label", { caption: "Loading...", font: { color: '#FD4A4C', size: '1.5em' }, class: "i-loading-spinner_text" }))),
                         this.$render("i-vstack", { id: "emptyStack", visible: false, minHeight: 320, margin: { top: 10, bottom: 10 }, verticalAlignment: "center", horizontalAlignment: "center" }),
-                        this.$render("i-vstack", { id: "infoStack", width: "100%", minWidth: 320, maxWidth: 500, height: "100%", margin: { left: 'auto', right: 'auto' }, horizontalAlignment: "center" },
-                            this.$render("i-vstack", { id: "topStack", width: "inherit", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' } }),
-                            this.$render("i-panel", { width: "calc(100% - 4rem)", height: 2, background: { color: Theme.input.background } }),
-                            this.$render("i-vstack", { id: "bottomStack", gap: "0.5rem", width: "inherit", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }, background: { color: Theme.background.main }, verticalAlignment: "space-between" }))),
+                        this.$render("i-vstack", { id: "infoStack", gap: "0.5rem", width: "100%", minWidth: 320, maxWidth: 500, height: "100%", margin: { left: 'auto', right: 'auto' }, horizontalAlignment: "center", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }, background: { color: Theme.background.main } })),
                     this.$render("i-scom-tx-status-modal", { id: "txStatusModal" }),
                     this.$render("i-scom-wallet-modal", { id: "mdWallet", wallets: [] }))));
         }
     };
     ScomBuyback = __decorate([
-        components_6.customModule,
-        (0, components_6.customElements)('i-scom-buyback')
+        components_7.customModule,
+        (0, components_7.customElements)('i-scom-buyback')
     ], ScomBuyback);
     exports.default = ScomBuyback;
 });

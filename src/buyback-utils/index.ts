@@ -3,7 +3,7 @@ import {
   numberToBytes32,
   IBuybackCampaign,
 } from '../global/index';
-import { BigNumber, Utils } from '@ijstech/eth-wallet';
+import { BigNumber } from '@ijstech/eth-wallet';
 import {
   getChainNativeToken,
   getWETH,

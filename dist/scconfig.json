@@ -12,10 +12,11 @@
         "@scom/scom-commission-proxy-contract",
         "@scom/scom-multicall",
         "@scom/scom-dapp-container",
-        "@scom/scom-network-picker",
+        "@scom/scom-tx-status-modal",
+        "@ijstech/eth-contract",
         "@scom/scom-token-modal",
         "@scom/scom-token-input",
-        "@scom/scom-commission-fee-setup",
-        "@scom/scom-tx-status-modal"
+        "@scom/scom-network-picker",
+        "@scom/scom-commission-fee-setup"
     ]
 }
