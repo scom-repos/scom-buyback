@@ -160,10 +160,34 @@ declare module "@scom/scom-buyback/store/tokens/mainnet/bsc.ts" {
         isNew?: boolean;
     })[];
 }
+/// <amd-module name="@scom/scom-buyback/store/tokens/mainnet/zkSync.ts" />
+declare module "@scom/scom-buyback/store/tokens/mainnet/zkSync.ts" {
+    export const Tokens_ZK: ({
+        name: string;
+        address: string;
+        symbol: string;
+        decimals: number;
+        isCommon: boolean;
+    } | {
+        chainId: number;
+        address?: string;
+        name: string;
+        decimals: number;
+        symbol: string;
+        status?: boolean;
+        logoURI?: string;
+        isCommon?: boolean;
+        balance?: string | number;
+        isNative?: boolean;
+        isWETH?: boolean;
+        isNew?: boolean;
+    })[];
+}
 /// <amd-module name="@scom/scom-buyback/store/tokens/mainnet/index.ts" />
 declare module "@scom/scom-buyback/store/tokens/mainnet/index.ts" {
     export { Tokens_Avalanche } from "@scom/scom-buyback/store/tokens/mainnet/avalanche.ts";
     export { Tokens_BSC } from "@scom/scom-buyback/store/tokens/mainnet/bsc.ts";
+    export { Tokens_ZK } from "@scom/scom-buyback/store/tokens/mainnet/zkSync.ts";
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts" />
 declare module "@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts" {
@@ -216,10 +240,34 @@ declare module "@scom/scom-buyback/store/tokens/testnet/fuji.ts" {
         isNew?: boolean;
     })[];
 }
+/// <amd-module name="@scom/scom-buyback/store/tokens/testnet/zk-sepolia.ts" />
+declare module "@scom/scom-buyback/store/tokens/testnet/zk-sepolia.ts" {
+    export const Tokens_ZK_Sepolia: ({
+        name: string;
+        address: string;
+        symbol: string;
+        decimals: number;
+        isCommon: boolean;
+    } | {
+        chainId: number;
+        address?: string;
+        name: string;
+        decimals: number;
+        symbol: string;
+        status?: boolean;
+        logoURI?: string;
+        isCommon?: boolean;
+        balance?: string | number;
+        isNative?: boolean;
+        isWETH?: boolean;
+        isNew?: boolean;
+    })[];
+}
 /// <amd-module name="@scom/scom-buyback/store/tokens/testnet/index.ts" />
 declare module "@scom/scom-buyback/store/tokens/testnet/index.ts" {
     export { Tokens_BSC_Testnet } from "@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts";
     export { Tokens_Fuji } from "@scom/scom-buyback/store/tokens/testnet/fuji.ts";
+    export { Tokens_ZK_Sepolia } from "@scom/scom-buyback/store/tokens/testnet/zk-sepolia.ts";
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/index.ts" />
 declare module "@scom/scom-buyback/store/tokens/index.ts" {
@@ -272,7 +320,7 @@ declare module "@scom/scom-buyback/swap-utils/index.ts" {
     import { BigNumber, TransactionReceipt } from '@ijstech/eth-wallet';
     import { ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
     import { State } from "@scom/scom-buyback/store/index.ts";
-    const getHybridRouterAddress: (state: State) => string;
+    const getHybridRouterAddress: (state: State, isZksync?: boolean) => string;
     interface SwapData {
         provider: string;
         routeTokens: any[];
@@ -303,6 +351,8 @@ declare module "@scom/scom-buyback/data.json.ts" {
         proxyAddresses: {
             "97": string;
             "43113": string;
+            "300": string;
+            "324": string;
         };
         embedderCommissionFee: string;
         defaultBuilderData: {
@@ -503,6 +553,18 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
         } | {
             name: string;
             target: string;
+            getActions: (category?: string) => any[];
+            getData: any;
+            setData: (data: any) => Promise<void>;
+            getTag: any;
+            setTag: any;
+            getProxySelectors?: undefined;
+            elementName?: undefined;
+            getLinkParams?: undefined;
+            bindOnChanged?: undefined;
+        } | {
+            name: string;
+            target: string;
             elementName: string;
             getLinkParams: () => {
                 data: string;
@@ -530,18 +592,6 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
             setTag: any;
             getProxySelectors?: undefined;
             getActions?: undefined;
-        } | {
-            name: string;
-            target: string;
-            getActions: (category?: string) => any[];
-            getData: any;
-            setData: any;
-            getTag: any;
-            setTag: any;
-            getProxySelectors?: undefined;
-            elementName?: undefined;
-            getLinkParams?: undefined;
-            bindOnChanged?: undefined;
         })[];
         getData(): IBuybackCampaign;
         setData(data: IBuybackCampaign): Promise<void>;
@@ -633,6 +683,18 @@ declare module "@scom/scom-buyback" {
         } | {
             name: string;
             target: string;
+            getActions: (category?: string) => any[];
+            getData: any;
+            setData: (data: any) => Promise<void>;
+            getTag: any;
+            setTag: any;
+            getProxySelectors?: undefined;
+            elementName?: undefined;
+            getLinkParams?: undefined;
+            bindOnChanged?: undefined;
+        } | {
+            name: string;
+            target: string;
             elementName: string;
             getLinkParams: () => {
                 data: string;
@@ -660,18 +722,6 @@ declare module "@scom/scom-buyback" {
             setTag: any;
             getProxySelectors?: undefined;
             getActions?: undefined;
-        } | {
-            name: string;
-            target: string;
-            getActions: (category?: string) => any[];
-            getData: any;
-            setData: any;
-            getTag: any;
-            setTag: any;
-            getProxySelectors?: undefined;
-            elementName?: undefined;
-            getLinkParams?: undefined;
-            bindOnChanged?: undefined;
         })[];
         initModels(): void;
         getData(): Promise<IBuybackCampaign>;

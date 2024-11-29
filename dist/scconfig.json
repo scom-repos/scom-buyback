@@ -9,6 +9,7 @@
         "@scom/scom-wallet-modal",
         "@scom/scom-token-list",
         "@scom/oswap-openswap-contract",
+        "@scom/scom-queue-contract",
         "@scom/scom-commission-proxy-contract",
         "@scom/scom-multicall",
         "@scom/scom-dapp-container",

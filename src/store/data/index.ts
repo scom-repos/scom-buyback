@@ -23,6 +23,16 @@ export const CoreContractAddressesByChainId: { [chainId: number]: { [contract: s
   137: { // Polygon
     "WETH9": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
   },
+  300: { // zkSync Era Sepolia Testnet
+    "WETH9": '0xe8FD21d796B963B508e4FFfaEF4DD641A9B3c938',
+    "OSWAP_HybridRouter": '0x78a65fb41747a0454AB772e1398d6d12b3aEfA9E',
+    "OSWAP_RestrictedFactory": '0xb7e7Fb350983cB87628bcc642a7c3Afc6A8101e0',
+  },
+  324: { // zkSync Era Mainnet
+    "WETH9": '0x621Fb323C46085Ba44c5fE890d43737758Def9C8',
+    "OSWAP_HybridRouter": '0x162E341beAe5d6ee4a5bdEF28Fa9f1898e3D2545',
+    "OSWAP_RestrictedFactory": '0x3DA43301b428f72AB0204949267A77CBBEcd53AB',
+  },
   1287: { // Moonbeam
     "WETH9": "0xd614547c5CF8619F8F40445e51c39F93E1D48BFf",
   },

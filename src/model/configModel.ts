@@ -276,7 +276,10 @@ export class ConfigModel {
           return editAction ? [editAction] : [];
         },
         getData: this.getData.bind(this),
-        setData: this.setData.bind(this),
+        setData: async (data: any) => {
+          const defaultData = configData.defaultBuilderData;
+          await this.setData({ ...defaultData, ...data });
+        },
         getTag: this.getTag.bind(this),
         setTag: this.setTag.bind(this)
       }
