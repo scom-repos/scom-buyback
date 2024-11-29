@@ -10,11 +10,23 @@ export default {
       "chainId": 43113,
       "explorerTxUrl": "https://testnet.snowtrace.io/tx/",
       "explorerAddressUrl": "https://testnet.snowtrace.io/address/"
-    }
+    },
+    {
+      "chainId": 300,
+      "explorerTxUrl": "https://sepolia.explorer.zksync.io/tx/",
+      "explorerAddressUrl": "https://sepolia.explorer.zksync.io/address/",
+    },
+    {
+      "chainId": 324,
+      "explorerTxUrl": "https://explorer.zksync.io/tx/",
+      "explorerAddressUrl": "https://explorer.zksync.io/address/"
+    },
   ],
   "proxyAddresses": {
     "97": "0x9602cB9A782babc72b1b6C96E050273F631a6870",
-    "43113": "0x7f1EAB0db83c02263539E3bFf99b638E61916B96"
+    "43113": "0x7f1EAB0db83c02263539E3bFf99b638E61916B96",
+    "300": "",
+    "324": ""
   },
   "embedderCommissionFee": "0.01",
   "defaultBuilderData": {
@@ -29,6 +41,12 @@ export default {
       },
       {
         "chainId": 97
+      },
+      {
+        "chainId": 300
+      },
+      {
+        "chainId": 324
       }
     ],
     "wallets": [

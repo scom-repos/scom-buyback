@@ -191,7 +191,9 @@ export default class ScomBuyback extends Module {
 	}
 
 	get commissions() {
-		return this.configModel.commissions;
+		const chainId = this.state?.getChainId();
+		const isZksync = chainId === 300 || chainId === 324;
+		return isZksync ? [] : this.configModel.commissions;
 	}
 
 	set commissions(value: ICommissionInfo[]) {
@@ -207,7 +209,9 @@ export default class ScomBuyback extends Module {
 		if (hasCommission) {
 			this.contractAddress = this.state.getProxyAddress();
 		} else {
-			this.contractAddress = getHybridRouterAddress(this.state);
+			const chainId = this.state.getChainId();
+			const isZksync = chainId === 300 || chainId === 324;
+			this.contractAddress = getHybridRouterAddress(this.state, isZksync);
 		}
 		if (this.state?.approvalModel && this.approvalModelAction) {
 			this.state.approvalModel.spenderAddress = this.contractAddress;

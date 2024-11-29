@@ -1,13 +1,14 @@
 import { BigNumber, Utils, TransactionReceipt, Wallet, IWallet } from '@ijstech/eth-wallet';
 import { Contracts } from '@scom/oswap-openswap-contract';
+import { Contracts as QueueContracts } from "@scom/scom-queue-contract";
 import { Contracts as ProxyContracts } from '@scom/scom-commission-proxy-contract';
 import { ICommissionInfo } from '../global/index';
 import { State } from '../store/index';
 import { getGroupQueueExecuteData } from '../buyback-utils/index';
 
-const getHybridRouterAddress = (state: State): string => {
+const getHybridRouterAddress = (state: State, isZksync?: boolean): string => {
   let Address = state.getAddresses();
-  return Address['OSWAP_HybridRouter2'];
+  return Address[isZksync ? 'OSWAP_HybridRouter' : 'OSWAP_HybridRouter2'];
 }
 
 const hybridTradeExactIn = async (state: State, wallet: IWallet, path: any[], pairs: string[], amountIn: string, amountOutMin: string, toAddress: string, deadline: number, feeOnTransfer: boolean, data: string, commissions?: ICommissionInfo[]) => {
@@ -17,9 +18,14 @@ const hybridTradeExactIn = async (state: State, wallet: IWallet, path: any[], pa
 
   let tokenIn = path[0];
   let tokenOut = path[path.length - 1];
-
-  const hybridRouterAddress = getHybridRouterAddress(state);
-  const hybridRouter = new Contracts.OSWAP_HybridRouter2(wallet, hybridRouterAddress);
+  const isZksync = wallet.chainId === 300 || wallet.chainId === 324;
+  const hybridRouterAddress = getHybridRouterAddress(state, isZksync);
+  let hybridRouter: any;
+  if (wallet.chainId === 300 || wallet.chainId === 324) {
+    hybridRouter = new QueueContracts.HybridRouter(wallet, hybridRouterAddress);
+  } else {
+    hybridRouter = new Contracts.OSWAP_HybridRouter2(wallet, hybridRouterAddress);
+  }
 
   const proxyAddress = state.getProxyAddress();
   const proxy = new ProxyContracts.Proxy(wallet, proxyAddress);
