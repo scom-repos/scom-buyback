@@ -1,4 +1,4 @@
-import { moment } from "@ijstech/components";
+import { Module, moment } from "@ijstech/components";
 import { ITokenObject, tokenStore } from "@scom/scom-token-list";
 import { BigNumber } from "@ijstech/eth-contract";
 import { IBuybackCampaign, ICommissionInfo } from "../global/index";
@@ -9,9 +9,11 @@ import { CUSTOM_TOKEN } from "@scom/scom-token-input";
 
 export class BuybackModel {
   private state: State;
+  private module: Module;
   private _buybackInfo: GuaranteedBuyBackInfo;
 
-  constructor(state: State) {
+  constructor(module: Module, state: State) {
+    this.module = module;
     this.state = state;
   }
 
@@ -112,21 +114,21 @@ export class BuybackModel {
 
   getSubmitButtonText(isApproveButtonShown: boolean, isSubmitting: boolean, firstValue: number, secondValue: number, commissions: ICommissionInfo[]) {
     if (!this.state.isRpcWalletConnected()) {
-      return 'Switch Network';
+      return this.module.i18n.get('$switch_network');
     }
     if (this.isUpcoming) {
-      return 'Upcoming';
+      return this.module.i18n.get('$upcoming');
     }
     if (this.isExpired) {
-      return 'Expired';
+      return this.module.i18n.get('$expired');
     }
     if (isApproveButtonShown) {
-      return isSubmitting ? 'Approving' : 'Approve';
+      return this.module.i18n.get(isSubmitting ? '$approving' : '$approve');
     }
     const firstVal = new BigNumber(firstValue);
     const secondVal = new BigNumber(secondValue);
     if (firstVal.lt(0) || secondVal.lt(0)) {
-      return 'Amount must be greater than 0';
+      return this.module.i18n.get('$amount_must_be_greater_than_0');
     }
     if (this.buybackInfo) {
       const firstMaxVal = new BigNumber(this.firstAvailableBalance);
@@ -138,13 +140,13 @@ export class BuybackModel {
       const total = firstVal.plus(commissionAmount);
 
       if (firstVal.gt(firstMaxVal) || secondVal.gt(secondMaxVal) || total.gt(balance)) {
-        return 'Insufficient amount available';
+        return this.module.i18n.get('$insufficient_amount_available');
       }
     }
     if (isSubmitting) {
-      return 'Swapping';
+      return this.module.i18n.get('$swapping');
     }
-    return 'Swap';
+    return this.module.i18n.get('$swap');
   }
 
   executeSwap = async (fromAmount: BigNumber, toAmount: BigNumber, commissions: ICommissionInfo[]) => {

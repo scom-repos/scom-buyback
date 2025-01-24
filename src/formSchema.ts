@@ -1,4 +1,4 @@
-import { ComboBox, IComboItem, Input } from '@ijstech/components';
+import { ComboBox, I18n, IComboItem, Input } from '@ijstech/components';
 import ScomNetworkPicker from '@scom/scom-network-picker';
 import ScomTokenInput, { CUSTOM_TOKEN } from '@scom/scom-token-input';
 import { ChainNativeTokenByChainId, ITokenObject, tokenStore } from "@scom/scom-token-list";
@@ -112,7 +112,7 @@ const themeUISchema = {
     ]
 }
 
-export function getSchema(state?: State, isOwner?: boolean) {
+export function getSchema(i18n: I18n, state?: State, isOwner?: boolean) {
     const elements = [
         {
             type: 'Control',
@@ -170,29 +170,32 @@ export function getSchema(state?: State, isOwner?: boolean) {
             properties: {
                 offerIndex: {
                     type: 'number',
+                    title: i18n.get('$offer_index'),
                     required: true
                 },
                 chainId: {
                     type: 'number',
-                    title: 'Chain',
+                    title: i18n.get('$chain'),
                     required: true
                 },
                 tokenIn: {
                     type: 'string',
+                    title: i18n.get('$token_in'),
                     required: true
                 },
                 customTokenIn: {
                     type: 'string',
-                    title: 'Token In Address',
+                    title: i18n.get('$token_in_address'),
                     required: true
                 },
                 tokenOut: {
                     type: 'string',
+                    title: i18n.get('$token_out'),
                     required: true
                 },
                 customTokenOut: {
                     type: 'string',
-                    title: 'Token Out Address',
+                    title: i18n.get('$token_out_address'),
                     required: true
                 }
             }

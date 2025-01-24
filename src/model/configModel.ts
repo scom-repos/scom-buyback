@@ -9,23 +9,17 @@ import { IWalletPlugin } from "@scom/scom-wallet-modal";
 import { getSchema } from '../formSchema';
 import ScomCommissionFeeSetup from "@scom/scom-commission-fee-setup";
 import configData from "../data.json";
+import ScomDappContainer from "@scom/scom-dapp-container";
 
 interface IConfigOptions {
   refreshWidget: () => Promise<void>;
-  refreshDappContainer: () => void;
-  setContaiterTag: (value: any) => void;
-  updateTheme: () => void;
+  getContainer: () => ScomDappContainer;
 }
 
 export class ConfigModel {
   private state: State;
   private module: Module;
-  private options: IConfigOptions = {
-    refreshWidget: async () => { },
-    refreshDappContainer: () => { },
-    setContaiterTag: (value: any) => { },
-    updateTheme: () => { }
-  };
+  private options: IConfigOptions;
   private _data: IBuybackCampaign = {
     chainId: 0,
     title: '',
@@ -98,7 +92,7 @@ export class ConfigModel {
   }
 
   private _getActions(category?: string) {
-    const formSchema = getSchema();
+    const formSchema = getSchema(this.module.i18n);
     const actions: any[] = [];
 
     if (category !== 'offers') {
@@ -139,8 +133,8 @@ export class ConfigModel {
                 chainId,
                 tokenIn,
                 customTokenIn,
-								tokenOut,
-								customTokenOut
+                tokenOut,
+                customTokenOut
               };
 
               this._data.chainId = generalSettings.chainId;
@@ -157,7 +151,7 @@ export class ConfigModel {
               oldTag = JSON.parse(JSON.stringify(this.module.tag));
               if (builder?.setTag) builder.setTag(themeSettings);
               else this.setTag(themeSettings);
-              this.options.setContaiterTag(themeSettings);
+              this.setContaiterTag(themeSettings);
             },
             undo: async () => {
               this._data = JSON.parse(JSON.stringify(oldData));
@@ -167,7 +161,7 @@ export class ConfigModel {
               this.module.tag = tag;
               if (builder?.setTag) builder.setTag(tag);
               else this.setTag(tag);
-              this.options.setContaiterTag(tag);
+              this.setContaiterTag(tag);
             },
             redo: () => { }
           }
@@ -182,7 +176,7 @@ export class ConfigModel {
   }
 
   private getProjectOwnerActions() {
-    const formSchema = getSchema(this.state, true);
+    const formSchema = getSchema(this.module.i18n, this.state, true);
     const actions: any[] = [
       {
         name: 'Settings',
@@ -293,7 +287,7 @@ export class ConfigModel {
   async setData(data: IBuybackCampaign) {
     this._data = data;
     await this.resetRpcWallet();
-    await this.options.refreshWidget();
+    await this.options?.refreshWidget();
   }
 
   async getTag() {
@@ -310,8 +304,17 @@ export class ConfigModel {
           this.module.tag[prop] = newValue[prop];
       }
     }
-    this.options.setContaiterTag(this.module.tag);
-    this.options.updateTheme();
+    this.setContaiterTag(this.module.tag);
+    this.updateTheme();
+  }
+
+  private get container() {
+    const container = this.options?.getContainer();
+    return container;
+  }
+
+  private setContaiterTag(value: any) {
+    if (this.container) this.container.setTag(value);
   }
 
   private updateTag(type: 'light' | 'dark', value: any) {
@@ -322,9 +325,38 @@ export class ConfigModel {
     }
   }
 
+  private updateTheme() {
+    const themeVar = this.container?.theme || 'light';
+    const tag = this.module.tag[themeVar] || {};
+    this.updateStyle('--text-primary', tag.fontColor);
+    this.updateStyle('--background-main', tag.backgroundColor);
+    this.updateStyle('--input-font_color', tag.inputFontColor);
+    this.updateStyle('--input-background', tag.inputBackgroundColor);
+  }
+
+  private updateStyle(name: string, value: any) {
+    if (value) {
+      this.module.style.setProperty(name, value);
+    } else {
+      this.module.style.removeProperty(name);
+    }
+  }
+
+  private refreshDappContainer = () => {
+    const rpcWallet = this.rpcWallet;
+    const containerData = {
+      defaultChainId: this.chainId || this.defaultChainId,
+      wallets: this.wallets,
+      networks: this.networks.length ? this.networks : [{ chainId: this.chainId || this.chainId }],
+      showHeader: this.showHeader,
+      rpcWalletId: rpcWallet.instanceId
+    }
+    if (this.container) this.container.setData(containerData);
+  }
+
   private refreshData = (builder: any) => {
-    this.options.refreshDappContainer();
-    this.options.refreshWidget();
+    this.refreshDappContainer();
+    this.options?.refreshWidget();
     if (builder?.setData) {
       builder.setData(this._data);
     }
@@ -343,13 +375,13 @@ export class ConfigModel {
     const rpcWalletId = await this.state.initRpcWallet(this.defaultChainId);
     const rpcWallet = this.rpcWallet;
     const chainChangedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.ChainChanged, async (chainId: number) => {
-      this.options.refreshWidget();
+      this.options?.refreshWidget();
     });
     const connectedEvent = rpcWallet.registerWalletEvent(this, Constants.RpcWalletEvent.Connected, async (connected: boolean) => {
-      this.options.refreshWidget();
+      this.options?.refreshWidget();
     });
     this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
-    this.options.refreshDappContainer();
+    this.refreshDappContainer();
   }
 
   initWallet = async () => {

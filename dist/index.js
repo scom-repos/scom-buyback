@@ -1186,7 +1186,7 @@ define("@scom/scom-buyback/model/buybackModel.ts", ["require", "exports", "@ijst
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BuybackModel = void 0;
     class BuybackModel {
-        constructor(state) {
+        constructor(module, state) {
             this.getAvailable = (commissions) => {
                 const firstAvailable = this.firstAvailableBalance;
                 let totalAmount = new eth_contract_1.BigNumber(this.secondTokenBalance);
@@ -1253,6 +1253,7 @@ define("@scom/scom-buyback/model/buybackModel.ts", ["require", "exports", "@ijst
                 }
                 return 0;
             };
+            this.module = module;
             this.state = state;
         }
         get chainId() {
@@ -1334,21 +1335,21 @@ define("@scom/scom-buyback/model/buybackModel.ts", ["require", "exports", "@ijst
         }
         getSubmitButtonText(isApproveButtonShown, isSubmitting, firstValue, secondValue, commissions) {
             if (!this.state.isRpcWalletConnected()) {
-                return 'Switch Network';
+                return this.module.i18n.get('$switch_network');
             }
             if (this.isUpcoming) {
-                return 'Upcoming';
+                return this.module.i18n.get('$upcoming');
             }
             if (this.isExpired) {
-                return 'Expired';
+                return this.module.i18n.get('$expired');
             }
             if (isApproveButtonShown) {
-                return isSubmitting ? 'Approving' : 'Approve';
+                return this.module.i18n.get(isSubmitting ? '$approving' : '$approve');
             }
             const firstVal = new eth_contract_1.BigNumber(firstValue);
             const secondVal = new eth_contract_1.BigNumber(secondValue);
             if (firstVal.lt(0) || secondVal.lt(0)) {
-                return 'Amount must be greater than 0';
+                return this.module.i18n.get('$amount_must_be_greater_than_0');
             }
             if (this.buybackInfo) {
                 const firstMaxVal = new eth_contract_1.BigNumber(this.firstAvailableBalance);
@@ -1358,13 +1359,13 @@ define("@scom/scom-buyback/model/buybackModel.ts", ["require", "exports", "@ijst
                 const balance = new eth_contract_1.BigNumber(tokenBalances ? tokenBalances[this.getValueByKey('toTokenAddress')] : 0);
                 const total = firstVal.plus(commissionAmount);
                 if (firstVal.gt(firstMaxVal) || secondVal.gt(secondMaxVal) || total.gt(balance)) {
-                    return 'Insufficient amount available';
+                    return this.module.i18n.get('$insufficient_amount_available');
                 }
             }
             if (isSubmitting) {
-                return 'Swapping';
+                return this.module.i18n.get('$swapping');
             }
-            return 'Swap';
+            return this.module.i18n.get('$swap');
         }
         isEmptyData(value) {
             return !value || !value.chainId || !value.offerIndex;
@@ -1476,7 +1477,7 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
             }
         ]
     };
-    function getSchema(state, isOwner) {
+    function getSchema(i18n, state, isOwner) {
         const elements = [
             {
                 type: 'Control',
@@ -1535,29 +1536,32 @@ define("@scom/scom-buyback/formSchema.ts", ["require", "exports", "@ijstech/comp
                 properties: {
                     offerIndex: {
                         type: 'number',
+                        title: i18n.get('$offer_index'),
                         required: true
                     },
                     chainId: {
                         type: 'number',
-                        title: 'Chain',
+                        title: i18n.get('$chain'),
                         required: true
                     },
                     tokenIn: {
                         type: 'string',
+                        title: i18n.get('$token_in'),
                         required: true
                     },
                     customTokenIn: {
                         type: 'string',
-                        title: 'Token In Address',
+                        title: i18n.get('$token_in_address'),
                         required: true
                     },
                     tokenOut: {
                         type: 'string',
+                        title: i18n.get('$token_out'),
                         required: true
                     },
                     customTokenOut: {
                         type: 'string',
-                        title: 'Token Out Address',
+                        title: i18n.get('$token_out_address'),
                         required: true
                     }
                 }
@@ -1818,12 +1822,6 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
     exports.ConfigModel = void 0;
     class ConfigModel {
         constructor(state, module, options) {
-            this.options = {
-                refreshWidget: async () => { },
-                refreshDappContainer: () => { },
-                setContaiterTag: (value) => { },
-                updateTheme: () => { }
-            };
             this._data = {
                 chainId: 0,
                 title: '',
@@ -1835,9 +1833,21 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
                 networks: []
             };
             this.rpcWalletEvents = [];
+            this.refreshDappContainer = () => {
+                const rpcWallet = this.rpcWallet;
+                const containerData = {
+                    defaultChainId: this.chainId || this.defaultChainId,
+                    wallets: this.wallets,
+                    networks: this.networks.length ? this.networks : [{ chainId: this.chainId || this.chainId }],
+                    showHeader: this.showHeader,
+                    rpcWalletId: rpcWallet.instanceId
+                };
+                if (this.container)
+                    this.container.setData(containerData);
+            };
             this.refreshData = (builder) => {
-                this.options.refreshDappContainer();
-                this.options.refreshWidget();
+                this.refreshDappContainer();
+                this.options?.refreshWidget();
                 if (builder?.setData) {
                     builder.setData(this._data);
                 }
@@ -1854,13 +1864,13 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
                 const rpcWalletId = await this.state.initRpcWallet(this.defaultChainId);
                 const rpcWallet = this.rpcWallet;
                 const chainChangedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_6.Constants.RpcWalletEvent.ChainChanged, async (chainId) => {
-                    this.options.refreshWidget();
+                    this.options?.refreshWidget();
                 });
                 const connectedEvent = rpcWallet.registerWalletEvent(this, eth_wallet_6.Constants.RpcWalletEvent.Connected, async (connected) => {
-                    this.options.refreshWidget();
+                    this.options?.refreshWidget();
                 });
                 this.rpcWalletEvents.push(chainChangedEvent, connectedEvent);
-                this.options.refreshDappContainer();
+                this.refreshDappContainer();
             };
             this.initWallet = async () => {
                 try {
@@ -1917,7 +1927,7 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
             return this.state.getRpcWallet();
         }
         _getActions(category) {
-            const formSchema = (0, formSchema_1.getSchema)();
+            const formSchema = (0, formSchema_1.getSchema)(this.module.i18n);
             const actions = [];
             if (category !== 'offers') {
                 actions.push({
@@ -1964,7 +1974,7 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
                                     builder.setTag(themeSettings);
                                 else
                                     this.setTag(themeSettings);
-                                this.options.setContaiterTag(themeSettings);
+                                this.setContaiterTag(themeSettings);
                             },
                             undo: async () => {
                                 this._data = JSON.parse(JSON.stringify(oldData));
@@ -1975,7 +1985,7 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
                                     builder.setTag(tag);
                                 else
                                     this.setTag(tag);
-                                this.options.setContaiterTag(tag);
+                                this.setContaiterTag(tag);
                             },
                             redo: () => { }
                         };
@@ -1988,7 +1998,7 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
             return actions;
         }
         getProjectOwnerActions() {
-            const formSchema = (0, formSchema_1.getSchema)(this.state, true);
+            const formSchema = (0, formSchema_1.getSchema)(this.module.i18n, this.state, true);
             const actions = [
                 {
                     name: 'Settings',
@@ -2096,7 +2106,7 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
         async setData(data) {
             this._data = data;
             await this.resetRpcWallet();
-            await this.options.refreshWidget();
+            await this.options?.refreshWidget();
         }
         async getTag() {
             return this.module.tag;
@@ -2111,14 +2121,38 @@ define("@scom/scom-buyback/model/configModel.ts", ["require", "exports", "@scom/
                         this.module.tag[prop] = newValue[prop];
                 }
             }
-            this.options.setContaiterTag(this.module.tag);
-            this.options.updateTheme();
+            this.setContaiterTag(this.module.tag);
+            this.updateTheme();
+        }
+        get container() {
+            const container = this.options?.getContainer();
+            return container;
+        }
+        setContaiterTag(value) {
+            if (this.container)
+                this.container.setTag(value);
         }
         updateTag(type, value) {
             this.module.tag[type] = this.module.tag[type] ?? {};
             for (let prop in value) {
                 if (value.hasOwnProperty(prop))
                     this.module.tag[type][prop] = value[prop];
+            }
+        }
+        updateTheme() {
+            const themeVar = this.container?.theme || 'light';
+            const tag = this.module.tag[themeVar] || {};
+            this.updateStyle('--text-primary', tag.fontColor);
+            this.updateStyle('--background-main', tag.backgroundColor);
+            this.updateStyle('--input-font_color', tag.inputFontColor);
+            this.updateStyle('--input-background', tag.inputBackgroundColor);
+        }
+        updateStyle(name, value) {
+            if (value) {
+                this.module.style.setProperty(name, value);
+            }
+            else {
+                this.module.style.removeProperty(name);
             }
         }
     }
@@ -2131,7 +2165,116 @@ define("@scom/scom-buyback/model/index.ts", ["require", "exports", "@scom/scom-b
     Object.defineProperty(exports, "BuybackModel", { enumerable: true, get: function () { return buybackModel_1.BuybackModel; } });
     Object.defineProperty(exports, "ConfigModel", { enumerable: true, get: function () { return configModel_1.ConfigModel; } });
 });
-define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@scom/scom-buyback/model/index.ts"], function (require, exports, components_7, eth_wallet_7, index_15, index_16, index_17, assets_2, data_json_2, scom_token_list_11, index_css_2, index_18) {
+define("@scom/scom-buyback/translations.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-buyback/translations.json.ts'/> 
+    exports.default = {
+        "en": {
+            "swapping_to": "Swapping {{from}} to {{to}}",
+            "approve": "Approve",
+            "approving": "Approving",
+            "no_buybacks": "No Buybacks",
+            "please_connect_with_your_wallet": "Please connect with your wallet!",
+            "connect_wallet": "Connect Wallet",
+            "hide_information": "Hide Information",
+            "more_information": "More Information",
+            "end_time": "End Time",
+            "group_queue_balance": "Group Queue Balance",
+            "your_allocation": "Your Allocation",
+            "your_balance": "Your Balance",
+            "unlimited": "Unlimited",
+            "buyback_price": "Buyback Price",
+            "swap_available": "Swap Available",
+            "max": "Max",
+            "trade_fee_value": "Trade Fee {{value}}",
+            "commission_fee": "Commission Fee",
+            "a_commission_fee_of_value_will_be_applied_to_the_amount_you_input": "A commission fee of {{value}}% will be applied to the amount you input",
+            "swap": "Swap",
+            "swapping": "Swapping",
+            "upcoming": "Upcoming",
+            "expired": "Expired",
+            "amount_must_be_greater_than_0": "Amount must be greater than 0",
+            "insufficient_amount_available": "Insufficient amount available",
+            "switch_network": "Switch Network",
+            "offer_index": "Offer Index",
+            "chain": "Chain",
+            "token_in": "Token In",
+            "token_in_address": "Token In Address",
+            "token_out": "Token Out",
+            "token_out_address": "Token Out Address",
+        },
+        "zh-hant": {
+            "swapping_to": "正在將 {{from}} 換成 {{to}}",
+            "approve": "批准",
+            "approving": "正在批准",
+            "no_buybacks": "沒有回購",
+            "please_connect_with_your_wallet": "請連接您的錢包！",
+            "connect_wallet": "連接錢包",
+            "hide_information": "隱藏資訊",
+            "more_information": "更多資訊",
+            "end_time": "結束時間",
+            "group_queue_balance": "群組排隊餘額",
+            "your_allocation": "您的配額",
+            "your_balance": "您的餘額",
+            "unlimited": "無限",
+            "buyback_price": "回購價格",
+            "swap_available": "可換幣",
+            "max": "最大",
+            "trade_fee_value": "交易費 {{value}}",
+            "commission_fee": "佣金費用",
+            "a_commission_fee_of_value_will_be_applied_to_the_amount_you_input": "將對您輸入的金額收取 {{value}}% 的佣金費用",
+            "swap": "交換",
+            "swapping": "正在交換",
+            "upcoming": "即將來臨",
+            "expired": "已過期",
+            "amount_must_be_greater_than_0": "金額必須大於0",
+            "insufficient_amount_available": "可用金額不足",
+            "switch_network": "切換網絡",
+            "offer_index": "提供指數",
+            "chain": "鏈",
+            "token_in": "輸入代幣",
+            "token_in_address": "輸入代幣地址",
+            "token_out": "輸出代幣",
+            "token_out_address": "輸出代幣地址",
+        },
+        "vi": {
+            "swapping_to": "Đang hoán đổi {{from}} sang {{to}}",
+            "approve": "Phê duyệt",
+            "approving": "Đang phê duyệt",
+            "no_buybacks": "Không có mua lại",
+            "please_connect_with_your_wallet": "Vui lòng kết nối với ví của bạn!",
+            "connect_wallet": "Kết nối ví",
+            "hide_information": "Ẩn thông tin",
+            "more_information": "Thêm thông tin",
+            "end_time": "Thời gian kết thúc",
+            "group_queue_balance": "Số dư hàng đợi nhóm",
+            "your_allocation": "Phân bổ của bạn",
+            "your_balance": "Số dư của bạn",
+            "unlimited": "Không giới hạn",
+            "buyback_price": "Giá mua lại",
+            "swap_available": "Hoán đổi có sẵn",
+            "max": "Tối đa",
+            "trade_fee_value": "Phí giao dịch {{value}}",
+            "commission_fee": "Phí hoa hồng",
+            "a_commission_fee_of_value_will_be_applied_to_the_amount_you_input": "Phí hoa hồng {{value}}% sẽ được áp dụng cho số tiền bạn nhập",
+            "swap": "Hoán đổi",
+            "swapping": "Đang hoán đổi",
+            "upcoming": "Sắp tới",
+            "expired": "Đã hết hạn",
+            "amount_must_be_greater_than_0": "Số tiền phải lớn hơn 0",
+            "insufficient_amount_available": "Số tiền có sẵn không đủ",
+            "switch_network": "Chuyển đổi mạng",
+            "offer_index": "Chỉ số cung cấp",
+            "chain": "Chuỗi",
+            "token_in": "Token vào",
+            "token_in_address": "Địa chỉ token vào",
+            "token_out": "Token ra",
+            "token_out_address": "Địa chỉ token ra",
+        }
+    };
+});
+define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-buyback/global/index.ts", "@scom/scom-buyback/store/index.ts", "@scom/scom-buyback/swap-utils/index.ts", "@scom/scom-buyback/assets.ts", "@scom/scom-buyback/data.json.ts", "@scom/scom-token-list", "@scom/scom-buyback/index.css.ts", "@scom/scom-buyback/model/index.ts", "@scom/scom-buyback/translations.json.ts"], function (require, exports, components_7, eth_wallet_7, index_15, index_16, index_17, assets_2, data_json_2, scom_token_list_11, index_css_2, index_18, translations_json_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_7.Styles.Theme.ThemeVars;
@@ -2161,14 +2304,12 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.state = new index_16.State(data_json_2.default);
             }
             if (!this.buybackModel) {
-                this.buybackModel = new index_18.BuybackModel(this.state);
+                this.buybackModel = new index_18.BuybackModel(this, this.state);
             }
             if (!this.configModel) {
                 this.configModel = new index_18.ConfigModel(this.state, this, {
-                    refreshWidget: () => this.refreshWidget(),
-                    refreshDappContainer: () => this.refreshDappContainer(),
-                    setContaiterTag: (value) => this.setContaiterTag(value),
-                    updateTheme: () => this.updateTheme()
+                    refreshWidget: this.refreshWidget.bind(this),
+                    getContainer: this.getContainer.bind(this)
                 });
             }
         }
@@ -2183,25 +2324,6 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
         }
         async setTag(value) {
             this.configModel.setTag(value);
-        }
-        setContaiterTag(value) {
-            if (this.dappContainer)
-                this.dappContainer.setTag(value);
-        }
-        updateStyle(name, value) {
-            if (value) {
-                this.style.setProperty(name, value);
-            }
-            else {
-                this.style.removeProperty(name);
-            }
-        }
-        updateTheme() {
-            const themeVar = this.dappContainer?.theme || 'light';
-            this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
-            this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
-            this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
-            this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
         }
         get chainId() {
             return this.state.getChainId();
@@ -2260,17 +2382,8 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     this.updateCommissionInfo();
                 }
             };
-            this.refreshDappContainer = () => {
-                const rpcWallet = this.rpcWallet;
-                const containerData = {
-                    defaultChainId: this.configModel.chainId || this.defaultChainId,
-                    wallets: this.wallets,
-                    networks: this.networks.length ? this.networks : [{ chainId: this.configModel.chainId || this.chainId }],
-                    showHeader: this.showHeader,
-                    rpcWalletId: rpcWallet.instanceId
-                };
-                if (this.dappContainer?.setData)
-                    this.dappContainer.setData(containerData);
+            this.getContainer = () => {
+                return this.dappContainer;
             };
             this.refreshWidget = async () => {
                 this.updateContractAddress();
@@ -2440,7 +2553,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 const fromAmount = new eth_wallet_7.BigNumber(this.firstInput?.value || 0);
                 const toAmount = new eth_wallet_7.BigNumber(this.secondInput?.value || 0);
                 const commissionAmount = this.state.getCommissionAmount(this.commissions, fromAmount);
-                this.showResultMessage('warning', `Swapping ${(0, index_15.formatNumber)(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol} to ${(0, index_15.formatNumber)(this.secondInput.value)} ${secondTokenObject?.symbol}`);
+                this.showResultMessage('warning', this.i18n.get('$swapping_to', { from: `${(0, index_15.formatNumber)(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol}`, to: `${(0, index_15.formatNumber)(this.secondInput.value)} ${secondTokenObject?.symbol}` }));
                 const { error } = await this.buybackModel.executeSwap(fromAmount, toAmount, this.commissions);
                 if (error) {
                     this.isSubmitting = false;
@@ -2464,7 +2577,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     onToBeApproved: async (token) => {
                         this.isApproveButtonShown = true;
                         this.btnSwap.enabled = true;
-                        this.btnSwap.caption = this.state.isRpcWalletConnected() ? 'Approve' : 'Switch Network';
+                        this.btnSwap.caption = this.i18n.get(this.state.isRpcWalletConnected() ? '$approve' : '$switch_network');
                     },
                     onToBePaid: async (token) => {
                         this.updateBtnSwap();
@@ -2475,7 +2588,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.showResultMessage('success', receipt || '');
                         this.isSubmitting = true;
                         this.btnSwap.rightIcon.visible = true;
-                        this.btnSwap.caption = 'Approving';
+                        this.btnSwap.caption = this.i18n.get('$approving');
                         this.updateInput(false);
                     },
                     onApproved: async (token, data) => {
@@ -2490,7 +2603,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                         this.showResultMessage('error', err);
                         this.updateInput(true);
                         this.isSubmitting = false;
-                        this.btnSwap.caption = 'Approve';
+                        this.btnSwap.caption = this.i18n.get('$approve');
                         this.btnSwap.rightIcon.visible = false;
                     },
                     onPaying: async (receipt, data) => {
@@ -2557,14 +2670,14 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                 this.noCampaignSection.appendChild(this.$render("i-vstack", { class: "no-buyback", height: "100%", background: { color: Theme.background.main }, verticalAlignment: "center" },
                     this.$render("i-vstack", { gap: 10, verticalAlignment: "center", horizontalAlignment: "center" },
                         this.$render("i-image", { url: assets_2.default.fullPath('img/TrollTrooper.svg') }),
-                        this.$render("i-label", { caption: isClientConnected ? 'No Buybacks' : 'Please connect with your wallet!' })),
-                    !isClientConnected ? this.$render("i-button", { caption: "Connect Wallet", class: "btn-os", minHeight: 43, width: 300, maxWidth: "90%", margin: { top: 10, left: 'auto', right: 'auto' }, onClick: this.connectWallet }) : []));
+                        this.$render("i-label", { caption: isClientConnected ? '$no_buybacks' : '$please_connect_with_your_wallet' })),
+                    !isClientConnected ? this.$render("i-button", { caption: "$connect_wallet", class: "btn-os", minHeight: 43, width: 300, maxWidth: "90%", margin: { top: 10, left: 'auto', right: 'auto' }, onClick: this.connectWallet }) : []));
                 this.noCampaignSection.visible = true;
             };
             this.onToggleDetail = () => {
                 const isExpanding = this.detailWrapper.visible;
                 this.detailWrapper.visible = !isExpanding;
-                this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
+                this.btnDetail.caption = this.i18n.get(isExpanding ? '$more_information' : '$hide_information');
                 this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
             };
             this.renderEmpty = async () => {
@@ -2591,7 +2704,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                     const rate = `1 ${firstSymbol} : ${(0, index_15.formatNumber)(new eth_wallet_7.BigNumber(1).dividedBy(offerPrice))} ${secondSymbol}`;
                     const reverseRate = `1 ${secondSymbol} : ${offerPrice} ${firstSymbol}`;
                     const hStackEndTime = await components_7.HStack.create({ gap: 4, verticalAlignment: 'center' });
-                    const lbEndTime = await components_7.Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
+                    const lbEndTime = await components_7.Label.create({ caption: this.i18n.get('$end_time'), font: { size: '0.875rem', bold: true } });
                     hStackEndTime.appendChild(lbEndTime);
                     hStackEndTime.appendChild(this.$render("i-label", { caption: (0, index_15.formatDate)(endDate), font: { size: '0.875rem', bold: true, color: Theme.colors.primary.main }, margin: { left: 'auto' } }));
                     const balance = firstTokenBalance;
@@ -2612,29 +2725,29 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             this.$render("i-vstack", { id: "detailWrapper", gap: 10, width: "100%", visible: false },
                                 hStackEndTime,
                                 this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                    this.$render("i-label", { caption: "Group Queue Balance" }),
+                                    this.$render("i-label", { caption: "$group_queue_balance" }),
                                     this.$render("i-label", { caption: `${(0, index_15.formatNumber)(amount || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                                 this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                    this.$render("i-label", { caption: "Your Allocation" }),
-                                    this.$render("i-label", { caption: allowAll ? 'Unlimited' : `${(0, index_15.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
+                                    this.$render("i-label", { caption: "$your_allocation" }),
+                                    this.$render("i-label", { caption: allowAll ? '$unlimited' : `${(0, index_15.formatNumber)(available || 0)} ${secondSymbol}`, margin: { left: 'auto' } })),
                                 this.$render("i-hstack", { gap: 4, verticalAlignment: "center", wrap: "wrap" },
-                                    this.$render("i-label", { caption: "Your Balance" }),
+                                    this.$render("i-label", { caption: "$your_balance" }),
                                     this.$render("i-label", { caption: `${(0, index_15.formatNumber)(balance || 0)} ${firstSymbol}`, margin: { left: 'auto' } }))),
-                            this.$render("i-button", { id: "btnDetail", caption: "More Information", rightIcon: { width: 10, height: 16, margin: { left: 5 }, fill: Theme.text.primary, name: 'caret-down' }, background: { color: 'transparent' }, border: { width: 1, style: 'solid', color: Theme.text.primary, radius: 8 }, width: 300, maxWidth: "100%", height: 36, margin: { top: 4, bottom: 16, left: 'auto', right: 'auto' }, onClick: this.onToggleDetail }),
+                            this.$render("i-button", { id: "btnDetail", caption: "$more_information", rightIcon: { width: 10, height: 16, margin: { left: 5 }, fill: Theme.text.primary, name: 'caret-down' }, background: { color: 'transparent' }, border: { width: 1, style: 'solid', color: Theme.text.primary, radius: 8 }, width: 300, maxWidth: "100%", height: 36, margin: { top: 4, bottom: 16, left: 'auto', right: 'auto' }, onClick: this.onToggleDetail }),
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center", horizontalAlignment: "space-between", wrap: "wrap" },
-                                this.$render("i-label", { caption: "Buyback Price", font: { bold: true } }),
+                                this.$render("i-label", { caption: "$buyback_price", font: { bold: true } }),
                                 this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
                                     lbRate,
                                     this.$render("i-icon", { name: "exchange-alt", width: 14, height: 14, fill: Theme.text.primary, opacity: 0.9, cursor: "pointer", onClick: onToggleRate }))),
                             this.$render("i-hstack", { gap: 4, wrap: "wrap" },
-                                this.$render("i-label", { caption: "Swap Available" }),
+                                this.$render("i-label", { caption: "$swap_available" }),
                                 this.$render("i-vstack", { gap: 4, margin: { left: 'auto' }, horizontalAlignment: "end" },
                                     this.$render("i-label", { caption: `${(0, index_15.formatNumber)(firstAvailableBalance)} ${firstSymbol}`, font: { color: Theme.colors.primary.main } }),
                                     this.$render("i-label", { caption: `(${(0, index_15.formatNumber)(secondAvailableBalance)} ${secondSymbol})`, font: { color: Theme.colors.primary.main } }))),
                             this.$render("i-hstack", { id: "firstInputBox", gap: 8, width: "100%", height: 50, verticalAlignment: "center", background: { color: Theme.input.background }, border: { radius: 5, width: 2, style: 'solid', color: 'transparent' }, padding: { left: 7, right: 7 } },
                                 this.$render("i-input", { id: "firstInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.firstInputChange, onFocus: () => this.handleFocusInput(true, true), onBlur: () => this.handleFocusInput(true, false) }),
                                 this.$render("i-hstack", { gap: 4, width: 130, verticalAlignment: "center" },
-                                    this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(firstAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
+                                    this.$render("i-button", { caption: "$max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(firstAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
                                     this.$render("i-image", { width: 24, height: 24, url: scom_token_list_11.assets.tokenPath(firstTokenObject, chainId), fallbackUrl: index_16.fallBackUrl }),
                                     this.$render("i-label", { caption: firstSymbol, font: { color: Theme.input.fontColor, bold: true } }))),
                             this.$render("i-vstack", { width: "100%", margin: { top: 4, bottom: 4 }, horizontalAlignment: "center" },
@@ -2642,20 +2755,20 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
                             this.$render("i-hstack", { id: "secondInputBox", gap: 8, width: "100%", height: 50, verticalAlignment: "center", background: { color: Theme.input.background }, border: { radius: 5, width: 2, style: 'solid', color: 'transparent' }, padding: { left: 7, right: 7 } },
                                 this.$render("i-input", { id: "secondInput", inputType: "number", placeholder: "0.0", class: "input-amount", width: "100%", height: "100%", enabled: isRpcConnected, onChanged: this.secondInputChange, onFocus: () => this.handleFocusInput(false, true), onBlur: () => this.handleFocusInput(false, false) }),
                                 this.$render("i-hstack", { gap: 4, margin: { right: 8 }, width: 130, verticalAlignment: "center" },
-                                    this.$render("i-button", { caption: "Max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(secondAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
+                                    this.$render("i-button", { caption: "$max", enabled: isRpcConnected && new eth_wallet_7.BigNumber(secondAvailableBalance).gt(0), padding: { top: 3, bottom: 3, left: 6, right: 6 }, border: { radius: 6 }, font: { size: '14px' }, class: "btn-os", onClick: this.onSetMaxBalance }),
                                     this.$render("i-image", { width: 24, height: 24, url: scom_token_list_11.assets.tokenPath(secondTokenObject, chainId), fallbackUrl: index_16.fallBackUrl }),
                                     this.$render("i-label", { caption: secondSymbol, font: { color: Theme.input.fontColor, bold: true } })))),
                         this.$render("i-hstack", { gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
-                            this.$render("i-label", { caption: `Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_7.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`, font: { size: '0.75rem' } }),
+                            this.$render("i-label", { caption: this.i18n.get('$trade_fee_value', { value: isNaN(Number(tradeFee)) ? '' : `(${new eth_wallet_7.BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)` }), font: { size: '0.75rem' } }),
                             this.$render("i-label", { id: "lbFee", caption: `0 ${firstSymbol}`, font: { size: '0.75rem' } })),
                         this.$render("i-hstack", { id: "hStackCommission", visible: hasCommission, gap: 10, margin: { top: 6 }, verticalAlignment: "center", horizontalAlignment: "space-between" },
                             this.$render("i-hstack", { gap: 4, verticalAlignment: "center" },
-                                this.$render("i-label", { caption: "Commission Fee", font: { size: '0.75rem' } }),
-                                this.$render("i-icon", { tooltip: { content: `A commission fee of ${new eth_wallet_7.BigNumber(commissionFee).times(100)}% will be applied to the amount you input.` }, name: "question-circle", width: 14, height: 14 })),
+                                this.$render("i-label", { caption: "$commission_fee", font: { size: '0.75rem' } }),
+                                this.$render("i-icon", { tooltip: { content: this.i18n.get('$a_commission_fee_of_value_will_be_applied_to_the_amount_you_input', { value: new eth_wallet_7.BigNumber(commissionFee).times(100).toFixed() }) }, name: "question-circle", width: 14, height: 14 })),
                             this.$render("i-label", { id: "lbCommissionFee", caption: `0 ${firstSymbol}`, font: { size: '0.75rem' } })),
                         this.$render("i-vstack", { margin: { top: 15 }, verticalAlignment: "center", horizontalAlignment: "center" },
                             this.$render("i-panel", null,
-                                this.$render("i-button", { id: "btnSwap", minWidth: 150, minHeight: 36, caption: this.state.isRpcWalletConnected() ? 'Swap' : 'Switch Network', border: { radius: 12 }, rightIcon: { spin: true, visible: false, fill: '#fff' }, padding: { top: 4, bottom: 4, left: 16, right: 16 }, class: "btn-os", onClick: this.onSwap.bind(this) })))));
+                                this.$render("i-button", { id: "btnSwap", minWidth: 150, minHeight: 36, caption: this.state.isRpcWalletConnected() ? '$swap' : '$switch_network', border: { radius: 12 }, rightIcon: { spin: true, visible: false, fill: '#fff' }, padding: { top: 4, bottom: 4, left: 16, right: 16 }, class: "btn-os", onClick: this.onSwap.bind(this) })))));
                     const currentTime = (0, components_7.moment)().valueOf();
                     if (this.buybackModel.isUpcoming) {
                         const startTime = (0, components_7.moment)(startDate).valueOf();
@@ -2679,6 +2792,7 @@ define("@scom/scom-buyback", ["require", "exports", "@ijstech/components", "@ijs
             return this.buybackModel.getSubmitButtonText(this.isApproveButtonShown, this.isSubmitting, this.firstInput.value, this.secondInput.value, this.commissions);
         }
         async init() {
+            this.i18n.init({ ...translations_json_1.default });
             this.initModels();
             super.init();
             const lazyLoad = this.getAttribute('lazyLoad', true, false);
