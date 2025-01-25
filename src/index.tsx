@@ -12,6 +12,7 @@ import { buybackComponent, buybackDappContainer } from './index.css';
 import ScomWalletModal, { IWalletPlugin } from '@scom/scom-wallet-modal';
 import ScomTxStatusModal from '@scom/scom-tx-status-modal';
 import { ConfigModel, BuybackModel } from './model/index';
+import translations from './translations.json';
 
 const Theme = Styles.Theme.ThemeVars;
 const ROUNDING_NUMBER = 1;
@@ -102,14 +103,12 @@ export default class ScomBuyback extends Module {
 			this.state = new State(configData);
 		}
 		if (!this.buybackModel) {
-			this.buybackModel = new BuybackModel(this.state);
+			this.buybackModel = new BuybackModel(this, this.state);
 		}
 		if (!this.configModel) {
 			this.configModel = new ConfigModel(this.state, this, {
-				refreshWidget: () => this.refreshWidget(),
-				refreshDappContainer: () => this.refreshDappContainer(),
-				setContaiterTag: (value: any) => this.setContaiterTag(value),
-				updateTheme: () => this.updateTheme()
+				refreshWidget: this.refreshWidget.bind(this),
+				getContainer: this.getContainer.bind(this)
 			});
 		}
 	}
@@ -128,26 +127,6 @@ export default class ScomBuyback extends Module {
 
 	async setTag(value: any) {
 		this.configModel.setTag(value);
-	}
-
-	private setContaiterTag(value: any) {
-		if (this.dappContainer) this.dappContainer.setTag(value);
-	}
-
-	private updateStyle(name: string, value: any) {
-		if (value) {
-			this.style.setProperty(name, value);
-		} else {
-			this.style.removeProperty(name);
-		}
-	}
-
-	private updateTheme() {
-		const themeVar = this.dappContainer?.theme || 'light';
-		this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
-		this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
-		this.updateStyle('--input-font_color', this.tag[themeVar]?.inputFontColor);
-		this.updateStyle('--input-background', this.tag[themeVar]?.inputBackgroundColor);
 	}
 
 	private get chainId() {
@@ -219,16 +198,8 @@ export default class ScomBuyback extends Module {
 		}
 	}
 
-	private refreshDappContainer = () => {
-		const rpcWallet = this.rpcWallet;
-		const containerData = {
-			defaultChainId: this.configModel.chainId || this.defaultChainId,
-			wallets: this.wallets,
-			networks: this.networks.length ? this.networks : [{ chainId: this.configModel.chainId || this.chainId }],
-			showHeader: this.showHeader,
-			rpcWalletId: rpcWallet.instanceId
-		}
-		if (this.dappContainer?.setData) this.dappContainer.setData(containerData);
+	private getContainer = () => {
+		return this.dappContainer;
 	}
 
 	private refreshWidget = async () => {
@@ -396,7 +367,7 @@ export default class ScomBuyback extends Module {
 		const fromAmount = new BigNumber(this.firstInput?.value || 0);
 		const toAmount = new BigNumber(this.secondInput?.value || 0);
 		const commissionAmount = this.state.getCommissionAmount(this.commissions, fromAmount);
-		this.showResultMessage('warning', `Swapping ${formatNumber(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol} to ${formatNumber(this.secondInput.value)} ${secondTokenObject?.symbol}`);
+		this.showResultMessage('warning', this.i18n.get('$swapping_to', { from: `${formatNumber(fromAmount.plus(commissionAmount))} ${firstTokenObject?.symbol}`, to: `${formatNumber(this.secondInput.value)} ${secondTokenObject?.symbol}`}));
 		const { error } = await this.buybackModel.executeSwap(fromAmount, toAmount, this.commissions);
 		if (error) {
 			this.isSubmitting = false;
@@ -425,7 +396,7 @@ export default class ScomBuyback extends Module {
 			onToBeApproved: async (token: ITokenObject) => {
 				this.isApproveButtonShown = true;
 				this.btnSwap.enabled = true;
-				this.btnSwap.caption = this.state.isRpcWalletConnected() ? 'Approve' : 'Switch Network';
+				this.btnSwap.caption = this.i18n.get(this.state.isRpcWalletConnected() ? '$approve' : '$switch_network');
 			},
 			onToBePaid: async (token: ITokenObject) => {
 				this.updateBtnSwap();
@@ -436,7 +407,7 @@ export default class ScomBuyback extends Module {
 				this.showResultMessage('success', receipt || '');
 				this.isSubmitting = true;
 				this.btnSwap.rightIcon.visible = true;
-				this.btnSwap.caption = 'Approving';
+				this.btnSwap.caption = this.i18n.get('$approving');
 				this.updateInput(false);
 			},
 			onApproved: async (token: ITokenObject, data?: any) => {
@@ -451,7 +422,7 @@ export default class ScomBuyback extends Module {
 				this.showResultMessage('error', err);
 				this.updateInput(true);
 				this.isSubmitting = false;
-				this.btnSwap.caption = 'Approve';
+				this.btnSwap.caption = this.i18n.get('$approve');
 				this.btnSwap.rightIcon.visible = false;
 			},
 			onPaying: async (receipt?: string, data?: any) => {
@@ -520,10 +491,10 @@ export default class ScomBuyback extends Module {
 			<i-vstack class="no-buyback" height="100%" background={{ color: Theme.background.main }} verticalAlignment="center">
 				<i-vstack gap={10} verticalAlignment="center" horizontalAlignment="center">
 					<i-image url={Assets.fullPath('img/TrollTrooper.svg')} />
-					<i-label caption={isClientConnected ? 'No Buybacks' : 'Please connect with your wallet!'} />
+					<i-label caption={isClientConnected ? '$no_buybacks' : '$please_connect_with_your_wallet'} />
 				</i-vstack>
 				{!isClientConnected ? <i-button
-					caption="Connect Wallet"
+					caption="$connect_wallet"
 					class="btn-os"
 					minHeight={43}
 					width={300}
@@ -539,7 +510,7 @@ export default class ScomBuyback extends Module {
 	private onToggleDetail = () => {
 		const isExpanding = this.detailWrapper.visible;
 		this.detailWrapper.visible = !isExpanding;
-		this.btnDetail.caption = `${isExpanding ? 'More' : 'Hide'} Information`;
+		this.btnDetail.caption = this.i18n.get(isExpanding ? '$more_information' : '$hide_information');
 		this.btnDetail.rightIcon.name = isExpanding ? 'caret-down' : 'caret-up';
 	}
 
@@ -568,7 +539,7 @@ export default class ScomBuyback extends Module {
 			const rate = `1 ${firstSymbol} : ${formatNumber(new BigNumber(1).dividedBy(offerPrice))} ${secondSymbol}`;
 			const reverseRate = `1 ${secondSymbol} : ${offerPrice} ${firstSymbol}`;
 			const hStackEndTime = await HStack.create({ gap: 4, verticalAlignment: 'center' });
-			const lbEndTime = await Label.create({ caption: 'End Time', font: { size: '0.875rem', bold: true } });
+			const lbEndTime = await Label.create({ caption: this.i18n.get('$end_time'), font: { size: '0.875rem', bold: true } });
 			hStackEndTime.appendChild(lbEndTime);
 			hStackEndTime.appendChild(<i-label caption={formatDate(endDate)} font={{ size: '0.875rem', bold: true, color: Theme.colors.primary.main }} margin={{ left: 'auto' }} />);
 
@@ -591,21 +562,21 @@ export default class ScomBuyback extends Module {
 						<i-vstack id="detailWrapper" gap={10} width="100%" visible={false}>
 							{hStackEndTime}
 							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
-								<i-label caption="Group Queue Balance" />
+								<i-label caption="$group_queue_balance" />
 								<i-label caption={`${formatNumber(amount || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
 							</i-hstack>
 							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
-								<i-label caption="Your Allocation" />
-								<i-label caption={allowAll ? 'Unlimited' : `${formatNumber(available || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
+								<i-label caption="$your_allocation" />
+								<i-label caption={allowAll ? '$unlimited' : `${formatNumber(available || 0)} ${secondSymbol}`} margin={{ left: 'auto' }} />
 							</i-hstack>
 							<i-hstack gap={4} verticalAlignment="center" wrap="wrap">
-								<i-label caption="Your Balance" />
+								<i-label caption="$your_balance" />
 								<i-label caption={`${formatNumber(balance || 0)} ${firstSymbol}`} margin={{ left: 'auto' }} />
 							</i-hstack>
 						</i-vstack>
 						<i-button
 							id="btnDetail"
-							caption="More Information"
+							caption="$more_information"
 							rightIcon={{ width: 10, height: 16, margin: { left: 5 }, fill: Theme.text.primary, name: 'caret-down' }}
 							background={{ color: 'transparent' }}
 							border={{ width: 1, style: 'solid', color: Theme.text.primary, radius: 8 }}
@@ -616,7 +587,7 @@ export default class ScomBuyback extends Module {
 							onClick={this.onToggleDetail}
 						/>
 						<i-hstack gap={4} verticalAlignment="center" horizontalAlignment="space-between" wrap="wrap">
-							<i-label caption="Buyback Price" font={{ bold: true }} />
+							<i-label caption="$buyback_price" font={{ bold: true }} />
 							<i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="end">
 								{lbRate}
 								<i-icon
@@ -631,7 +602,7 @@ export default class ScomBuyback extends Module {
 							</i-hstack>
 						</i-hstack>
 						<i-hstack gap={4} wrap="wrap">
-							<i-label caption="Swap Available" />
+							<i-label caption="$swap_available" />
 							<i-vstack gap={4} margin={{ left: 'auto' }} horizontalAlignment="end">
 								<i-label caption={`${formatNumber(firstAvailableBalance)} ${firstSymbol}`} font={{ color: Theme.colors.primary.main }} />
 								<i-label caption={`(${formatNumber(secondAvailableBalance)} ${secondSymbol})`} font={{ color: Theme.colors.primary.main }} />
@@ -661,7 +632,7 @@ export default class ScomBuyback extends Module {
 							/>
 							<i-hstack gap={4} width={130} verticalAlignment="center">
 								<i-button
-									caption="Max"
+									caption="$max"
 									enabled={isRpcConnected && new BigNumber(firstAvailableBalance).gt(0)}
 									padding={{ top: 3, bottom: 3, left: 6, right: 6 }}
 									border={{ radius: 6 }}
@@ -700,7 +671,7 @@ export default class ScomBuyback extends Module {
 							/>
 							<i-hstack gap={4} margin={{ right: 8 }} width={130} verticalAlignment="center">
 								<i-button
-									caption="Max"
+									caption="$max"
 									enabled={isRpcConnected && new BigNumber(secondAvailableBalance).gt(0)}
 									padding={{ top: 3, bottom: 3, left: 6, right: 6 }}
 									border={{ radius: 6 }}
@@ -714,13 +685,13 @@ export default class ScomBuyback extends Module {
 						</i-hstack>
 					</i-vstack>
 					<i-hstack gap={10} margin={{ top: 6 }} verticalAlignment="center" horizontalAlignment="space-between">
-						<i-label caption={`Trade Fee ${isNaN(Number(tradeFee)) ? '' : `(${new BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`}`} font={{ size: '0.75rem' }} />
+						<i-label caption={this.i18n.get('$trade_fee_value', { value: isNaN(Number(tradeFee)) ? '' : `(${new BigNumber(1).minus(tradeFee).multipliedBy(100).toFixed()}%)`})} font={{ size: '0.75rem' }} />
 						<i-label id="lbFee" caption={`0 ${firstSymbol}`} font={{ size: '0.75rem' }} />
 					</i-hstack>
 					<i-hstack id="hStackCommission" visible={hasCommission} gap={10} margin={{ top: 6 }} verticalAlignment="center" horizontalAlignment="space-between">
 						<i-hstack gap={4} verticalAlignment="center">
-							<i-label caption="Commission Fee" font={{ size: '0.75rem' }} />
-							<i-icon tooltip={{ content: `A commission fee of ${new BigNumber(commissionFee).times(100)}% will be applied to the amount you input.` }} name="question-circle" width={14} height={14} />
+							<i-label caption="$commission_fee" font={{ size: '0.75rem' }} />
+							<i-icon tooltip={{ content: this.i18n.get('$a_commission_fee_of_value_will_be_applied_to_the_amount_you_input', { value : new BigNumber(commissionFee).times(100).toFixed() })}} name="question-circle" width={14} height={14} />
 						</i-hstack>
 						<i-label id="lbCommissionFee" caption={`0 ${firstSymbol}`} font={{ size: '0.75rem' }} />
 					</i-hstack>
@@ -730,7 +701,7 @@ export default class ScomBuyback extends Module {
 								id="btnSwap"
 								minWidth={150}
 								minHeight={36}
-								caption={this.state.isRpcWalletConnected() ? 'Swap' : 'Switch Network'}
+								caption={this.state.isRpcWalletConnected() ? '$swap' : '$switch_network'}
 								border={{ radius: 12 }}
 								rightIcon={{ spin: true, visible: false, fill: '#fff' }}
 								padding={{ top: 4, bottom: 4, left: 16, right: 16 }}
@@ -760,6 +731,7 @@ export default class ScomBuyback extends Module {
 	}
 
 	async init() {
+		this.i18n.init({ ...translations });
 		this.initModels();
 		super.init();
 		const lazyLoad = this.getAttribute('lazyLoad', true, false);

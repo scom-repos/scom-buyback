@@ -380,6 +380,7 @@ declare module "@scom/scom-buyback/index.css.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/model/buybackModel.ts" />
 declare module "@scom/scom-buyback/model/buybackModel.ts" {
+    import { Module } from "@ijstech/components";
     import { ITokenObject } from "@scom/scom-token-list";
     import { BigNumber } from "@ijstech/eth-contract";
     import { IBuybackCampaign, ICommissionInfo } from "@scom/scom-buyback/global/index.ts";
@@ -387,8 +388,9 @@ declare module "@scom/scom-buyback/model/buybackModel.ts" {
     import { State } from "@scom/scom-buyback/store/index.ts";
     export class BuybackModel {
         private state;
+        private module;
         private _buybackInfo;
-        constructor(state: State);
+        constructor(module: Module, state: State);
         get chainId(): number;
         set buybackInfo(value: GuaranteedBuyBackInfo);
         get buybackInfo(): GuaranteedBuyBackInfo;
@@ -403,7 +405,7 @@ declare module "@scom/scom-buyback/model/buybackModel.ts" {
         get secondTokenBalance(): string | 0;
         get offerPrice(): any;
         getAvailable: (commissions: ICommissionInfo[]) => string | BigNumber;
-        getSubmitButtonText(isApproveButtonShown: boolean, isSubmitting: boolean, firstValue: number, secondValue: number, commissions: ICommissionInfo[]): "Switch Network" | "Upcoming" | "Expired" | "Approving" | "Approve" | "Amount must be greater than 0" | "Insufficient amount available" | "Swapping" | "Swap";
+        getSubmitButtonText(isApproveButtonShown: boolean, isSubmitting: boolean, firstValue: number, secondValue: number, commissions: ICommissionInfo[]): string;
         executeSwap: (fromAmount: BigNumber, toAmount: BigNumber, commissions: ICommissionInfo[]) => Promise<{
             receipt: import("@ijstech/eth-wallet/web3.ts").TransactionReceipt;
             error: Record<string, string>;
@@ -417,16 +419,17 @@ declare module "@scom/scom-buyback/model/buybackModel.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/formSchema.ts" />
 declare module "@scom/scom-buyback/formSchema.ts" {
-    import { Input } from '@ijstech/components';
+    import { I18n, Input } from '@ijstech/components';
     import ScomNetworkPicker from '@scom/scom-network-picker';
     import ScomTokenInput from '@scom/scom-token-input';
     import { State } from "@scom/scom-buyback/store/index.ts";
-    export function getSchema(state?: State, isOwner?: boolean): {
+    export function getSchema(i18n: I18n, state?: State, isOwner?: boolean): {
         dataSchema: {
             type: string;
             properties: {
                 offerIndex: {
                     type: string;
+                    title: string;
                     required: boolean;
                 };
                 chainId: {
@@ -436,6 +439,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 };
                 tokenIn: {
                     type: string;
+                    title: string;
                     required: boolean;
                 };
                 customTokenIn: {
@@ -445,6 +449,7 @@ declare module "@scom/scom-buyback/formSchema.ts" {
                 };
                 tokenOut: {
                     type: string;
+                    title: string;
                     required: boolean;
                 };
                 customTokenOut: {
@@ -511,11 +516,10 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
     import { INetworkConfig } from "@scom/scom-network-picker";
     import { IWalletPlugin } from "@scom/scom-wallet-modal";
     import ScomCommissionFeeSetup from "@scom/scom-commission-fee-setup";
+    import ScomDappContainer from "@scom/scom-dapp-container";
     interface IConfigOptions {
         refreshWidget: () => Promise<void>;
-        refreshDappContainer: () => void;
-        setContaiterTag: (value: any) => void;
-        updateTheme: () => void;
+        getContainer: () => ScomDappContainer;
     }
     export class ConfigModel {
         private state;
@@ -597,7 +601,12 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
         setData(data: IBuybackCampaign): Promise<void>;
         getTag(): Promise<any>;
         setTag(value: any): void;
+        private get container();
+        private setContaiterTag;
         private updateTag;
+        private updateTheme;
+        private updateStyle;
+        private refreshDappContainer;
         private refreshData;
         removeRpcWalletEvents: () => void;
         resetRpcWallet: () => Promise<void>;
@@ -608,6 +617,114 @@ declare module "@scom/scom-buyback/model/configModel.ts" {
 declare module "@scom/scom-buyback/model/index.ts" {
     export { BuybackModel } from "@scom/scom-buyback/model/buybackModel.ts";
     export { ConfigModel } from "@scom/scom-buyback/model/configModel.ts";
+}
+/// <amd-module name="@scom/scom-buyback/translations.json.ts" />
+declare module "@scom/scom-buyback/translations.json.ts" {
+    const _default_2: {
+        en: {
+            swapping_to: string;
+            approve: string;
+            approving: string;
+            no_buybacks: string;
+            please_connect_with_your_wallet: string;
+            connect_wallet: string;
+            hide_information: string;
+            more_information: string;
+            end_time: string;
+            group_queue_balance: string;
+            your_allocation: string;
+            your_balance: string;
+            unlimited: string;
+            buyback_price: string;
+            swap_available: string;
+            max: string;
+            trade_fee_value: string;
+            commission_fee: string;
+            a_commission_fee_of_value_will_be_applied_to_the_amount_you_input: string;
+            swap: string;
+            swapping: string;
+            upcoming: string;
+            expired: string;
+            amount_must_be_greater_than_0: string;
+            insufficient_amount_available: string;
+            switch_network: string;
+            offer_index: string;
+            chain: string;
+            token_in: string;
+            token_in_address: string;
+            token_out: string;
+            token_out_address: string;
+        };
+        "zh-hant": {
+            swapping_to: string;
+            approve: string;
+            approving: string;
+            no_buybacks: string;
+            please_connect_with_your_wallet: string;
+            connect_wallet: string;
+            hide_information: string;
+            more_information: string;
+            end_time: string;
+            group_queue_balance: string;
+            your_allocation: string;
+            your_balance: string;
+            unlimited: string;
+            buyback_price: string;
+            swap_available: string;
+            max: string;
+            trade_fee_value: string;
+            commission_fee: string;
+            a_commission_fee_of_value_will_be_applied_to_the_amount_you_input: string;
+            swap: string;
+            swapping: string;
+            upcoming: string;
+            expired: string;
+            amount_must_be_greater_than_0: string;
+            insufficient_amount_available: string;
+            switch_network: string;
+            offer_index: string;
+            chain: string;
+            token_in: string;
+            token_in_address: string;
+            token_out: string;
+            token_out_address: string;
+        };
+        vi: {
+            swapping_to: string;
+            approve: string;
+            approving: string;
+            no_buybacks: string;
+            please_connect_with_your_wallet: string;
+            connect_wallet: string;
+            hide_information: string;
+            more_information: string;
+            end_time: string;
+            group_queue_balance: string;
+            your_allocation: string;
+            your_balance: string;
+            unlimited: string;
+            buyback_price: string;
+            swap_available: string;
+            max: string;
+            trade_fee_value: string;
+            commission_fee: string;
+            a_commission_fee_of_value_will_be_applied_to_the_amount_you_input: string;
+            swap: string;
+            swapping: string;
+            upcoming: string;
+            expired: string;
+            amount_must_be_greater_than_0: string;
+            insufficient_amount_available: string;
+            switch_network: string;
+            offer_index: string;
+            chain: string;
+            token_in: string;
+            token_in_address: string;
+            token_out: string;
+            token_out_address: string;
+        };
+    };
+    export default _default_2;
 }
 /// <amd-module name="@scom/scom-buyback" />
 declare module "@scom/scom-buyback" {
@@ -728,9 +845,6 @@ declare module "@scom/scom-buyback" {
         setData(data: IBuybackCampaign): Promise<void>;
         getTag(): Promise<any>;
         setTag(value: any): Promise<void>;
-        private setContaiterTag;
-        private updateStyle;
-        private updateTheme;
         private get chainId();
         private get rpcWallet();
         get defaultChainId(): number;
@@ -745,7 +859,7 @@ declare module "@scom/scom-buyback" {
         set commissions(value: ICommissionInfo[]);
         constructor(parent?: Container, options?: ControlElement);
         private updateContractAddress;
-        private refreshDappContainer;
+        private getContainer;
         private refreshWidget;
         private initializeWidgetConfig;
         private handleFocusInput;
