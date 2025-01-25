@@ -116,14 +116,9 @@ declare module "@scom/scom-buyback/store/utils.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/mainnet/avalanche.ts" />
 declare module "@scom/scom-buyback/store/tokens/mainnet/avalanche.ts" {
-    export const Tokens_Avalanche: ({
-        address: string;
-        name: string;
-        symbol: string;
-        decimals: number;
-        isCommon: boolean;
-    } | {
-        chainId: number;
+    export const Tokens_Avalanche: {
+        networkCode?: string;
+        chainId?: number;
         address?: string;
         name: string;
         decimals: number;
@@ -135,18 +130,13 @@ declare module "@scom/scom-buyback/store/tokens/mainnet/avalanche.ts" {
         isNative?: boolean;
         isWETH?: boolean;
         isNew?: boolean;
-    })[];
+    }[];
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/mainnet/bsc.ts" />
 declare module "@scom/scom-buyback/store/tokens/mainnet/bsc.ts" {
-    export const Tokens_BSC: ({
-        name: string;
-        symbol: string;
-        address: string;
-        decimals: number;
-        isCommon: boolean;
-    } | {
-        chainId: number;
+    export const Tokens_BSC: {
+        networkCode?: string;
+        chainId?: number;
         address?: string;
         name: string;
         decimals: number;
@@ -158,18 +148,13 @@ declare module "@scom/scom-buyback/store/tokens/mainnet/bsc.ts" {
         isNative?: boolean;
         isWETH?: boolean;
         isNew?: boolean;
-    })[];
+    }[];
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/mainnet/zkSync.ts" />
 declare module "@scom/scom-buyback/store/tokens/mainnet/zkSync.ts" {
-    export const Tokens_ZK: ({
-        name: string;
-        address: string;
-        symbol: string;
-        decimals: number;
-        isCommon: boolean;
-    } | {
-        chainId: number;
+    export const Tokens_ZK: {
+        networkCode?: string;
+        chainId?: number;
         address?: string;
         name: string;
         decimals: number;
@@ -181,7 +166,7 @@ declare module "@scom/scom-buyback/store/tokens/mainnet/zkSync.ts" {
         isNative?: boolean;
         isWETH?: boolean;
         isNew?: boolean;
-    })[];
+    }[];
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/mainnet/index.ts" />
 declare module "@scom/scom-buyback/store/tokens/mainnet/index.ts" {
@@ -191,20 +176,9 @@ declare module "@scom/scom-buyback/store/tokens/mainnet/index.ts" {
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts" />
 declare module "@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts" {
-    export const Tokens_BSC_Testnet: ({
-        name: string;
-        address: string;
-        symbol: string;
-        decimals: number;
-        isCommon: boolean;
-    } | {
-        name: string;
-        address: string;
-        symbol: string;
-        decimals: number;
-        isCommon?: undefined;
-    } | {
-        chainId: number;
+    export const Tokens_BSC_Testnet: {
+        networkCode?: string;
+        chainId?: number;
         address?: string;
         name: string;
         decimals: number;
@@ -216,17 +190,13 @@ declare module "@scom/scom-buyback/store/tokens/testnet/bsc-testnet.ts" {
         isNative?: boolean;
         isWETH?: boolean;
         isNew?: boolean;
-    })[];
+    }[];
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/testnet/fuji.ts" />
 declare module "@scom/scom-buyback/store/tokens/testnet/fuji.ts" {
-    export const Tokens_Fuji: ({
-        name: string;
-        address: string;
-        symbol: string;
-        decimals: number;
-    } | {
-        chainId: number;
+    export const Tokens_Fuji: {
+        networkCode?: string;
+        chainId?: number;
         address?: string;
         name: string;
         decimals: number;
@@ -238,18 +208,13 @@ declare module "@scom/scom-buyback/store/tokens/testnet/fuji.ts" {
         isNative?: boolean;
         isWETH?: boolean;
         isNew?: boolean;
-    })[];
+    }[];
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/testnet/zk-sepolia.ts" />
 declare module "@scom/scom-buyback/store/tokens/testnet/zk-sepolia.ts" {
-    export const Tokens_ZK_Sepolia: ({
-        name: string;
-        address: string;
-        symbol: string;
-        decimals: number;
-        isCommon: boolean;
-    } | {
-        chainId: number;
+    export const Tokens_ZK_Sepolia: {
+        networkCode?: string;
+        chainId?: number;
         address?: string;
         name: string;
         decimals: number;
@@ -261,7 +226,7 @@ declare module "@scom/scom-buyback/store/tokens/testnet/zk-sepolia.ts" {
         isNative?: boolean;
         isWETH?: boolean;
         isNew?: boolean;
-    })[];
+    }[];
 }
 /// <amd-module name="@scom/scom-buyback/store/tokens/testnet/index.ts" />
 declare module "@scom/scom-buyback/store/tokens/testnet/index.ts" {
